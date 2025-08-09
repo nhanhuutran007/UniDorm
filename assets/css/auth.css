@@ -1,0 +1,263 @@
+/* File CSS chung cho các trang đăng nhập, đăng ký, quên mật khẩu, đặt lại mật khẩu, xác nhận email */
+
+/* Body chung */
+body {
+  background: url("/network-management/assets/svg/JHT.svg") no-repeat center
+    center fixed;
+  background-size: cover !important;
+  min-height: 100vh;
+  padding: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Wrapper chung */
+.login_wrapper,
+.register_wrapper,
+.forgot_password_wrapper,
+.reset_password_wrapper,
+.activate_email_wrapper {
+  min-height: 100vh;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Container cho các trang có bố cục hai cột (đăng nhập, đăng ký) */
+.login_container,
+.register_container {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10vw;
+}
+
+/* Container cho các trang một cột (quên mật khẩu, đặt lại mật khẩu, xác nhận email) */
+.activate_email_container,
+.forgot_password_form,
+.reset_password_form {
+  max-width: 600px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Form chung */
+.login_form,
+.register_form,
+.forgot_password_form,
+.reset_password_form,
+.activate_email_content {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 0 20px 5px rgba(147, 112, 219, 0.5),
+    0 0 40px 10px rgba(147, 112, 219, 0.3),
+    0 0 60px 15px rgba(147, 112, 219, 0.1);
+  backdrop-filter: blur(5px);
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Hình nền SVG */
+.login_background_image,
+.register_background_image {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+}
+
+.login_background_image img,
+.register_background_image img {
+  width: 100%;
+  max-width: 600px;
+  height: auto;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+}
+
+.login_background_image img:hover,
+.register_background_image img:hover {
+  transform: scale(1.1);
+}
+
+/* Animation fadeIn */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Nút chính */
+.btn-primary {
+  background-color: #38bdf8;
+  border: none;
+  padding: 10px 30px;
+  border-radius: 8px;
+  transition: transform 0.2s ease, background-color 0.3s ease;
+}
+
+.btn-primary:hover {
+  transform: scale(1.05);
+  background-color: #0ea5e9;
+}
+
+/* Tiêu đề */
+h2 {
+  color: #38bdf8;
+  font-weight: 700;
+}
+
+/* Trường nhập liệu */
+.form-control {
+  border: 2px solid #38bdf8;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.form-control:focus {
+  border-color: #0ea5e9;
+  box-shadow: 0 0 5px rgba(56, 189, 248, 0.5);
+}
+
+.form-control[readonly] {
+  background-color: #f8f9fa;
+}
+
+/* Input group cho toggle password */
+.input-group-text {
+  background-color: #38bdf8;
+  border: none;
+  color: white;
+  border-radius: 0 8px 8px 0;
+}
+
+.input-group-text.login_toggle_password,
+.input-group-text.reset_password_toggle_password {
+  padding: 0.5rem 1rem;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+/* Liên kết */
+a {
+  color: #38bdf8;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: #0ea5e9;
+  text-decoration: underline;
+}
+
+/* Thông báo */
+.alert-success {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.alert-danger {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+/* Radio button */
+.form-check-input:checked {
+  background-color: #38bdf8;
+  border-color: #38bdf8;
+}
+
+/* Media query cho màn hình nhỏ hơn 1024px */
+@media (max-width: 1024px) {
+  .register_container {
+    gap: 5vw;
+  }
+  .register_background_image {
+    padding: 20px;
+  }
+  .register_background_image img {
+    max-width: 400px;
+  }
+  .register_form {
+    min-width: 250px;
+  }
+}
+
+/* Media query cho màn hình nhỏ hơn 768px */
+@media (max-width: 768px) {
+  .login_container,
+  .register_container {
+    flex-direction: column;
+    gap: 20px;
+  }
+  .login_form,
+  .register_form,
+  .forgot_password_form,
+  .reset_password_form,
+  .activate_email_content {
+    max-width: 100%;
+    padding: 1.5rem;
+    margin: 0 15px;
+  }
+  .login_background_image,
+  .register_background_image {
+    width: 100%;
+    padding: 5px;
+    justify-content: center;
+  }
+  .login_background_image img,
+  .register_background_image img {
+    max-width: 300px;
+  }
+  .register_form {
+    min-width: 0;
+  }
+}
+
+/* CSS cho embed (nếu cần) */
+.embed_container {
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-top: 56.2225%;
+  box-shadow: 0 2px 8px 0 rgba(63, 69, 81, 0.16);
+  margin-top: 1.6em;
+  margin-bottom: 0.9em;
+  overflow: hidden;
+  border-radius: 8px;
+  will-change: transform;
+}
+
+.embed_iframe {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.embed_link {
+  color: #4b0082;
+  text-decoration: none;
+  font-weight: bold;
+  transition: color 0.3s ease;
+}
+
+.embed_link:hover {
+  color: #1e1e2f;
+  text-decoration: underline;
+}

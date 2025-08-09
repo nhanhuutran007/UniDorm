@@ -1,0 +1,9 @@
+RewriteEngine On
+
+# Nếu tệp hoặc thư mục không tồn tại, chuyển hướng đến index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php?route=$1 [L,QSA]
+
+# Cấu hình trang lỗi 404 (dự phòng, nếu cần)
+ErrorDocument 404 /includes/404.php
