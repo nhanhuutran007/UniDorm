@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="/network-management/assets/css/auth.css">
+    <link rel="stylesheet" href="/QuanLySV/assets/css/auth.css">
     <title>Đăng nhập</title>
 </head>
 
@@ -15,12 +15,12 @@
         <div class="login_container">
             <!-- SVG bên trái -->
             <div class="login_background_image">
-                <img src="/network-management/assets/svg/background_logo.svg" alt="Login Illustration">
+                <img src="/QuanLySV/assets/svg/background_logo.svg" alt="Login Illustration">
             </div>
             <!-- Form login bên phải -->
             <div class="login_form">
                 <div class="text-center mb-4">
-                    <img src="/network-management/assets/img/logo1.png" alt="Logo" style="max-width: 100px;">
+                    <img src="/QuanLySV/assets/img/logo1.png" alt="Logo" style="max-width: 100px;">
                 </div>
                 <h2 class="text-center text-uppercase mb-4">Đăng nhập</h2>
                 <?php if (!empty($success)) : ?>
@@ -29,7 +29,7 @@
                 <?php if (!empty($error)) : ?>
                 <div class="alert alert-danger text-center"><?php echo $error; ?></div>
                 <?php endif; ?>
-                <form action="/network-management/index.php?route=login" method="POST">
+                <form action="/QuanLySV/index.php?route=login" method="POST">
                     <div class="form-group mb-3">
                         <label for="username">Username</label>
                         <input type="text" name="username" id="username" class="form-control" required>
@@ -47,11 +47,11 @@
                         <button type="submit" class="btn btn-primary" id="loginBtn">Đăng nhập</button>
                     </div>
                     <div class="text-center mt-3">
-                        <span>Chưa có tài khoản? <a href="/network-management/index.php?route=register">Đăng
+                        <span>Chưa có tài khoản? <a href="/QuanLySV/index.php?route=register">Đăng
                                 kí</a></span>
                     </div>
                     <div class="text-center mt-3">
-                        <span><a href="/network-management/index.php?route=forgot">Quên mật khẩu?</a></span>
+                        <span><a href="/QuanLySV/index.php?route=forgot">Quên mật khẩu?</a></span>
                     </div>
                 </form>
             </div>

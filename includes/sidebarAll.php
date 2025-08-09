@@ -1,8 +1,8 @@
 <?php
-// Path: /network-management/includes/sidebarAll.php
+// Path: /QuanLySV/includes/sidebarAll.php
 
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['role'])) {
-    header("Location: /network-management/views/auth/login.php");
+    header("Location: /QuanLySV/views/auth/login.php");
     exit();
 }
 
@@ -13,13 +13,13 @@ function renderMenuItem($item, $isSubmenu = false) {
     $class = $isSubmenu ? '' : ($currentPage === basename($item['url']) ? 'active' : '');
     $html = $isSubmenu
         ? "<li><a href=\"{$item['url']}\">{$item['title']}</a></li>"
-        : "<li class=\"$class\"><a href=\"{$item['url']}\"><img src=\"/network-management/assets/img/icons/{$item['icon']}\" alt=\"{$item['title']} Icon\"><span>{$item['title']}</span></a></li>";
+        : "<li class=\"$class\"><a href=\"{$item['url']}\"><img src=\"/QuanLySV/assets/img/icons/{$item['icon']}\" alt=\"{$item['title']} Icon\"><span>{$item['title']}</span></a></li>";
     return $html;
 }
 
 function renderSubmenu($submenu) {
     $html = "<li class=\"submenu\">";
-    $html .= "<a href=\"javascript:void(0);\"><img src=\"/network-management/assets/img/icons/{$submenu['icon']}\" alt=\"{$submenu['title']} Icon\"><span>{$submenu['title']}</span><span class=\"menu-arrow\"></span></a>";
+    $html .= "<a href=\"javascript:void(0);\"><img src=\"/QuanLySV/assets/img/icons/{$submenu['icon']}\" alt=\"{$submenu['title']} Icon\"><span>{$submenu['title']}</span><span class=\"menu-arrow\"></span></a>";
     $html .= "<ul>";
     foreach ($submenu['items'] as $item) {
         $html .= renderMenuItem($item, true);
@@ -35,7 +35,7 @@ switch ($role) {
         $menuItems = [
             'main' => [
                 'title' => 'Trang chủ',
-                'url' => '/network-management/views/admin/dashboard.php',
+                'url' => '/QuanLySV/views/admin/dashboard.php',
                 'icon' => 'dashboard.svg'
             ],
             'submenu' => [
@@ -43,103 +43,36 @@ switch ($role) {
                     'title' => 'Người dùng',
                     'icon' => 'users1.svg',
                     'items' => [
-                        ['title' => 'Thêm người dùng mới', 'url' => '/network-management/views/admin/newuser.php'],
-                        ['title' => 'Danh sách người dùng', 'url' => '/network-management/views/admin/userlists.php']
+                        ['title' => 'Thêm người dùng mới', 'url' => '/QuanLySV/views/admin/newuser.php'],
+                        ['title' => 'Danh sách người dùng', 'url' => '/QuanLySV/views/admin/userlists.php']
                     ]
                 ],
                 [
                     'title' => 'Thông báo',
                     'icon' => 'notification-bing.svg',
                     'items' => [
-                        ['title' => 'Danh sách thông báo', 'url' => '/network-management/views/admin/notifications.php']
-                    ]
-                ],
-                [
-                    'title' => 'Thiết bị',
-                    'icon' => 'product.svg',
-                    'items' => [
-                        ['title' => 'Danh sách thiết bị', 'url' => '/network-management/views/admin/devicelist.php'],
-                        ['title' => 'Thêm thiết bị', 'url' => '/network-management/views/admin/addDevice.php'],
-                        ['title' => 'Phân quyền thiết bị', 'url' => '/network-management/views/admin/assignmentlist.php'],
-                        ['title' => 'Bảo trì thiết bị', 'url' => '/network-management/views/admin/maintenancelist.php'],
+                        ['title' => 'Danh sách thông báo', 'url' => '/QuanLySV/views/admin/notifications.php']
                     ]
                 ],
                 [
                     'title' => 'Báo cáo',
                     'icon' => 'time.svg',
                     'items' => [
-                        ['title' => 'Sự Kiện Thiết Bị', 'url' => '/network-management/views/admin/report_devices.php'],
+                        ['title' => 'Sự Kiện Thiết Bị', 'url' => '/QuanLySV/views/admin/report_devices.php'],
                     ]
                 ],
                 [
                     'title' => 'Tin nhắn',
                     'icon' => 'purchase1.svg',
                     'items' => [
-                        ['title' => 'Tin nhắn', 'url' => '/network-management/views/chat.php']
+                        ['title' => 'Tin nhắn', 'url' => '/QuanLySV/views/chat.php']
                     ]
                 ]
             ]
         ];
         break;
-
-    case 'technician':
-        $menuItems = [
-            'main' => [
-                'title' => 'Trang chủ',
-                'url' => '/network-management/views/technician/technician.php',
-                'icon' => 'dashboard.svg'
-            ],
-            'submenu' => [
-                [
-                    'title' => 'Thiết bị',
-                    'icon' => 'product.svg',
-                    'items' => [
-                        ['title' => 'Danh sách thiết bị', 'url' => '/network-management/views/technician/devicesTech.php'],
-                        ['title' => 'Bảo trì thiết bị', 'url' => '/network-management/views/technician/maintenance.php'],
-                        ['title' => 'Thêm trì thiết bị', 'url' => '/network-management/views/technician/addmaintenance.php']
-                    ]
-                ],
-                [
-                    'title' => 'Tin nhắn',
-                    'icon' => 'purchase1.svg',
-                    'items' => [
-                        ['title' => 'Tin nhắn', 'url' => '/network-management/views/chat.php']
-                    ]
-                ]
-            ]
-        ];
-        // Đối với technician không có Người dùng, Thông báo, Báo cáo nên chỉ sắp xếp lại như trên.
-        break;
-
-    case 'staff':
-        $menuItems = [
-            'main' => [
-                'title' => 'Trang chủ',
-                'url' => '/network-management/views/staff/staff.php',
-                'icon' => 'dashboard.svg'
-            ],
-            'submenu' => [
-                [
-                    'title' => 'Thiết bị',
-                    'icon' => 'product.svg',
-                    'items' => [
-                        ['title' => 'Danh sách thiết bị', 'url' => '/network-management/views/staff/devicesStaff.php'],
-                    ]
-                ],
-                [
-                    'title' => 'Tin nhắn',
-                    'icon' => 'purchase1.svg',
-                    'items' => [
-                        ['title' => 'Tin nhắn', 'url' => '/network-management/views/chat.php']
-                    ]
-                ]
-            ]
-        ];
-        // Đối với staff không có Người dùng, Thông báo, Báo cáo nên chỉ sắp xếp lại như trên.
-        break;
-
     default:
-        echo '<div class="alert alert-danger m-3">Vai trò không hợp lệ. Vui lòng đăng nhập lại.</div>';
+        echo '<div class="alert alert-danger m-3">Chỉ cho phép admin đăng nhập. Vui lòng đăng nhập lại.</div>';
         exit();
 }
 ?>

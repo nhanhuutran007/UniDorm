@@ -38,9 +38,7 @@ class AuthLoginController {
                         $_SESSION['role'] = $user['role'];
 
                         $redirectPages = [
-                            'admin' => '/network-management/views/admin/dashboard.php',
-                            'staff' => '/network-management/views/staff/staff.php',
-                            'technician' => '/network-management/views/technician/technician.php'
+                            'admin' => '/QuanLySV/views/admin/dashboard.php',
                         ];
 
                         if (array_key_exists($user['role'], $redirectPages)) {
@@ -76,7 +74,7 @@ class AuthLoginController {
     }
 }
 
-// require_once __DIR__ . '/../includes/db.php';
+// require_once __DIR__ . '/QuanLySV/includes/db.php';
 // $controller = new AuthLoginController($conn);
 // $controller->login();
 ?>

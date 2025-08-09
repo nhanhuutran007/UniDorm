@@ -1,1 +1,0 @@
-// Week 4 - Report device manager

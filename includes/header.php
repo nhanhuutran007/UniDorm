@@ -1,7 +1,6 @@
 <?php
 $conn = require __DIR__ . '/db.php';
 require __DIR__ . '/../models/ProfileModel.php';
-require_once __DIR__ . '/../controllers/DeviceController.php';
 
 // Kiểm tra session và timeout
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || 
@@ -29,7 +28,6 @@ switch ($userRole) {
 }
 
 // Lấy thông tin người dùng
-
 $profileModel = new ProfileModel($conn);
 $userData = $profileModel->getUserById($userId);
 if (!$userData) {
@@ -40,44 +38,39 @@ if (!$userData) {
 
 $profilePicture = "/network-management/assets/" . htmlspecialchars($userData['profile_picture'] ?? 'images/default-avatar.jpg');
 
-// Khởi tạo DeviceController
-$startTime = microtime(true); // Debug: Đo thời gian thực thi
-$deviceController = new DeviceController($userId, $userRole);
+// --- THÔNG BÁO: ĐÃ COMMENT LẠI ĐỂ SỬ DỤNG CHO MỤC ĐÍCH KHÁC ---
+// $notification = [];
+// $unreadCount = 0;
+// try {
+//     if ($userRole === 'admin') {
+//         // Admin thấy tất cả thông báo
+//         $result = $deviceController->handleRequest('get_all_notifications', [
+//             'filters' => [],
+//             'limit' => 5,
+//             'offset' => 0
+//         ]);
+//     } else {
+//         // Người dùng bình thường chỉ thấy thông báo của mình
+//         $result = $deviceController->handleRequest('get_notifications_by_user_id', [
+//             'target_user_id' => $userId,
+//             'filters' => ['is_read' => 0],
+//             'limit' => 5,
+//             'offset' => 0
+//         ]);
+//     }
 
-// Lấy danh sách thông báo
-$notification = [];
-$unreadCount = 0;
-try {
-    if ($userRole === 'admin') {
-        // Admin thấy tất cả thông báo
-        $result = $deviceController->handleRequest('get_all_notifications', [
-            'filters' => [], // Chỉ lấy thông báo chưa đọc 'is_read' => 0
-            'limit' => 5, // Giới hạn 10 thông báo
-            'offset' => 0
-        ]);
-    } else {
-        // Người dùng bình thường chỉ thấy thông báo của mình
-        $result = $deviceController->handleRequest('get_notifications_by_user_id', [
-            'target_user_id' => $userId,
-            'filters' => ['is_read' => 0], // Chỉ lấy thông báo chưa đọc
-            'limit' => 5, // Giới hạn 5 thông báo
-            'offset' => 0
-        ]);
-    }
+//     if ($result['success'] && is_array($result['data'])) {
+//         $notification = $result['data'];
+//         $unreadCount = count($notification ?? []);
+//     } else {
+//         error_log('Failed to fetch notifications: ' . ($result['message'] ?? 'No message'));
+//     }
+// } catch (Exception $e) {
+//     error_log('Error fetching notifications: ' . $e->getMessage());
+// }
 
-    if ($result['success'] && is_array($result['data'])) {
-        $notification = $result['data'];
-        //$unreadCount = count($notification);
-        $unreadCount = count($notification ?? []);
-    } else {
-        error_log('Failed to fetch notifications: ' . ($result['message'] ?? 'No message'));
-    }
-} catch (Exception $e) {
-    error_log('Error fetching notifications: ' . $e->getMessage());
-}
-
-$endTime = microtime(true); // Debug: Kết thúc đo thời gian
-error_log('Notification fetch time: ' . ($endTime - $startTime) . ' seconds');
+// $endTime = microtime(true);
+// error_log('Notification fetch time: ' . ($endTime - $startTime) . ' seconds');
 ?>
 
 <div class="header">
@@ -98,24 +91,10 @@ error_log('Notification fetch time: ' . ($endTime - $startTime) . ' seconds');
 
     <ul class="nav user-menu">
         <!-- Thanh tìm kiếm -->
-        <!-- <li class="nav-item">
-            <div class="top-nav-search">
-                <a href="javascript:void(0);" class="responsive-search">
-                    <i class="fa fa-search"></i>
-                </a>
-                <form action="#">
-                    <div class="searchinputs">
-                        <input type="text" placeholder="Search Here ...">
-                        <div class="search-addon">
-                            <span><img src="/network-management/assets/img/icons/closes.svg" alt="Close"></span>
-                        </div>
-                    </div>
-                    <a class="btn" id="searchdiv"><img src="/network-management/assets/img/icons/search.svg" alt="Search"></a>
-                </form>
-            </div>
-        </li> -->
+        <!-- ... -->
 
         <!-- Thông báo -->
+        <!--
         <li class="nav-item dropdown">
             <a href="javascript:void(0);" class="dropdown-toggle nav-link" data-bs-toggle="dropdown">
                 <img src="/network-management/assets/img/icons/notification-bing.svg" alt="Notifications">
@@ -146,7 +125,6 @@ error_log('Notification fetch time: ' . ($endTime - $startTime) . ' seconds');
                                                 $targetUserId = htmlspecialchars($noti['target_user_id'] ?? 'Unknown');
                                                 $prefix = "Gửi tới user $targetUserId : ";
                                                 $message = $noti['message'] ?? 'No message';
-                                                // Sử dụng mb_strlen và mb_substr với UTF-8
                                                 $maxMessageLength = 60 - mb_strlen($prefix, 'UTF-8');
                                                 $maxMessageLength = max($maxMessageLength, 10);
                                                 $displayMessage = mb_strlen($message, 'UTF-8') > $maxMessageLength
@@ -196,6 +174,7 @@ error_log('Notification fetch time: ' . ($endTime - $startTime) . ' seconds');
                 </div>
             </div>
         </li>
+        -->
 
         <!-- User Profile Dropdown -->
         <li class="nav-item dropdown has-arrow main-drop">
@@ -240,6 +219,7 @@ error_log('Notification fetch time: ' . ($endTime - $startTime) . ' seconds');
     </div>
 </div>
 
+<!--
 <script>
 function clearAllNotifications() {
     fetch('/network-management/api/mark_all_notifications.php', {
@@ -281,3 +261,4 @@ function markNotificationAsRead(notificationId, redirectUrl) {
     window.location.href = redirectUrl;
 }
 </script>
+-->
