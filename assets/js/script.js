@@ -109,12 +109,11 @@ $(document).ready(function () {
       bFilter: false,
     });
   }
-  setTimeout(function () {
-    $("#global-loader");
-    setTimeout(function () {
-      $("#global-loader").fadeOut("slow");
-    }, 100);
-  }, 500);
+ // Ẩn loader ngay khi DOM sẵn sàng
+$(document).ready(function () {
+    $("#global-loader").fadeOut("slow");
+});
+
   if ($(".datetimepicker").length > 0) {
     $(".datetimepicker").datetimepicker({
       format: "DD-MM-YYYY",

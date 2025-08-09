@@ -1,6 +1,6 @@
 <?php
 $conn = require __DIR__ . '/db.php';
-require __DIR__ . '/../models/ProfileModel.php';
+require_once __DIR__ . '/../models/ProfileModel.php';
 
 // Kiểm tra session và timeout
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || 
@@ -76,7 +76,7 @@ $profilePicture = "/network-management/assets/" . htmlspecialchars($userData['pr
 <div class="header">
     <div class="header-left active">
         <a href="<?php echo $dashboardUrl; ?>" class="logo">
-            <img src="/network-management/assets/img/logo1.png" alt="Logo" width="140" height="60">
+            <img src="/QuanLySV/assets/img/logo1.png" alt="Logo" width="140" height="60">
         </a>
         <a id="toggle_btn" href="javascript:void(0);"></a>
     </div>
@@ -97,7 +97,7 @@ $profilePicture = "/network-management/assets/" . htmlspecialchars($userData['pr
         <!--
         <li class="nav-item dropdown">
             <a href="javascript:void(0);" class="dropdown-toggle nav-link" data-bs-toggle="dropdown">
-                <img src="/network-management/assets/img/icons/notification-bing.svg" alt="Notifications">
+                <img src="/QuanLySV/assets/img/icons/notification-bing.svg" alt="Notifications">
                 <span class="badge rounded-pill"><?php echo $unreadCount; ?></span>
             </a>
             <div class="dropdown-menu notifications">
@@ -112,11 +112,11 @@ $profilePicture = "/network-management/assets/" . htmlspecialchars($userData['pr
                         <li class="notification-message"
                             data-notification-id="<?php echo htmlspecialchars($noti['notification_id'] ?? ''); ?>">
                             <a href="javascript:void(0);"
-                                onclick="markNotificationAsRead('<?php echo htmlspecialchars($noti['notification_id'] ?? ''); ?>', '/network-management/views/viewAll_noti.php?notification_id=<?php echo htmlspecialchars($noti['notification_id'] ?? ''); ?>')">
+                                onclick="markNotificationAsRead('<?php echo htmlspecialchars($noti['notification_id'] ?? ''); ?>', '/QuanLySV/views/viewAll_noti.php?notification_id=<?php echo htmlspecialchars($noti['notification_id'] ?? ''); ?>')">
                                 <div class="media d-flex">
                                     <span class="avatar flex-shrink-0">
                                         <img alt="Avatar"
-                                            src="<?php echo htmlspecialchars('/network-management/assets/img/logo1.png'); ?>">
+                                            src="<?php echo htmlspecialchars('/QuanLySV/assets/img/logo1.png'); ?>">
                                     </span>
                                     <div class="media-body flex-grow-1">
                                         <p class="noti-details">
@@ -170,7 +170,7 @@ $profilePicture = "/network-management/assets/" . htmlspecialchars($userData['pr
                     </ul>
                 </div>
                 <div class="topnav-dropdown-footer">
-                    <a href="/network-management/views/viewAll_noti.php">Xem tất cả</a>
+                    <a href="/QuanLySV/views/viewAll_noti.php">Xem tất cả</a>
                 </div>
             </div>
         </li>
@@ -197,11 +197,11 @@ $profilePicture = "/network-management/assets/" . htmlspecialchars($userData['pr
                         </div>
                     </div>
                     <hr class="m-0">
-                    <a class="dropdown-item" href="/network-management/views/profile.php"><i class="me-2"
+                    <a class="dropdown-item" href="/QuanLySV/views/profile.php"><i class="me-2"
                             data-feather="user"></i>Hồ sơ cá nhân</a>
                     <hr class="m-0">
-                    <a class="dropdown-item logout pb-0" href="/network-management/views/auth/logout.php"><img
-                            src="/network-management/assets/img/icons/log-out.svg" class="me-2" alt="Logout">Đăng
+                    <a class="dropdown-item logout pb-0" href="/QuanLySV/views/auth/logout.php"><img
+                            src="/QuanLySV/assets/img/icons/log-out.svg" class="me-2" alt="Logout">Đăng
                         xuất</a>
                 </div>
             </div>
@@ -213,8 +213,8 @@ $profilePicture = "/network-management/assets/" . htmlspecialchars($userData['pr
         <a href="javascript:void(0);" class="nav-link dropdown-toggle" data-bs-toggle="dropdown"
             aria-expanded="false"><i class="fa fa-ellipsis-v"></i></a>
         <div class="dropdown-menu dropdown-menu-right">
-            <a class="dropdown-item" href="/network-management/views/profile.php">Hồ sơ cá nhân</a>
-            <a class="dropdown-item" href="/network-management/views/auth/logout.php">Dăng xuất </a>
+            <a class="dropdown-item" href="/QuanLySV/views/profile.php">Hồ sơ cá nhân</a>
+            <a class="dropdown-item" href="/QuanLySV/views/auth/logout.php">Dăng xuất </a>
         </div>
     </div>
 </div>

@@ -32,12 +32,12 @@ switch (strtolower($userData['role'])) {
     case 'admin':
         $dashboardUrl = '/QuanLySV/views/admin/dashboard.php';
         break;
-    // case 'staff':
-    //     $dashboardUrl = '/QuanLySV/views/staff/staff.php';
-    //     break;
-    // case 'technician':
-    //     $dashboardUrl = '/QuanLySV/views/technician/technician.php';
-    //     break;
+    case 'staff':
+        $dashboardUrl = '/QuanLySV/views/staff/staff.php';
+        break;
+    case 'technician':
+        $dashboardUrl = '/QuanLySV/views/technician/technician.php';
+        break;
 }
 
 $deviceListUrl = '';
@@ -45,12 +45,12 @@ switch (strtolower($userData['role'])) {
     case 'admin':
         $deviceListUrl = '/QuanLySV/views/admin/devices.php';
         break;
-    // case 'staff':
-    //     $deviceListUrl = '/QuanLySV/views/staff/devicesStaff.php';
-    //     break;
-    // case 'technician':
-    //     $deviceListUrl = '/QuanLySV/views/technician/devicesTech.php';
-    //     break;
+    case 'staff':
+        $deviceListUrl = '/QuanLySV/views/staff/devicesStaff.php';
+        break;
+    case 'technician':
+        $deviceListUrl = '/QuanLySV/views/technician/devicesTech.php';
+        break;
 }
 ?>
 
@@ -65,7 +65,7 @@ switch (strtolower($userData['role'])) {
         content="admin, estimates, bootstrap, business, corporate, creative, invoice, html5, responsive, Projects">
     <meta name="author" content="Dreamguys - Bootstrap Admin Template">
     <meta name="robots" content="noindex, nofollow">
-    <title>Trang hồ sơ cá nhân</title>
+    <title>Profile - Network Management</title>
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
@@ -83,9 +83,9 @@ switch (strtolower($userData['role'])) {
 </head>
 
 <body>
-    <div id="global-loader">
+    <!-- <div id="global-loader">
         <div class="whirly-loader"></div>
-    </div>
+    </div> -->
 
     <div class="main-wrapper">
         <?php
