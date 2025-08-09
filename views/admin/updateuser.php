@@ -142,8 +142,8 @@ if ($show_error_toast) unset($_SESSION['error_message']);
             <div class="content">
                 <div class="page-header">
                     <div class="page-title">
-                        <h4>Cập nhật thông tin người dùng</h4>
-                        <h6>Trang cập nhật thông tin người dùng cho Admin</h6>
+                        <h4>Cập nhật thông tin sinh viên</h4>
+                        <h6>Trang cập nhật thông tin sinh viên cho Admin</h6>
                     </div>
                 </div>
 
@@ -187,7 +187,7 @@ if ($show_error_toast) unset($_SESSION['error_message']);
                                             value="<?php echo $email; ?>">
                                     </div>
                                 </div>
-                                <div class="col-lg-6 col-sm-12 col-12">
+                                <!-- <div class="col-lg-6 col-sm-12 col-12">
                                     <div class="form-group">
                                         <label>Vai trò</label>
                                         <select class="form-select" name="role">
@@ -200,9 +200,9 @@ if ($show_error_toast) unset($_SESSION['error_message']);
                                             <!-- <option value="admin"
                                                 <?php if ($currentRole === 'admin') echo 'selected'; ?>>
                                                 Quản trị viên</option> -->
-                                        </select>
+                                <!-- </select>
                                     </div>
-                                </div>
+                                </div> -->
                                 <div class="col-lg-12">
                                     <button type="submit" class="btn btn-primary me-2">Cập nhật</button>
                                     <a href="userlists.php" class="btn btn-secondary">Hủy</a>

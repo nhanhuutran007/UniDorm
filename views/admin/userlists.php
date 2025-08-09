@@ -46,7 +46,7 @@ if ($show_error_toast) unset($_SESSION['error_message']);
 <head>
     <meta charset="utf-8">
     <link rel="shortcut icon" type="image/x-icon" href="../../assets/img/favicon.svg">
-    <title>Trang quản lý người dùng</title>
+    <title>Trang quản lý sinh viên</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
@@ -120,12 +120,12 @@ if ($show_error_toast) unset($_SESSION['error_message']);
             <div class="content">
                 <div class="page-header">
                     <div class="page-title">
-                        <h4>Danh sách người dùng</h4>
-                        <h6>Quản lý người dùng của bạn</h6>
+                        <h4>Danh sách sinh viên</h4>
+                        <h6>Quản lý sinh viên của bạn</h6>
                     </div>
                     <div class="page-btn">
                         <a href="./newuser.php" class="btn btn-added">
-                            <img src="../../assets/img/icons/plus.svg" alt="img">Thêm người dùng
+                            <img src="../../assets/img/icons/plus.svg" alt="img">Thêm sinh viên
                         </a>
                     </div>
                 </div>
@@ -221,11 +221,8 @@ if ($show_error_toast) unset($_SESSION['error_message']);
                                 <thead>
                                     <tr>
                                         <th>Id</th>
-                                        <th>Username</th>
                                         <th>Họ tên</th>
                                         <th>Email</th>
-                                        <th>Vai trò</th>
-                                        <th>Ngày tạo</th>
                                         <th>Trạng thái</th>
                                         <th>Thao tác</th>
                                     </tr>
@@ -236,11 +233,9 @@ if ($show_error_toast) unset($_SESSION['error_message']);
                                         $is_disabled = empty($user['username']) ? 'disabled' : ''; ?>
                                     <tr>
                                         <td><?php echo htmlspecialchars($user['user_id']); ?></td>
-                                        <td><?php echo htmlspecialchars($user['username']); ?></td>
                                         <td><?php echo htmlspecialchars($user['fullname']); ?></td>
                                         <td><?php echo htmlspecialchars($user['email']); ?></td>
-                                        <td><?php echo htmlspecialchars($user['role']); ?></td>
-                                        <td><?php echo htmlspecialchars($user['created_at'] ?? 'N/A'); ?></td>
+
                                         <td>
                                             <span
                                                 class="<?php echo ($user['status'] == 'active') ? 'bg-lightgreen badges' : 'bg-lightred badges'; ?>">

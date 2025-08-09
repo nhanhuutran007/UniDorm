@@ -40,11 +40,11 @@ switch ($role) {
             ],
             'submenu' => [
                 [
-                    'title' => 'Người dùng',
+                    'title' => 'Sinh viên',
                     'icon' => 'users1.svg',
                     'items' => [
-                        ['title' => 'Thêm người dùng mới', 'url' => '/QuanLySV/views/admin/newuser.php'],
-                        ['title' => 'Danh sách người dùng', 'url' => '/QuanLySV/views/admin/userlists.php']
+                        ['title' => 'Thêm sinh viên mới', 'url' => '/QuanLySV/views/admin/newuser.php'],
+                        ['title' => 'Danh sách sinh viên', 'url' => '/QuanLySV/views/admin/userlists.php']
                     ]
                 ],
                 [

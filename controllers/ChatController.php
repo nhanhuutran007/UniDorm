@@ -6,7 +6,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 require_once __DIR__ . '/../models/MessageModel.php';
-require_once __DIR__ . '/../functions/device_notification/DeviceNotificationManager.php';
+// require_once __DIR__ . '/../functions/device_notification/DeviceNotificationManager.php';
 
 class ChatController
 {
@@ -21,7 +21,7 @@ class ChatController
         if (!$this->db instanceof mysqli) {
             throw new Exception("Database connection failed: " . mysqli_connect_error());
         }
-        $this->deviceNotificationManager = new DeviceNotificationManager($this->db);
+        // $this->deviceNotificationManager = new DeviceNotificationManager($this->db);
     }
 
     private function getDatabaseConnection()
