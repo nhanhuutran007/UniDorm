@@ -57,14 +57,29 @@ class UserModel {
 
     public function getUsers($searchParams = []) {
         try {
-            $query = "SELECT user_id, room, username, profile_picture, fullname, email, status, role 
+            $query = "SELECT user_id, room, num_bed, hometown, username, profile_picture, fullname, email, status, role 
                      FROM users WHERE username IS NOT NULL AND username != ''";
             $params = [];
             $types = '';
 
-              if (!empty($searchParams['room'])) {
+            if (!empty($searchParams['id'])) {
+                $query .= " AND user_id = ?";
+                $params[] = $searchParams['id'];
+                $types .= 'i';
+            }
+            if (!empty($searchParams['room'])) {
                 $query .= " AND room = ?";
                 $params[] = $searchParams['room'];
+                $types .= 's';
+            }
+            if (!empty($searchParams['num_bed'])) {
+                $query .= " AND num_bed = ?";
+                $params[] = $searchParams['num_bed'];
+                $types .= 's';
+            }
+            if (!empty($searchParams['hometown'])) {
+                $query .= " AND hometown LIKE ?";
+                $params[] = '%' . $searchParams['hometown'] . '%';
                 $types .= 's';
             }
 

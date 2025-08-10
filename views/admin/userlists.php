@@ -237,12 +237,14 @@ if ($show_error_toast) unset($_SESSION['error_message']);
                             <table class="table datanew">
                                 <thead>
                                     <tr>
-
                                         <th>Phòng</th>
+                                        <th>Mã HV</th>
                                         <th>Họ tên</th>
+                                        <th>Số giường</th>
+                                        <th>Quê quán</th>
                                         <th>Email</th>
-                                        <th>Trạng thái</th>
                                         <th>Thao tác</th>
+
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -250,17 +252,19 @@ if ($show_error_toast) unset($_SESSION['error_message']);
                                     <?php foreach ($users as $user): 
                                         $is_disabled = empty($user['username']) ? 'disabled' : ''; ?>
                                     <tr>
-
                                         <td><?php echo htmlspecialchars($user['room']); ?></td>
+                                        <td><?php echo htmlspecialchars($user['user_id']); ?></td>
                                         <td><?php echo htmlspecialchars($user['fullname']); ?></td>
+                                        <td><?php echo htmlspecialchars($user['num_bed']); ?></td>
+                                        <td><?php echo htmlspecialchars($user['hometown']); ?></td>
                                         <td><?php echo htmlspecialchars($user['email']); ?></td>
 
-                                        <td>
+                                        <!-- <td>
                                             <span
                                                 class="<?php echo ($user['status'] == 'active') ? 'bg-lightgreen badges' : 'bg-lightred badges'; ?>">
                                                 <?php echo htmlspecialchars($user['status'] == 'active' ? 'Kích hoạt' : 'Khóa'); ?>
                                             </span>
-                                        </td>
+                                        </td> -->
                                         <td>
                                             <a class="me-3"
                                                 href="updateuser.php?username=<?php echo urlencode($user['username']); ?>">
