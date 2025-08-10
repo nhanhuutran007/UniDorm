@@ -134,18 +134,38 @@ class UserModel {
 
     public function updateUser($username, $data) {
         try {
-            $query = "UPDATE users SET fullname = ?, email = ?, role = ? WHERE username = ?";
+            // Kiểm tra dữ liệu đầu vào
+            $requiredFields = ['fullname', 'room', 'user_id', 'email', 'num_bed', 'hometown'];
+            foreach ($requiredFields as $field) {
+                if (!isset($data[$field])) {
+                    throw new InvalidArgumentException("Thiếu trường dữ liệu: $field");
+                }
+            }
+
+            // Sắp xếp lại thứ tự truyền vào cho đúng với câu lệnh SQL
+            $query = "UPDATE users SET fullname = ?, room = ?, email = ?, num_bed = ?, hometown = ? WHERE username = ?";
             $stmt = $this->db->prepare($query);
-            $stmt->bind_param(
-                "ssss",
-                $data['fullname'],
-                $data['email'],
-                $data['role'],
-                $username
-            );
+            if (!$stmt) {
+                throw new Exception("Lỗi prepare: " . $this->db->error);
+            }
+
+            // fullname (s), room (s), email (s), num_bed (s), hometown (s), username (s)
+           $stmt->bind_param(
+            "ssssss",
+            $data['fullname'],
+            $data['room'],
+            $data['email'],
+            $data['num_bed'],
+            $data['hometown'],
+            $username
+        );
+
             $result = $stmt->execute();
+            if (!$result) {
+                throw new Exception("Lỗi execute: " . $stmt->error);
+            }
             $stmt->close();
-            return $result;
+            return true;
         } catch (Exception $e) {
             error_log("Error updating user: " . $e->getMessage());
             return false;
@@ -235,7 +255,7 @@ class UserModel {
     
             $user_id = $user['user_id'];
     
-            $delete_query = "UPDATE users SET username = NULL, email = NULL, phone_number = NULL, profile_picture = NULL, birthday = NULL, gender = NULL, status = 'ban' WHERE username = ?";
+            $delete_query = "UPDATE users SET username = NULL, email = NULL, phone_number = NULL, profile_picture = NULL, num_bed = NULL, hometown = NULL, status = 'ban' WHERE username = ?";
             $stmt = $this->db->prepare($delete_query);
             $stmt->bind_param("s", $username);
             $delete_success = $stmt->execute();

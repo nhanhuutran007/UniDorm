@@ -37,7 +37,7 @@ class AuthResetModel {
         $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
         $domain = $_SERVER['HTTP_HOST']; // Lấy domain hiện tại 
         $base_url = $protocol . $domain; 
-        $reset_link = " $base_url/network-management/index.php?route=reset&token=" . urlencode($token);
+        $reset_link = " $base_url/QuanLySV/index.php?route=reset&token=" . urlencode($token);
         
         $mail = new PHPMailer(true);
         $mail->CharSet = 'UTF-8';

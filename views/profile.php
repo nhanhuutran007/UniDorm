@@ -156,14 +156,8 @@ switch (strtolower($userData['role'])) {
                                             value="<?php echo htmlspecialchars($userData['phone_number']); ?>">
                                     </div>
                                 </div>
-                                <div class="col-lg-6 col-sm-12">
-                                    <div class="form-group">
-                                        <label>Ngày sinh</label>
-                                        <input type="date" name="birthday" class="form-control"
-                                            value="<?php echo htmlspecialchars($userData['birthday']); ?>">
-                                    </div>
-                                </div>
-                                <div class="col-lg-6 col-sm-12">
+
+                                <!-- <div class="col-lg-6 col-sm-12">
                                     <div class="form-group">
                                         <label>Giới tính</label>
                                         <select name="gender" class="form-select">
@@ -178,7 +172,7 @@ switch (strtolower($userData['role'])) {
                                             </option>
                                         </select>
                                     </div>
-                                </div>
+                                </div> -->
                             </div>
 
                             <h5 class="mt-4">Cập nhật mật khẩu</h5>
