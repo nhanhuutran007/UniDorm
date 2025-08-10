@@ -1,5 +1,4 @@
 
-
 INSERT INTO `users` (`user_id`, `room`, `username`, `fullname`, `email`, `phone_number`, `role`, `profile_picture`, `birthday`, `gender`, `status`, `created_by`, `created_at`, `updated_at`) VALUES
 (1, 'A101', 'nguyen.van.an', 'Nguyễn Văn An', 'nguyen.van.an@gmail.com', '0912345671', 'admin', 'images/default.jpg', '1985-03-15', 'male', 'active', NULL, '2025-04-26 10:39:50', '2025-05-04 10:19:20'),
 (2, 'B202', '', 'Trần Thị Biển', NULL, NULL, 'staff', 'images/default.jpg', NULL, NULL, 'ban', 1, '2025-04-26 10:39:50', '2025-05-04 10:19:20'),

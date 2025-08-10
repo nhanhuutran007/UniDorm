@@ -2,7 +2,7 @@
 $host = "localhost"; // MySQL Server
 $user = "root";      // Default MySQL username (XAMPP)
 $pass = "";          // Password (empty if using XAMPP)
-$dbname = "network_management"; // Database name
+$dbname = "quanlysv"; // Database name
 
 $conn = new mysqli($host, $user, $pass, $dbname);
 

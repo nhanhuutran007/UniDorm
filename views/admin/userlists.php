@@ -29,7 +29,24 @@ if (isset($_GET['toggle_status']) && isset($_GET['username']) && $_SESSION['role
 
 $userController = new UserController();
 $users = $userController->getUsers($_GET); // Lấy danh sách người dùng thông qua controller
+// Sắp xếp theo số phòng (room) alphabet
+usort($users, function($a, $b) {
+    // Tách phần chữ và số
+    preg_match('/^([A-Za-z]+)(\d+)/', $a['room'], $matchesA);
+    preg_match('/^([A-Za-z]+)(\d+)/', $b['room'], $matchesB);
 
+    $prefixA = $matchesA[1] ?? $a['room'];
+    $prefixB = $matchesB[1] ?? $b['room'];
+    $numA = isset($matchesA[2]) ? intval($matchesA[2]) : 0;
+    $numB = isset($matchesB[2]) ? intval($matchesB[2]) : 0;
+
+    // So sánh phần chữ trước
+    if ($prefixA === $prefixB) {
+        // Nếu cùng phòng, so sánh số
+        return $numA - $numB;
+    }
+    return strcmp($prefixA, $prefixB);
+});
 // Xử lý thông báo toast
 $show_success_toast = isset($_SESSION['success_message']);
 $show_error_toast = isset($_SESSION['error_message']);
@@ -220,7 +237,8 @@ if ($show_error_toast) unset($_SESSION['error_message']);
                             <table class="table datanew">
                                 <thead>
                                     <tr>
-                                        <th>Id</th>
+
+                                        <th>Phòng</th>
                                         <th>Họ tên</th>
                                         <th>Email</th>
                                         <th>Trạng thái</th>
@@ -232,7 +250,8 @@ if ($show_error_toast) unset($_SESSION['error_message']);
                                     <?php foreach ($users as $user): 
                                         $is_disabled = empty($user['username']) ? 'disabled' : ''; ?>
                                     <tr>
-                                        <td><?php echo htmlspecialchars($user['user_id']); ?></td>
+
+                                        <td><?php echo htmlspecialchars($user['room']); ?></td>
                                         <td><?php echo htmlspecialchars($user['fullname']); ?></td>
                                         <td><?php echo htmlspecialchars($user['email']); ?></td>
 
