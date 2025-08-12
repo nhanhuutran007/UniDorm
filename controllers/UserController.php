@@ -26,48 +26,54 @@ class UserController {
         $show_error_toast = false;
         $error_message = "";
 
-        if ($_SERVER["REQUEST_METHOD"] == "POST") {
+        if ($_SERVER["REQUEST_METHOD"] === "POST") {
+            $username = trim($_POST['username'] ?? '');
+            $room = trim($_POST['room'] ?? '');
+            $fullname = trim($_POST['fullname'] ?? '');
+            $email = trim($_POST['email'] ?? '');
+            $phone_number = trim($_POST['phone_number'] ?? '');
+            $num_bed = intval($_POST['num_bed'] ?? 0);
+            $hometown = trim($_POST['hometown'] ?? '');
+            $created_by = $_SESSION['username'] ?? null;
+
+            // Validate required fields
+            if (empty($username)) {
+            $show_error_toast = true;
+            $error_message = "Tên đăng nhập không được để trống.";
+            } else {
+            $profile_picture = $this->handleProfilePictureUpload($_FILES['profile_picture'] ?? null, $username) ?: 'images/default.jpg';
+
             $data = [
-                'username' => $_POST['username'],
-                'password' => $_POST['password'] ?? '',
-                'fullname' => $_POST['fullname'] ?: NULL,
-                'email' => $_POST['email'] ?: NULL,
-                'phone_number' => $_POST['phone_number'] ?: NULL,
-                'role' => $_POST['role'],
-                'birthday' => $_POST['birthday'] ?: NULL,
-                'gender' => $_POST['gender'] ?: NULL,
-                'status' => $_POST['status'],
-                'profile_picture' => $this->handleProfilePictureUpload($_FILES['profile_picture'] ?? null, $_POST['username']) ?: 'images/default.jpg'
+                'username' => $username,
+                'room' => $room ?: NULL,
+                'fullname' => $fullname ?: NULL,
+                'email' => $email ?: NULL,
+                'phone_number' => $phone_number ?: NULL,
+                'profile_picture' => $profile_picture,
+                'num_bed' => $num_bed,
+                'hometown' => $hometown ?: NULL,
+                'created_by' => $created_by
             ];
 
-            if (empty($data['password'])) {
-                $show_error_toast = true;
-                $error_message = "Mật khẩu không được để trống.";
-            } elseif (strlen($data['password']) < 6) {
-                $show_error_toast = true;
-                $error_message = "Mật khẩu phải có ít nhất 6 ký tự.";
-            } elseif ($data['email'] && $this->userModel->checkEmailExists($data['email'])) {
-                $show_error_toast = true;
-                $error_message = "Email đã tồn tại! Vui lòng sử dụng email khác.";
-            } else {
+            try {
                 $user_id = $this->userModel->createUser($data);
-
-                $hashed_password = password_hash($data['password'], PASSWORD_DEFAULT);
-                $is_active = ($data['status'] === 'active') ? 1 : 0;
-
-                if ($this->userModel->createAuthAccount($user_id, $hashed_password, $is_active)) {
-                    $show_success_toast = true;
+                if ($user_id) {
+                $show_success_toast = true;
                 } else {
-                    $show_error_toast = true;
-                    $error_message = "Lỗi khi tạo tài khoản xác thực.";
+                $show_error_toast = true;
+                $error_message = "Tạo người dùng thất bại.";
                 }
+            } catch (Exception $e) {
+                $show_error_toast = true;
+                $error_message = "Lỗi: " . $e->getMessage();
+            }
             }
         }
 
         return [
             'show_success_toast' => $show_success_toast,
             'show_error_toast' => $show_error_toast,
-            'error_message' => $error_message  
+            'error_message' => $error_message
         ];
     }
 

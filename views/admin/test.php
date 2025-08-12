@@ -1,147 +1,42 @@
 <?php
-//path: views/admin/updateuser.php
-
-require_once __DIR__ . '/../../includes/db.php';
 require_once __DIR__ . '/../../controllers/UserController.php';
-
-// Kiểm tra quyền truy cập (chỉ admin mới có quyền)
-if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'admin') {
-    header("Location: /network-management/auth/login.php"); 
+// Kiểm tra đăng nhập
+if (!isset($_SESSION['user_id'])) {
+    header("Location: /network-management/auth/login.php");
     exit();
 }
 
-// Khởi tạo UserController
 $userController = new UserController();
+$response = $userController->handleFormSubmission();
 
-// Lấy username từ URL (GET)
-$usernameToEdit = $_GET['username'] ?? null;
-
-// Lấy thông tin người dùng đang đăng nhập
-$loggedInUsername = $_SESSION['username'] ?? null;
-$loggedInRole = $_SESSION['role'] ?? null;
-
-// Xử lý yêu cầu cập nhật thông tin người dùng qua POST
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    header('Content-Type: application/json');
-
-    try {
-        $usernameToUpdate = $_POST['username'] ?? null;
-        $fullname = $_POST['fullname'] ?? null;
-        $email = $_POST['email'] ?? null;
-        $user_id = $_POST['user_id'] ?? null;
-        $room = $_POST['room'] ?? null; 
-
-        // $newRole = $_POST['role'] ?? 'staff'; // Mặc định là nhân viên
-
-        if (!$usernameToUpdate) {
-            throw new Exception("Không tìm thấy username người dùng để cập nhật.");
-        }
-
-        // Lấy thông tin người dùng đang được chỉnh sửa
-        $userToEdit = $userController->getUserByUsername($usernameToUpdate);
-        if (!$userToEdit) {
-            throw new Exception("Không tìm thấy thông tin người dùng với username: " . htmlspecialchars($usernameToUpdate));
-        }
-
-        $currentRoleOfUserToEdit = $userToEdit['role'] ?? 'staff';
-
-        // Kiểm tra logic: Admin không được phép sửa role của Admin khác
-        if ($loggedInRole === 'admin' && $currentRoleOfUserToEdit === 'admin' && $usernameToUpdate !== $loggedInUsername) {
-            throw new Exception("Quản trị viên không được phép thay đổi vai trò của quản trị viên khác.");
-        }
-
-        $data = [];
-        if ($fullname !== null && $fullname !== '') {
-            $data['fullname'] = $fullname;
-        }
-        if ($user_id !== null && $user_id !== '') {
-            $data['user_id'] = $user_id;
-        }
-        if ($email !== null && $email !== '') {
-            $data['email'] = $email;
-        }
-        if ($room = $_POST['room'] ?? null) {
-            $data['room'] = $room; 
-        }
-        if ($num_bed = $_POST['num_bed'] ?? null) {
-            $data['num_bed'] = (int)$num_bed; // Chuyển đổi sang số nguyên
-        }
-        if ($hometown = $_POST['hometown'] ?? null) {
-            $data['hometown'] = $hometown;
-        }
-
-        if (empty($data)) {
-            throw new Exception("Không có thông tin nào được gửi để cập nhật.");
-        }
-
-        // Gọi trực tiếp phương thức editUser
-        if ($userController->editUser($usernameToUpdate, $data)) {
-            echo json_encode([
-                'status' => 'success',
-                'message' => 'Cập nhật thông tin thành công!'
-            ]);
-        } else {
-            echo json_encode([
-                'status' => 'error',
-                'message' => 'Lỗi khi cập nhật thông tin!'
-            ]);
-        }
-
-    } catch (Exception $e) {
-        error_log("Lỗi trong updateUser.php: " . $e->getMessage());
-        echo json_encode([
-            'status' => 'error',
-            'message' => 'Lỗi hệ thống: ' . $e->getMessage()
-        ]);
-    }
-
-    ob_end_flush();
-    exit();
-}
-
-// Lấy thông tin người dùng để hiển thị trong form
-if (!$usernameToEdit) {
-    die("<div class='alert alert-danger'>Không tìm thấy username người dùng!</div>");
-}
-
-$user = $userController->getUserByUsername($usernameToEdit);
-
-if (!$user) {
-    die("<div class='alert alert-danger'>Không tìm thấy thông tin người dùng với username: " . htmlspecialchars($usernameToEdit) . "</div>");
-}
-
-$user_id = htmlspecialchars($user['user_id'] ?? '');
-$fullname = htmlspecialchars($user['fullname'] ?? '');
-$email = htmlspecialchars($user['email'] ?? '');
-$num_bed = (int)($user['num_bed'] ?? 1); 
-$hometown = htmlspecialchars($user['hometown'] ?? '');
-$room = htmlspecialchars($user['room'] ?? '');
-
-// Xử lý thông báo toast 
-$show_success_toast = isset($_SESSION['success_message']);
-$show_error_toast = isset($_SESSION['error_message']);
-$success_message = $show_success_toast ? $_SESSION['success_message'] : '';
-$error_message = $show_error_toast ? $_SESSION['error_message'] : '';
-
-if ($show_success_toast) unset($_SESSION['success_message']);
-if ($show_error_toast) unset($_SESSION['error_message']);
-
+$show_success_toast = $response['show_success_toast'];
+$show_error_toast = $response['show_error_toast'];
+$error_message = $response['error_message'];
 ?>
-
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cập nhật thông tin người dùng</title>
+    <meta charset="utf-8">
+    <title>Trang thêm sinh viên mới</title>
+
     <link rel="shortcut icon" type="image/x-icon" href="../../assets/img/favicon.svg">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-    <link rel="stylesheet" href="/network-management/assets/css/style.css">
-    <style>
-    </style>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+        integrity="sha512-c42qTSw/wiW5oaDSLFhn5z7mS0bIX7PB87LWBRH5iA/YB4iR8v+QYq5uTNkO5D3n4CW4S996zAqRpWIcLtYAiRw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- DataTables Bootstrap 5 CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+        integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="../../assets/css/style.css">
 </head>
 
 <body>
@@ -155,90 +50,119 @@ if ($show_error_toast) unset($_SESSION['error_message']);
 
         <div class="page-wrapper">
             <div class="content">
-                <div class="page-header">
-                    <div class="page-title">
-                        <h4>Cập nhật thông tin sinh viên</h4>
-                        <h6>Trang cập nhật thông tin sinh viên cho Admin</h6>
+                <!-- Toast Container -->
+                <div class="position-fixed top-0 end-0 p-3" style="z-index: 1050">
+                    <!-- Success Toast -->
+                    <?php if ($show_success_toast): ?>
+                    <div id="successToast" class="toast align-items-center text-white bg-success border-0 show"
+                        role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                <i class="fas fa-check-circle me-2"></i> Thêm sinh viên mới thành công!
+                            </div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                                aria-label="Close"></button>
+                        </div>
                     </div>
+                    <?php endif; ?>
+                    <!-- Error Toast -->
+                    <?php if ($show_error_toast): ?>
+                    <div id="errorToast" class="toast align-items-center text-white bg-danger border-0 show"
+                        role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                <i class="fas fa-exclamation-circle me-2"></i> <span
+                                    id="errorMessage"><?php echo htmlspecialchars($error_message); ?></span>
+                            </div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                                aria-label="Close"></button>
+                        </div>
+                    </div>
+                    <?php endif; ?>
                 </div>
 
-                <div class="toast-container position-fixed top-0 end-0 p-3">
-                    <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert">
-                        <div class="d-flex">
-                            <div class="toast-body"></div> <button type="button"
-                                class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-                        </div>
-                    </div>
-                    <div id="errorToast" class="toast align-items-center text-white bg-danger border-0" role="alert">
-                        <div class="d-flex">
-                            <div class="toast-body"></div> <button type="button"
-                                class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-                        </div>
+                <div class="page-header">
+                    <div class="page-title">
+                        <h4>Quản lý sinh viên</h4>
+                        <h6>Thêm sinh viên mới </h6>
                     </div>
                 </div>
 
                 <div class="card">
                     <div class="card-body">
-                        <form id="updateUserForm" method="POST">
+                        <form method="POST" action="" enctype="multipart/form-data">
                             <div class="row">
-                                <div class="col-lg-6 col-sm-12 col-12">
+                                <div class="col-lg-3 col-sm-6 col-12">
                                     <div class="form-group">
-                                        <label>Username <span class="text-danger">*</span></label>
-                                        <input type="text" name="username" class="form-control" readonly
-                                            value="<?php echo htmlspecialchars($usernameToEdit ?? ''); ?>">
+                                        <label>Tên người dùng</label>
+                                        <input type="text" name="username" class="form-control" required>
                                     </div>
-                                </div>
-                                <div class="col-lg-6 col-sm-12 col-12">
                                     <div class="form-group">
-                                        <label>Mã HV</label>
-                                        <input type="text" name="user_id" class="form-control"
-                                            value="<?php echo $user_id; ?>">
+                                        <label>Mật khẩu</label>
+                                        <input type="password" name="password" class="form-control" required>
                                     </div>
-                                </div>
-                                <div class="col-lg-6 col-sm-12 col-12">
                                     <div class="form-group">
                                         <label>Họ và tên</label>
-                                        <input type="text" name="fullname" class="form-control"
-                                            value="<?php echo $fullname; ?>">
+                                        <input type="text" name="fullname" class="form-control">
                                     </div>
-                                </div>
-                                <div class="col-lg-6 col-sm-12 col-12">
                                     <div class="form-group">
                                         <label>Email</label>
-                                        <input type="text" name="email" class="form-control"
-                                            value="<?php echo $email; ?>">
+                                        <input type="email" name="email" class="form-control">
                                     </div>
                                 </div>
-                                <div class="col-lg-6 col-sm-12 col-12">
+                                <div class="col-lg-3 col-sm-6 col-12">
                                     <div class="form-group">
-                                        <label>Số phòng</label>
-                                        <input type="text" name="room" class="form-control"
-                                            value="<?php echo $room; ?>">
-
+                                        <label>Điện thoại</label>
+                                        <input type="text" name="phone_number" class="form-control">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Vai trò</label>
+                                        <select class="form-select" name="role" required>
+                                            <option value="">Chọn</option>
+                                            <option value="admin">Admin</option>
+                                            <option value="staff">Staff</option>
+                                            <option value="technician">Technician</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Ngày sinh</label>
+                                        <input type="date" name="birthday" class="form-control">
                                     </div>
                                 </div>
-                                <div class="col-lg-6 col-sm-12 col-12">
+                                <div class="col-lg-3 col-sm-6 col-12">
                                     <div class="form-group">
-                                        <label>Số giường</label>
-                                        <select class="form-select" name="num_bed">
-                                            <?php
-                                            for ($i = 1; $i <= 6; $i++) {
-                                                echo '<option value="' . $i . '" ' . ($num_bed === $i ? 'selected' : '') . '>' . $i . '</option>';
-                                            }
-                                            ?>
+                                        <label>Giới tính</label>
+                                        <select class="form-select" name="gender">
+                                            <option value="">Chọn</option>
+                                            <option value="male">Male</option>
+                                            <option value="female">Female</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Trạng thái</label>
+                                        <select class="form-select" name="status" required>
+                                            <option value="active">Active</option>
+                                            <option value="inactive">Inactive</option>
+                                            <option value="ban">Ban</option>
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-lg-6 col-sm-12 col-12">
+                                <div class="col-lg-3 col-sm-6 col-12">
                                     <div class="form-group">
-                                        <label>Quê quán</label>
-                                        <input type="text" name="hometown" class="form-control"
-                                            value="<?php echo $hometown; ?>">
+                                        <label>Profile Picture</label>
+                                        <div class="image-upload image-upload-new">
+                                            <input type="file" name="profile_picture" class="form-control">
+                                            <div class="image-uploads">
+                                                <img src="../../assets/img/icons/upload.svg" alt="img">
+                                                <h4>Drag and drop a file to upload</h4>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="col-lg-12">
-                                    <button type="submit" class="btn btn-primary me-2">Cập nhật</button>
-                                    <a href="userlists.php" class="btn btn-secondary">Hủy</a>
+                                    <button type="submit" class="btn btn-primary me-2">Tạo</button>
+                                    <a href="newuser.php" class="btn btn-secondary">Hủy</a>
                                 </div>
                             </div>
                         </form>
@@ -248,70 +172,48 @@ if ($show_error_toast) unset($_SESSION['error_message']);
         </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+        integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.1/feather.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jQuery-slimScroll/1.3.8/jquery.slimscroll.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous">
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.44.0/dist/apexcharts.min.js"></script>
     <script src="../../assets/js/script.js"></script>
+
+    <!-- JavaScript để hiển thị Toast -->
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const loader = document.getElementById('global-loader');
-        setTimeout(() => {
-            loader.classList.add('hidden');
-        }, 500);
-
-        const successToast = new bootstrap.Toast(document.getElementById('successToast'), {
-            delay: 4000
-        });
-        const errorToast = new bootstrap.Toast(document.getElementById('errorToast'), {
-            delay: 4000
+        // Khởi tạo Success Toast
+        var successToast = document.getElementById('successToast');
+        var successToastInstance = new bootstrap.Toast(successToast, {
+            autohide: true,
+            delay: 4000 // Toast sẽ tự động ẩn sau 3 giây
         });
 
-        $("#updateUserForm").on('submit', function(event) {
-            event.preventDefault();
-            const formData = new FormData(this);
-            const submitButton = this.querySelector('button[type="submit"]');
-            submitButton.disabled = true;
-
-            $.ajax({
-                url: window.location.pathname +
-                    '?username=<?php echo urlencode($usernameToEdit ?? ''); ?>',
-                type: "POST",
-                data: formData,
-                processData: false,
-                contentType: false,
-                dataType: "json",
-                success: function(response) {
-                    submitButton.disabled = false;
-                    if (response.status === 'success') {
-                        successToast._element.querySelector('.toast-body').textContent =
-                            response.message;
-                        successToast.show();
-                        // Thêm logic chuyển hướng sau khi hiển thị toast
-                        setTimeout(() => {
-                            window.location.href = 'userlists.php';
-                        }, 500); // Chuyển hướng sau 2 giây để người dùng thấy thông báo
-                    } else {
-                        errorToast._element.querySelector('.toast-body').textContent =
-                            response.message;
-                        errorToast.show();
-                    }
-                },
-                error: function(xhr, status, error) {
-                    submitButton.disabled = false;
-                    console.error('AJAX Error:', xhr.responseText);
-                    errorToast._element.querySelector('.toast-body').textContent =
-                        "Lỗi hệ thống: " + (xhr.responseJSON?.message ||
-                            'Không thể xử lý yêu cầu');
-                    errorToast.show();
-                }
-            });
+        // Khởi tạo Error Toast
+        var errorToast = document.getElementById('errorToast');
+        var errorToastInstance = new bootstrap.Toast(errorToast, {
+            autohide: true,
+            delay: 4000 // Toast sẽ tự động ẩn sau 3 giây
         });
+
+        // Hiển thị Success Toast nếu thành công
+        <?php if ($show_success_toast): ?>
+        successToastInstance.show();
+        <?php endif; ?>
+
+        // Hiển thị Error Toast nếu có lỗi
+        <?php if ($show_error_toast): ?>
+        errorToastInstance.show();
+        <?php endif; ?>
     });
     </script>
+
+
 </body>
 
 </html>

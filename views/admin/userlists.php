@@ -271,11 +271,11 @@ if ($show_error_toast) unset($_SESSION['error_message']);
                                                 <img src="../../assets/img/icons/edit.svg" alt="img">
                                             </a>
                                             <?php if ($_SESSION['role'] === 'admin'): ?>
-                                            <a class="me-3"
+                                            <!-- <a class="me-3"
                                                 href="?toggle_status=1&username=<?php echo urlencode($user['username']); ?>">
                                                 <img src="../../assets/img/icons/<?php echo ($user['status'] == 'active') ? 'lock' : 'unlock'; ?>.svg"
                                                     alt="img" width="24" height="24">
-                                            </a>
+                                            </a> -->
                                             <?php endif; ?>
                                             <a class="me-3 confirm-text"
                                                 href="deleteUser.php?username=<?php echo urlencode($user['username']); ?>"

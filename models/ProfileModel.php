@@ -16,7 +16,7 @@ class ProfileModel {
     }
 
     public function updateUser($userId, $data) {
-        $query = "UPDATE users SET fullname = ?, email = ?, phone_number = ?, birthday = ?, gender = ?"
+        $query = "UPDATE users SET fullname = ?, email = ?, phone_number = ?"
                 . (isset($data['profile_picture']) ? ", profile_picture = ?" : "")
                 . " WHERE user_id = ?";
         
@@ -25,9 +25,7 @@ class ProfileModel {
         $params = [
             $data['fullname'],
             $data['email'],
-            $data['phone_number'],
-            $data['birthday'],
-            $data['gender'],
+            $data['phone_number']
         ];
         if (isset($data['profile_picture'])) {
             $params[] = $data['profile_picture'];

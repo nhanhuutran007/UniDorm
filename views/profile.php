@@ -156,23 +156,6 @@ switch (strtolower($userData['role'])) {
                                             value="<?php echo htmlspecialchars($userData['phone_number']); ?>">
                                     </div>
                                 </div>
-
-                                <!-- <div class="col-lg-6 col-sm-12">
-                                    <div class="form-group">
-                                        <label>Giới tính</label>
-                                        <select name="gender" class="form-select">
-                                            <option value="male"
-                                                <?php if ($userData['gender'] == 'male') echo 'selected'; ?>>Nam
-                                            </option>
-                                            <option value="female"
-                                                <?php if ($userData['gender'] == 'female') echo 'selected'; ?>>Nữ
-                                            </option>
-                                            <option value="other"
-                                                <?php if ($userData['gender'] == 'other') echo 'selected'; ?>>Khác
-                                            </option>
-                                        </select>
-                                    </div>
-                                </div> -->
                             </div>
 
                             <h5 class="mt-4">Cập nhật mật khẩu</h5>

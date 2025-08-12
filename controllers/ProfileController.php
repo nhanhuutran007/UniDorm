@@ -4,7 +4,7 @@ require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../models/ProfileModel.php';
 
 if (!isset($_SESSION['user_id'])) {
-    header("Location: /network-management/auth/login.php");
+    header("Location: /QuanLySV/auth/login.php");
     exit();
 }
 
@@ -40,12 +40,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
                 $profile_picture = "images/" . $newFileName;
             } else {
                 $_SESSION['error'] = "Lỗi khi tải ảnh hồ sơ lên.";
-                header("Location: /network-management/views/profile.php");
+                header("Location: /QuanLySV/views/profile.php");
                 exit();
             }
         } else {
             $_SESSION['error'] = "Định dạng ảnh không được hỗ trợ.";
-            header("Location: /network-management/views/profile.php");
+            header("Location: /QuanLySV/views/profile.php");
             exit();
         }
     }
@@ -74,23 +74,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
                 $passwordUpdated = $profileModel->updatePassword($userId, $new_password);
                 if (!$passwordUpdated) {
                     $_SESSION['error'] = "Lỗi khi cập nhật mật khẩu.";
-                    header("Location: /network-management/views/profile.php");
+                    header("Location: /QuanLySV/views/profile.php");
                     exit();
                 }
             } else {
                 $_SESSION['error'] = "Mật khẩu cũ không đúng.";
-                header("Location: /network-management/views/profile.php");
+                header("Location: /QuanLySV/views/profile.php");
                 exit();
             }
         } else {
             $_SESSION['error'] = "Mật khẩu mới và xác nhận không khớp.";
-            header("Location: /network-management/views/profile.php");
+            header("Location: /QuanLySV/views/profile.php");
             exit();
         }
     } elseif (!empty($old_password) || !empty($new_password) || !empty($confirm_password)) {
         // Nếu chỉ nhập một phần của mật khẩu thì báo lỗi
         $_SESSION['error'] = "Vui lòng điền đầy đủ thông tin mật khẩu để thay đổi.";
-        header("Location: /network-management/views/profile.php");
+        header("Location: /QuanLySV/views/profile.php");
         exit();
     }
 
@@ -100,12 +100,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
     } else {
         $_SESSION['error'] = "Không có thay đổi nào được thực hiện.";
     }
-    header("Location: /network-management/views/profile.php");
+    header("Location: /QuanLySV/views/profile.php");
     exit();
 } 
 // else {
 //     // Nếu không phải POST request hoặc không có update_profile
-//     header("Location: /network-management/views/profile.php");
+//     header("Location: /QuanLySV/views/profile.php");
 //     exit();
 // }
 ?>

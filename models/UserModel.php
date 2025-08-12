@@ -23,20 +23,19 @@ class UserModel {
     }
 
     public function createUser($data) {
-        $sql = "INSERT INTO users (username, fullname, email, phone_number, role, profile_picture, birthday, gender, status, created_by) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO users (username, room, fullname, email, phone_number, profile_picture, num_bed, hometown, created_by) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $this->db->prepare($sql);
         $stmt->bind_param(
-            "sssssssssi",
+            "ssssssiss",
             $data['username'],
+            $data['room'],
             $data['fullname'],
             $data['email'],
             $data['phone_number'],
-            $data['role'],
             $data['profile_picture'],
-            $data['birthday'],
-            $data['gender'],
-            $data['status'],
+            $data['num_bed'],
+            $data['hometown'],
             $data['created_by']
         );
         $stmt->execute();

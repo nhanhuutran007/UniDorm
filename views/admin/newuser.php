@@ -18,7 +18,7 @@ $error_message = $response['error_message'];
 
 <head>
     <meta charset="utf-8">
-    <title>Trang thêm người dùng mới</title>
+    <title>Trang thêm sinh viên mới</title>
 
     <link rel="shortcut icon" type="image/x-icon" href="../../assets/img/favicon.svg">
 
@@ -58,7 +58,7 @@ $error_message = $response['error_message'];
                         role="alert" aria-live="assertive" aria-atomic="true">
                         <div class="d-flex">
                             <div class="toast-body">
-                                <i class="fas fa-check-circle me-2"></i> Thêm người dùng mới thành công!
+                                <i class="fas fa-check-circle me-2"></i> Thêm sinh viên mới thành công!
                             </div>
                             <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
                                 aria-label="Close"></button>
@@ -83,8 +83,8 @@ $error_message = $response['error_message'];
 
                 <div class="page-header">
                     <div class="page-title">
-                        <h4>Quản lý người dùng</h4>
-                        <h6>Thêm người dùng mới </h6>
+                        <h4>Quản lý sinh viên</h4>
+                        <h6>Thêm sinh viên mới </h6>
                     </div>
                 </div>
 
@@ -92,84 +92,63 @@ $error_message = $response['error_message'];
                     <div class="card-body">
                         <form method="POST" action="" enctype="multipart/form-data">
                             <div class="row">
-                                <div class="col-lg-3 col-sm-6 col-12">
-                                    <div class="form-group">
-                                        <label>Tên người dùng</label>
-                                        <input type="text" name="username" class="form-control" required>
+                                <!-- Cột 1: Thông tin cá nhân -->
+                                <div class="col-lg-6 col-sm-12 mb-3">
+                                    <div class="form-group mb-3">
+                                        <label for="username">Username<span class="text-danger">*</span></label>
+                                        <input type="text" name="username" id="username" class="form-control" required>
                                     </div>
-                                    <div class="form-group">
-                                        <label>Mật khẩu</label>
-                                        <input type="password" name="password" class="form-control" required>
+                                    <div class="form-group mb-3">
+                                        <label for="fullname">Họ và tên</label>
+                                        <input type="text" name="fullname" id="fullname" class="form-control">
                                     </div>
-                                    <div class="form-group">
-                                        <label>Họ và tên</label>
-                                        <input type="text" name="fullname" class="form-control">
+                                    <div class="form-group mb-3">
+                                        <label for="email">Email</label>
+                                        <input type="email" name="email" id="email" class="form-control">
                                     </div>
-                                    <div class="form-group">
-                                        <label>Email</label>
-                                        <input type="email" name="email" class="form-control">
-                                    </div>
-                                </div>
-                                <div class="col-lg-3 col-sm-6 col-12">
-                                    <div class="form-group">
-                                        <label>Điện thoại</label>
-                                        <input type="text" name="phone_number" class="form-control">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Vai trò</label>
-                                        <select class="form-select" name="role" required>
-                                            <option value="">Chọn</option>
-                                            <option value="admin">Admin</option>
-                                            <option value="staff">Staff</option>
-                                            <option value="technician">Technician</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Ngày sinh</label>
-                                        <input type="date" name="birthday" class="form-control">
+                                    <div class="form-group mb-3">
+                                        <label for="phone_number">Điện thoại</label>
+                                        <input type="text" name="phone_number" id="phone_number" class="form-control">
                                     </div>
                                 </div>
-                                <div class="col-lg-3 col-sm-6 col-12">
-                                    <div class="form-group">
-                                        <label>Giới tính</label>
-                                        <select class="form-select" name="gender">
-                                            <option value="">Chọn</option>
-                                            <option value="male">Male</option>
-                                            <option value="female">Female</option>
-                                            <option value="other">Other</option>
-                                        </select>
+                                <!-- Cột 2: Phòng, số giường, quê quán, ảnh đại diện -->
+                                <div class="col-lg-6 col-sm-12 mb-3">
+                                    <div class="form-group mb-3">
+                                        <label for="room">Phòng</label>
+                                        <input type="text" name="room" id="room" class="form-control">
                                     </div>
-                                    <div class="form-group">
-                                        <label>Trạng thái</label>
-                                        <select class="form-select" name="status" required>
-                                            <option value="active">Active</option>
-                                            <option value="inactive">Inactive</option>
-                                            <option value="ban">Ban</option>
-                                        </select>
+                                    <div class="form-group mb-3">
+                                        <label for="num_bed">Số giường</label>
+                                        <input type="number" name="num_bed" id="num_bed" class="form-control">
                                     </div>
-                                </div>
-                                <div class="col-lg-3 col-sm-6 col-12">
-                                    <div class="form-group">
-                                        <label>Profile Picture</label>
+                                    <div class="form-group mb-3">
+                                        <label for="hometown">Quê quán</label>
+                                        <input type="text" name="hometown" id="hometown" class="form-control">
+                                    </div>
+                                    <div class="form-group mb-3">
+                                        <label for="profile_picture">Ảnh đại diện</label>
                                         <div class="image-upload image-upload-new">
-                                            <input type="file" name="profile_picture" class="form-control">
-                                            <div class="image-uploads">
-                                                <img src="../../assets/img/icons/upload.svg" alt="img">
-                                                <h4>Drag and drop a file to upload</h4>
+                                            <input type="file" name="profile_picture" id="profile_picture"
+                                                class="form-control">
+                                            <div class="image-uploads mt-2">
+                                                <img src="../../assets/img/icons/upload.svg" alt="img"
+                                                    style="width:40px;">
+                                                <h6 class="mt-2">Kéo và thả file để tải lên</h6>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-lg-12">
+                                <div class="col-lg-12 mt-3">
                                     <button type="submit" class="btn btn-primary me-2">Tạo</button>
-                                    <a href="newuser.php" class="btn btn-secondary">Hủy</a>
+                                    <a href="userlists.php" class="btn btn-secondary">Hủy</a>
                                 </div>
                             </div>
-                        </form>
                     </div>
+                    </form>
                 </div>
             </div>
         </div>
+    </div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"
