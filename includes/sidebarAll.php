@@ -43,8 +43,9 @@ switch ($role) {
                     'title' => 'Sinh viên',
                     'icon' => 'users1.svg',
                     'items' => [
+                        ['title' => 'Danh sách sinh viên', 'url' => '/QuanLySV/views/admin/userlists.php'],
                         ['title' => 'Thêm sinh viên mới', 'url' => '/QuanLySV/views/admin/newuser.php'],
-                        ['title' => 'Danh sách sinh viên', 'url' => '/QuanLySV/views/admin/userlists.php']
+                        ['title' => 'Import danh sách', 'url' => '/QuanLySV/views/admin/import.php']
                     ]
                 ],
                 [

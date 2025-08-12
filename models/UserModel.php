@@ -44,6 +44,67 @@ class UserModel {
         return $user_id;
     }
 
+    public function importUsersFromCSV($filePath) {
+    if (!file_exists($filePath) || !is_readable($filePath)) {
+        throw new Exception("Không thể đọc file CSV: " . $filePath);
+    }
+
+    $handle = fopen($filePath, 'r');
+    if ($handle === false) {
+        throw new Exception("Không thể mở file CSV.");
+    }
+
+    // Bỏ qua header
+    $header = fgetcsv($handle);
+
+    $sql = "INSERT INTO users (room, username, fullname, email, phone_number, role, profile_picture, num_bed, hometown, status, created_by) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    $stmt = $this->db->prepare($sql);
+    if (!$stmt) {
+        fclose($handle);
+        throw new Exception("Lỗi prepare statement: " . $this->db->error);
+    }
+
+    while (($row = fgetcsv($handle)) !== false) {
+        // Bỏ qua user_id => lấy từ cột thứ 2 trở đi
+        $room           = $row[1];
+        $username       = $row[2];
+        $fullname       = $row[3];
+        $email          = $row[4];
+        $phone_number   = $row[5];
+        $role           = $row[6];
+        $profile_picture= $row[7];
+        $num_bed        = (int)$row[8];
+        $hometown       = $row[9];
+        $status         = $row[10];
+        $created_by     = (int)$row[11];
+
+        $stmt->bind_param(
+            "sssssssissi", // chú ý thứ tự kiểu dữ liệu
+            $room,
+            $username,
+            $fullname,
+            $email,
+            $phone_number,
+            $role,
+            $profile_picture,
+            $num_bed,
+            $hometown,
+            $status,
+            $created_by
+        );
+
+        if (!$stmt->execute()) {
+            error_log("Lỗi insert user: " . $stmt->error);
+        }
+    }
+
+    $stmt->close();
+    fclose($handle);
+}
+
+
+
     public function createAuthAccount($user_id, $hashed_password, $is_active) {
         $sql = "INSERT INTO auth_accounts (user_id, password, is_active, last_password_change) 
                 VALUES (?, ?, ?, NOW())";

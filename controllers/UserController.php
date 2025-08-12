@@ -76,6 +76,43 @@ class UserController {
             'error_message' => $error_message
         ];
     }
+    // Xử lý khi người dùng upload file CSV
+    public function handleCSVUpload() {
+        $show_success_toast = false;
+        $show_error_toast = false;
+        $error_message = "";
+
+        if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csv_file'])) {
+            $file = $_FILES['csv_file'];
+            if ($file['error'] === UPLOAD_ERR_OK) {
+                $fileTmpPath = $file['tmp_name'];
+                $fileName = $file['name'];
+                $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+
+                if ($fileExtension === 'csv') {
+                    try {
+                        $this->userModel->importUsersFromCSV($fileTmpPath);
+                        $show_success_toast = true;
+                    } catch (Exception $e) {
+                        $show_error_toast = true;
+                        $error_message = "Lỗi khi import: " . $e->getMessage();
+                    }
+                } else {
+                    $show_error_toast = true;
+                    $error_message = "Vui lòng chọn file CSV.";
+                }
+            } else {
+                $show_error_toast = true;
+                $error_message = "Lỗi khi upload file: " . $file['error'];
+            }
+        }
+
+        return [
+            'show_success_toast' => $show_success_toast,
+            'show_error_toast' => $show_error_toast,
+            'error_message' => htmlspecialchars($error_message)
+        ];
+    }
 
     // Xử lý khi người dùng upload ảnh đại diện
     private function handleProfilePictureUpload($file, $username) {
