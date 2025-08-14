@@ -253,7 +253,7 @@ if ($show_error_toast) unset($_SESSION['error_message']);
                                         $is_disabled = empty($user['username']) ? 'disabled' : ''; ?>
                                     <tr>
                                         <td><?php echo htmlspecialchars($user['room']); ?></td>
-                                        <td><?php echo htmlspecialchars($user['user_id']); ?></td>
+                                        <td><?php echo htmlspecialchars($user['student_id']); ?></td>
                                         <td><?php echo htmlspecialchars($user['fullname']); ?></td>
                                         <td><?php echo htmlspecialchars($user['num_bed']); ?></td>
                                         <td><?php echo htmlspecialchars($user['hometown']); ?></td>

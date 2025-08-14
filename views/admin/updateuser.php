@@ -26,6 +26,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     try {
         $usernameToUpdate = $_POST['username'] ?? null;
+        $student_id = $_POST['student_id'] ?? null; // Mã sinh viên
         $fullname = $_POST['fullname'] ?? null;
         $email = $_POST['email'] ?? null;
         $user_id = $_POST['user_id'] ?? null;
@@ -54,8 +55,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         if ($fullname !== null && $fullname !== '') {
             $data['fullname'] = $fullname;
         }
-        if ($user_id !== null && $user_id !== '') {
-            $data['user_id'] = $user_id;
+        if ($student_id = $_POST['student_id'] ?? null) {
+            $data['student_id'] = (int)$student_id; 
         }
         if ($email !== null && $email !== '') {
             $data['email'] = $email;
@@ -111,6 +112,7 @@ if (!$user) {
 }
 
 $user_id = htmlspecialchars($user['user_id'] ?? '');
+$student_id = htmlspecialchars($user['student_id'] ?? ''); // Mã sinh viên
 $fullname = htmlspecialchars($user['fullname'] ?? '');
 $email = htmlspecialchars($user['email'] ?? '');
 $num_bed = (int)($user['num_bed'] ?? 1); 
@@ -191,8 +193,8 @@ if ($show_error_toast) unset($_SESSION['error_message']);
                                 <div class="col-lg-6 col-sm-12 col-12">
                                     <div class="form-group">
                                         <label>Mã HV</label>
-                                        <input type="text" name="user_id" class="form-control"
-                                            value="<?php echo $user_id; ?>">
+                                        <input type="text" name="student_id" class="form-control"
+                                            value="<?php echo $student_id; ?>">
                                     </div>
                                 </div>
                                 <div class="col-lg-6 col-sm-12 col-12">

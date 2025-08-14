@@ -117,7 +117,7 @@ class UserModel {
 
     public function getUsers($searchParams = []) {
         try {
-            $query = "SELECT user_id, room, num_bed, hometown, username, profile_picture, fullname, email, status, role 
+            $query = "SELECT user_id, student_id ,room, num_bed, hometown, username, profile_picture, fullname, email, status, role 
                      FROM users WHERE username IS NOT NULL AND username != ''";
             $params = [];
             $types = '';
@@ -147,6 +147,12 @@ class UserModel {
                 $query .= " AND username = ?";
                 $params[] = $searchParams['username'];
                 $types .= 's';
+            }
+        
+            if (!empty($searchParams['student_id'])) {
+                $query .= " AND student_id = ?";
+                $params[] = $searchParams['student_id'];
+                $types .= 'i';
             }
           
             if (!empty($searchParams['fullname'])) {
@@ -195,7 +201,7 @@ class UserModel {
     public function updateUser($username, $data) {
         try {
             // Kiểm tra dữ liệu đầu vào
-            $requiredFields = ['fullname', 'room', 'user_id', 'email', 'num_bed', 'hometown'];
+            $requiredFields = ['fullname', 'room', 'student_id', 'email', 'num_bed', 'hometown'];
             foreach ($requiredFields as $field) {
                 if (!isset($data[$field])) {
                     throw new InvalidArgumentException("Thiếu trường dữ liệu: $field");
@@ -203,17 +209,18 @@ class UserModel {
             }
 
             // Sắp xếp lại thứ tự truyền vào cho đúng với câu lệnh SQL
-            $query = "UPDATE users SET fullname = ?, room = ?, email = ?, num_bed = ?, hometown = ? WHERE username = ?";
+            $query = "UPDATE users SET fullname = ?, room = ?, student_id = ? ,email = ?, num_bed = ?, hometown = ? WHERE username = ?";
             $stmt = $this->db->prepare($query);
             if (!$stmt) {
                 throw new Exception("Lỗi prepare: " . $this->db->error);
             }
 
-            // fullname (s), room (s), email (s), num_bed (s), hometown (s), username (s)
+            // fullname (s), room (s), student_id (i), email (s), num_bed (s), hometown (s), username (s)
            $stmt->bind_param(
-            "ssssss",
+            "sssssss",
             $data['fullname'],
             $data['room'],
+            $data['student_id'], // Chuyển đổi sang int nếu cần
             $data['email'],
             $data['num_bed'],
             $data['hometown'],

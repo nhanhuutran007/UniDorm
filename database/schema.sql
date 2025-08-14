@@ -31,6 +31,7 @@ CREATE TABLE `password_reset_tokens` (
 CREATE TABLE `users` (
   `user_id` int(11) NOT NULL,
   `room` varchar(255) NOT NULL,
+  `student_id` int(10) NOT NULL,
   `username` varchar(50) NOT NULL,
   `fullname` varchar(255) DEFAULT NULL,
   `email` varchar(50) DEFAULT NULL,
