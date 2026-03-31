@@ -15,14 +15,23 @@ require_once __DIR__ . '/../../includes/db.php';
 $successMsg = $errorMsg = '';
 
 // Lấy danh sách phòng + giường trống để chọn
-$roomsForSelect = $conn->query("
-    SELECT r.id, r.room_code, f.floor_number,
+$roomsRaw = $conn->query("
+    SELECT r.id, r.room_code, f.floor_number, bld.name as building_name,
            (SELECT COUNT(*) FROM beds b WHERE b.room_id = r.id AND b.is_occupied = 0) as free_beds
     FROM rooms r
     JOIN floors f ON r.floor_id = f.id
+    JOIN buildings bld ON f.building_id = bld.id
     WHERE r.status != 'maintenance' AND r.status != 'closed'
-    ORDER BY f.floor_number ASC, r.room_code ASC
+    ORDER BY bld.name ASC, f.floor_number ASC, r.room_code ASC
 ")->fetch_all(MYSQLI_ASSOC);
+
+$roomsByFloor = [];
+foreach ($roomsRaw as $r) {
+    if ($r['free_beds'] > 0) {
+        $label = $r['building_name'] . ' - Lầu ' . $r['floor_number'];
+        $roomsByFloor[$label][] = $r;
+    }
+}
 
 // Lấy giường trống theo phòng (JSON cho JS)
 $bedsStmt = $conn->query("
@@ -215,12 +224,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <label class="form-label fw-semibold small">Phòng</label>
                             <select name="room_id" id="roomSelect" class="form-select rounded-3" onchange="updateBedSelect()">
                                 <option value="">-- Chưa gán phòng --</option>
-                                <?php foreach ($roomsForSelect as $r): ?>
-                                <?php if ($r['free_beds'] > 0): ?>
-                                <option value="<?php echo $r['id']; ?>" <?php echo ($_POST['room_id']??'')==$r['id']?'selected':''; ?>>
-                                    <?php echo $r['room_code']; ?> (<?php echo $r['free_beds']; ?> chỗ trống)
-                                </option>
-                                <?php endif; ?>
+                                <?php foreach ($roomsByFloor as $groupLabel => $rooms): ?>
+                                <optgroup label="<?php echo htmlspecialchars($groupLabel); ?>">
+                                    <?php foreach ($rooms as $r): ?>
+                                    <option value="<?php echo $r['id']; ?>" <?php echo ($_POST['room_id']??'')==$r['id']?'selected':''; ?>>
+                                        <?php echo $r['room_code']; ?> (<?php echo $r['free_beds']; ?> chỗ trống)
+                                    </option>
+                                    <?php endforeach; ?>
+                                </optgroup>
                                 <?php endforeach; ?>
                             </select>
                         </div>

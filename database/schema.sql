@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `role`            ENUM('admin','student') NOT NULL DEFAULT 'student',
   `bed_id`          INT(11)           DEFAULT NULL COMMENT 'FK → beds.id – giường sinh viên đang ở',
   `is_room_leader`  TINYINT(1)        DEFAULT 0 COMMENT 'Trưởng phòng (cột J GG Sheet: TP)',
-  `profile_picture` VARCHAR(255)      DEFAULT 'assets/images/default-avatar.jpg',
+  `profile_picture` VARCHAR(255)      DEFAULT 'assets/images/default.jpg',
   `status`          ENUM('pending','active','inactive','banned') NOT NULL DEFAULT 'pending'
                                       COMMENT 'pending: chờ kích hoạt email lần đầu',
   `created_by`      INT(11)           DEFAULT NULL COMMENT 'Admin tạo tài khoản (NULL nếu tự đăng ký)',

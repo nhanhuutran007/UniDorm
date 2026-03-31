@@ -32,12 +32,20 @@ if (!$target) {
 $successMsg = $errorMsg = '';
 
 // Rooms + beds
-$roomsForSelect = $conn->query("
-    SELECT r.id, r.room_code, f.floor_number
-    FROM rooms r JOIN floors f ON r.floor_id = f.id
+$roomsRaw = $conn->query("
+    SELECT r.id, r.room_code, f.floor_number, bld.name as building_name
+    FROM rooms r 
+    JOIN floors f ON r.floor_id = f.id
+    JOIN buildings bld ON f.building_id = bld.id
     WHERE r.status NOT IN ('maintenance','closed')
-    ORDER BY f.floor_number, r.room_code
+    ORDER BY bld.name ASC, f.floor_number ASC, r.room_code ASC
 ")->fetch_all(MYSQLI_ASSOC);
+
+$roomsByFloor = [];
+foreach ($roomsRaw as $r) {
+    $label = $r['building_name'] . ' - Lầu ' . $r['floor_number'];
+    $roomsByFloor[$label][] = $r;
+}
 
 $allBeds = $conn->query("
     SELECT b.id, b.bed_label, b.room_id, b.is_occupied,
@@ -49,7 +57,6 @@ $allBeds = $conn->query("
 
 $bedsByRoom = [];
 foreach ($allBeds as $b) {
-    // Giường trống HOẶC là giường hiện tại của SV đang sửa
     if (!$b['is_occupied'] || $b['occupant_id'] == $targetId) {
         $bedsByRoom[$b['room_id']][] = $b;
     }
@@ -112,7 +119,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
             $upd->execute();
 
-            // Nếu admin reset MK → gửi email
             if (isset($_POST['reset_password'])) {
                 $token     = bin2hex(random_bytes(32));
                 $expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour'));
@@ -237,11 +243,15 @@ if ($target['bed_id']) {
                             <label class="form-label fw-semibold small">Phòng</label>
                             <select name="room_id" id="roomSelect" class="form-select rounded-3" onchange="updateBedSelect()">
                                 <option value="">-- Chưa gán --</option>
-                                <?php foreach ($roomsForSelect as $r): ?>
-                                <option value="<?php echo $r['id']; ?>"
-                                    <?php echo ($curBedInfo && $curBedInfo['room_id']==$r['id']) ? 'selected' : ''; ?>>
-                                    <?php echo $r['room_code']; ?> (Lầu <?php echo $r['floor_number']; ?>)
-                                </option>
+                                <?php foreach ($roomsByFloor as $groupLabel => $rooms): ?>
+                                <optgroup label="<?php echo htmlspecialchars($groupLabel); ?>">
+                                    <?php foreach ($rooms as $r): ?>
+                                    <option value="<?php echo $r['id']; ?>"
+                                        <?php echo ($curBedInfo && $curBedInfo['room_id']==$r['id']) ? 'selected' : ''; ?>>
+                                        <?php echo $r['room_code']; ?> (Lầu <?php echo $r['floor_number']; ?>)
+                                    </option>
+                                    <?php endforeach; ?>
+                                </optgroup>
                                 <?php endforeach; ?>
                             </select>
                         </div>

@@ -11,6 +11,68 @@ ob_start();
 
 require_once __DIR__ . '/../../includes/db.php';
 
+require_once __DIR__ . '/../../includes/db.php';
+
+$successMsg = $errorMsg = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_floor') {
+    $buildingId  = (int)($_POST['building_id'] ?? 1); 
+    $floorNumber = (int)($_POST['floor_number'] ?? 0);
+
+    if ($floorNumber < 1 || $floorNumber > 25) {
+        $errorMsg = "Số lầu không hợp lệ (1-25).";
+    } else {
+        $chk = $conn->prepare("SELECT id FROM floors WHERE building_id = ? AND floor_number = ?");
+        $chk->bind_param('ii', $buildingId, $floorNumber);
+        $chk->execute();
+        if ($chk->get_result()->num_rows > 0) {
+            $errorMsg = "Lầu $floorNumber đã tồn tại trong tòa nhà này.";
+        } else {
+            $conn->begin_transaction();
+            try {
+                // Insert floor
+                $ins = $conn->prepare("INSERT INTO floors (building_id, floor_number) VALUES (?, ?)");
+                $ins->bind_param('ii', $buildingId, $floorNumber);
+                $ins->execute();
+                $floorId = $conn->insert_id;
+
+                // Determine beds per room based on rules
+                if ($floorNumber <= 11) {
+                    $bedsPerRoom = 6;
+                } elseif ($floorNumber <= 16) {
+                    $bedsPerRoom = 4;
+                } else {
+                    $bedsPerRoom = 2;
+                }
+
+                $roomsPerFloor = 14;
+                $roomStmt = $conn->prepare("INSERT INTO rooms (floor_id, room_code, max_capacity, status) VALUES (?, ?, ?, 'available')");
+                $bedStmt  = $conn->prepare("INSERT INTO beds (room_id, bed_label, is_occupied) VALUES (?, ?, 0)");
+
+                // Generate 14 rooms and beds
+                for ($i = 1; $i <= $roomsPerFloor; $i++) {
+                    $roomCode = 'L.' . sprintf('%02d', $floorNumber) . sprintf('%02d', $i);
+                    $roomStmt->bind_param('isi', $floorId, $roomCode, $bedsPerRoom);
+                    $roomStmt->execute();
+                    $roomId = $conn->insert_id;
+
+                    for ($j = 1; $j <= $bedsPerRoom; $j++) {
+                        $bedLabel = 'G' . $j;
+                        $bedStmt->bind_param('is', $roomId, $bedLabel);
+                        $bedStmt->execute();
+                    }
+                }
+
+                $conn->commit();
+                $successMsg = "Đã khởi tạo thành công Lầu $floorNumber cùng 14 phòng và " . (14 * $bedsPerRoom) . " giường (chuẩn $bedsPerRoom giường/phòng).";
+            } catch (Exception $e) {
+                $conn->rollback();
+                $errorMsg = "Lỗi hệ thống khi tạo lầu: " . $e->getMessage();
+            }
+        }
+    }
+}
+$buildings = $conn->query("SELECT * FROM buildings")->fetch_all(MYSQLI_ASSOC);
+
 // Stats tổng hợp theo lầu
 $floorsData = $conn->query("
     SELECT f.id, f.floor_number, b.name as building_name,
@@ -34,6 +96,68 @@ $totalRooms     = array_sum(array_column($floorsData, 'total_rooms'));
 $totalStudents  = array_sum(array_column($floorsData, 'current_students'));
 $totalCapacity  = array_sum(array_column($floorsData, 'total_capacity'));
 ?>
+?>
+
+<?php if ($successMsg): ?>
+<div class="alert alert-success alert-dismissible fade show mb-4 rounded-3" role="alert">
+    <i class="bi bi-check-circle-fill me-2"></i><?php echo $successMsg; ?>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+<?php endif; ?>
+
+<!-- Modal Thêm Lầu -->
+<div class="modal fade" id="addFloorModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <form method="POST" class="modal-content border-0 shadow" style="border-radius:14px;">
+            <input type="hidden" name="action" value="add_floor">
+            <div class="modal-header border-0 bg-light rounded-top-4 pb-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold"><i class="bi bi-layers text-primary me-2"></i>Thêm Lầu Mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4 py-4">
+                <div class="alert alert-info border-0 bg-info bg-opacity-10 small mb-4">
+                    <i class="bi bi-info-circle-fill me-1"></i>
+                    Hệ thống sẽ <b>tự động sinh ra 14 phòng</b> cho lầu được tạo:
+                    <ul class="mb-0 mt-1">
+                        <li>Từ lầu 1 đến 11: <b>6 giường/phòng</b></li>
+                        <li>Từ lầu 12 đến 16: <b>4 giường/phòng</b></li>
+                        <li>Từ lầu 17 trở lên: <b>2 giường/phòng</b></li>
+                    </ul>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold small text-muted">Thêm vào Tòa nhà</label>
+                    <select name="building_id" class="form-select rounded-3" required>
+                        <?php foreach($buildings as $b): ?>
+                        <option value="<?php echo $b['id']; ?>"><?php echo htmlspecialchars($b['name']); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold small text-muted">Số lầu khởi tạo</label>
+                    <input type="number" name="floor_number" class="form-control rounded-3" min="1" max="25" placeholder="VD: 8" required>
+                </div>
+            </div>
+            <div class="modal-footer border-0 px-4 pb-4 pt-0">
+                <button type="button" class="btn btn-outline-secondary rounded-3" data-bs-dismiss="modal">Hủy</button>
+                <button type="submit" class="btn btn-primary rounded-3 px-4" onclick="this.innerHTML='<span class=\'spinner-border spinner-border-sm me-2\'></span>Đang tạo...'; this.closest('form').submit(); this.disabled=true;">Tiến hành Khởi tạo</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<?php if ($errorMsg): ?>
+<div class="alert alert-danger alert-dismissible fade show mb-4 rounded-3" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i><?php echo $errorMsg; ?>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+<?php endif; ?>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h5 class="fw-bold text-dark mb-0">Tổng quan Quản lý Lầu</h5>
+    <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#addFloorModal">
+        <i class="bi bi-plus-lg me-1"></i>Thêm Lầu Mới
+    </button>
+</div>
 
 <!-- Tổng quan -->
 <div class="row g-3 mb-4">

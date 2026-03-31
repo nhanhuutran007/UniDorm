@@ -30,8 +30,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_room_status'])
     $newStatus = $_POST['new_status'];
     $validSt   = ['available','full','maintenance','closed'];
     if ($roomId && in_array($newStatus, $validSt)) {
-        $conn->prepare("UPDATE rooms SET status = ?, updated_at = NOW() WHERE id = ?")->execute() || true;
-        $st = $conn->prepare("UPDATE rooms SET status = ?, updated_at = NOW() WHERE id = ?");
+        $conn->prepare("UPDATE rooms SET status = ? WHERE id = ?")->execute() || true;
+        $st = $conn->prepare("UPDATE rooms SET status = ? WHERE id = ?");
         $st->bind_param('si', $newStatus, $roomId);
         $updateMsg = $st->execute() ? 'success' : 'error';
     }
@@ -71,7 +71,7 @@ $totalPages = max(1, ceil($totalRooms / $perPage));
 
 // Fetch rooms với số SV hiện tại
 $dataStmt = $conn->prepare("
-    SELECT r.id, r.room_code, r.status, r.max_capacity, r.updated_at,
+    SELECT r.id, r.room_code, r.status, r.max_capacity, r.created_at,
            f.floor_number, bld.name as building_name,
            COUNT(u.user_id) as current_count
     FROM rooms r
@@ -80,7 +80,7 @@ $dataStmt = $conn->prepare("
     LEFT JOIN beds b ON b.room_id = r.id
     LEFT JOIN users u ON u.bed_id = b.id AND u.status = 'active'
     WHERE $whereSQL
-    GROUP BY r.id, r.room_code, r.status, r.max_capacity, r.updated_at, f.floor_number, bld.name
+    GROUP BY r.id, r.room_code, r.status, r.max_capacity, r.created_at, f.floor_number, bld.name
     ORDER BY f.floor_number ASC, r.room_code ASC
     LIMIT ? OFFSET ?
 ");
@@ -270,7 +270,7 @@ $statusConfig = [
             <div class="card-footer bg-transparent border-0 pt-0 px-4 pb-3">
                 <small class="text-muted" style="font-size:10px;">
                     <i class="bi bi-clock me-1"></i>
-                    Cập nhật: <?php echo $room['updated_at'] ? date('d/m/Y', strtotime($room['updated_at'])) : 'N/A'; ?>
+                    Ngày tạo: <?php echo $room['created_at'] ? date('d/m/Y', strtotime($room['created_at'])) : 'N/A'; ?>
                 </small>
             </div>
         </div>

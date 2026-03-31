@@ -15,80 +15,86 @@ use PHPMailer\PHPMailer\Exception;
 
 // Autoload Composer nếu chưa load
 if (!class_exists('PHPMailer\PHPMailer\PHPMailer')) {
-    $autoload = dirname(__DIR__, 2) . '/vendor/autoload.php';
-    if (file_exists($autoload)) {
-        require_once $autoload;
-    }
+  $autoload = dirname(__DIR__, 2) . '/vendor/autoload.php';
+  if (file_exists($autoload)) {
+    require_once $autoload;
+  }
 }
 
-class MailService {
+class MailService
+{
 
-    private string $senderEmail = 'unidorm.tdtu@gmail.com';
-    private string $senderName  = 'UniDorm – Ký túc xá TDTU';
-    private string $appPassword = 'ufrvrrn vqquawepv';  // Thay khoảng trắng sau khi cài
+  private string $senderEmail = '52300235@student.tdtu.edu.vn';
+  private string $senderName = 'Ký túc xá TDTU';
+  private string $appPassword = 'ufrvrrn vqquawepv';  // Thay khoảng trắng sau khi cài
 
-    // Phân loại email templates
-    public function sendActivation(string $toEmail, string $toName, string $activationUrl): bool {
-        $subject = '[UniDorm] Kích hoạt tài khoản của bạn';
-        $body    = $this->templateActivation($toName, $activationUrl);
-        return $this->send($toEmail, $toName, $subject, $body);
+  // Phân loại email templates
+  public function sendActivation(string $toEmail, string $toName, string $activationUrl): bool
+  {
+    $subject = '[UniDorm] Kích hoạt tài khoản của bạn';
+    $body = $this->templateActivation($toName, $activationUrl);
+    return $this->send($toEmail, $toName, $subject, $body);
+  }
+
+  public function sendPasswordReset(string $toEmail, string $toName, string $resetUrl): bool
+  {
+    $subject = '[UniDorm] Đặt lại mật khẩu';
+    $body = $this->templateReset($toName, $resetUrl);
+    return $this->send($toEmail, $toName, $subject, $body);
+  }
+
+  public function sendNotification(string $toEmail, string $toName, string $title, string $message): bool
+  {
+    $subject = "[UniDorm] $title";
+    $body = $this->templateNotif($toName, $title, $message);
+    return $this->send($toEmail, $toName, $subject, $body);
+  }
+
+  // ─── Core send ───────────────────────────────────────────────────
+  public function send(string $toEmail, string $toName, string $subject, string $htmlBody): bool
+  {
+    // Fallback: nếu PHPMailer chưa cài, dùng mail()
+    if (!class_exists('PHPMailer\PHPMailer\PHPMailer')) {
+      $headers = "MIME-Version: 1.0\r\nContent-Type: text/html; charset=UTF-8\r\n"
+        . "From: {$this->senderName} <{$this->senderEmail}>\r\n";
+      return @mail($toEmail, $subject, $htmlBody, $headers);
     }
 
-    public function sendPasswordReset(string $toEmail, string $toName, string $resetUrl): bool {
-        $subject = '[UniDorm] Đặt lại mật khẩu';
-        $body    = $this->templateReset($toName, $resetUrl);
-        return $this->send($toEmail, $toName, $subject, $body);
+    $mail = new PHPMailer(true);
+    try {
+      // Server settings
+      $mail->isSMTP();
+      $mail->Host = 'smtp.gmail.com';
+      $mail->SMTPAuth = true;
+      $mail->Username = $this->senderEmail;
+      $mail->Password = str_replace(' ', '', $this->appPassword);  // Xóa khoảng trắng
+      $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+      $mail->Port = 587;
+      $mail->CharSet = 'UTF-8';
+
+      // Recipients
+      $mail->setFrom($this->senderEmail, $this->senderName);
+      $mail->addAddress($toEmail, $toName);
+      $mail->addReplyTo('52300235@student.tdtu.edu.vn', 'Ký túc xá TDTU – No Reply');
+
+      // Content
+      $mail->isHTML(true);
+      $mail->Subject = $subject;
+      $mail->Body = $htmlBody;
+      $mail->AltBody = strip_tags($htmlBody);
+
+      $mail->send();
+      return true;
+    } catch (Exception $e) {
+      error_log("MailService Error [{$toEmail}]: " . $mail->ErrorInfo);
+      return false;
     }
+  }
 
-    public function sendNotification(string $toEmail, string $toName, string $title, string $message): bool {
-        $subject = "[UniDorm] $title";
-        $body    = $this->templateNotif($toName, $title, $message);
-        return $this->send($toEmail, $toName, $subject, $body);
-    }
-
-    // ─── Core send ───────────────────────────────────────────────────
-    public function send(string $toEmail, string $toName, string $subject, string $htmlBody): bool {
-        // Fallback: nếu PHPMailer chưa cài, dùng mail()
-        if (!class_exists('PHPMailer\PHPMailer\PHPMailer')) {
-            $headers = "MIME-Version: 1.0\r\nContent-Type: text/html; charset=UTF-8\r\n"
-                     . "From: {$this->senderName} <{$this->senderEmail}>\r\n";
-            return @mail($toEmail, $subject, $htmlBody, $headers);
-        }
-
-        $mail = new PHPMailer(true);
-        try {
-            // Server settings
-            $mail->isSMTP();
-            $mail->Host       = 'smtp.gmail.com';
-            $mail->SMTPAuth   = true;
-            $mail->Username   = $this->senderEmail;
-            $mail->Password   = str_replace(' ', '', $this->appPassword);  // Xóa khoảng trắng
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port       = 587;
-            $mail->CharSet    = 'UTF-8';
-
-            // Recipients
-            $mail->setFrom($this->senderEmail, $this->senderName);
-            $mail->addAddress($toEmail, $toName);
-            $mail->addReplyTo('noreply@unidorm.tdtu.edu.vn', 'UniDorm – No Reply');
-
-            // Content
-            $mail->isHTML(true);
-            $mail->Subject = $subject;
-            $mail->Body    = $htmlBody;
-            $mail->AltBody = strip_tags($htmlBody);
-
-            $mail->send();
-            return true;
-        } catch (Exception $e) {
-            error_log("MailService Error [{$toEmail}]: " . $mail->ErrorInfo);
-            return false;
-        }
-    }
-
-    // ─── Email Templates ──────────────────────────────────────────────
-    private function baseTemplate(string $title, string $body): string {
-        return <<<HTML
+  // ─── Email Templates ──────────────────────────────────────────────
+  private function baseTemplate(string $title, string $body): string
+  {
+    return <<<HTML
 <!DOCTYPE html>
 <html lang="vi"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -107,10 +113,11 @@ class MailService {
 </table></td></tr></table>
 </body></html>
 HTML;
-    }
+  }
 
-    private function templateActivation(string $name, string $url): string {
-        $body = <<<HTML
+  private function templateActivation(string $name, string $url): string
+  {
+    $body = <<<HTML
 <p style="color:#374151;font-size:15px;">Xin chào <strong>{$name}</strong>,</p>
 <p style="color:#6b7280;font-size:14px;line-height:1.6;">Tài khoản sinh viên tại UniDorm đã được tạo.
 Hãy nhấn nút bên dưới để đặt mật khẩu và kích hoạt tài khoản của bạn.</p>
@@ -121,11 +128,12 @@ Hãy nhấn nút bên dưới để đặt mật khẩu và kích hoạt tài kh
 </div>
 <p style="color:#9ca3af;font-size:12px;">Link có hiệu lực trong <strong>24 giờ</strong>. Nếu bạn không yêu cầu điều này, hãy bỏ qua email này.</p>
 HTML;
-        return $this->baseTemplate('Kích hoạt tài khoản UniDorm', $body);
-    }
+    return $this->baseTemplate('Kích hoạt tài khoản UniDorm', $body);
+  }
 
-    private function templateReset(string $name, string $url): string {
-        $body = <<<HTML
+  private function templateReset(string $name, string $url): string
+  {
+    $body = <<<HTML
 <p style="color:#374151;font-size:15px;">Xin chào <strong>{$name}</strong>,</p>
 <p style="color:#6b7280;font-size:14px;line-height:1.6;">Bạn (hoặc quản trị viên) đã yêu cầu đặt lại mật khẩu cho tài khoản UniDorm.</p>
 <div style="text-align:center;margin:32px 0;">
@@ -135,11 +143,12 @@ HTML;
 </div>
 <p style="color:#9ca3af;font-size:12px;">Link có hiệu lực trong <strong>1 giờ</strong>. Nếu bạn không yêu cầu, hãy bỏ qua email này.</p>
 HTML;
-        return $this->baseTemplate('Đặt lại mật khẩu UniDorm', $body);
-    }
+    return $this->baseTemplate('Đặt lại mật khẩu UniDorm', $body);
+  }
 
-    private function templateNotif(string $name, string $title, string $message): string {
-        $body = <<<HTML
+  private function templateNotif(string $name, string $title, string $message): string
+  {
+    $body = <<<HTML
 <p style="color:#374151;font-size:15px;">Xin chào <strong>{$name}</strong>,</p>
 <div style="background:#eff6ff;border-left:4px solid #2563eb;border-radius:0 8px 8px 0;padding:16px 20px;margin:20px 0;">
   <h3 style="color:#1d4ed8;margin:0 0 8px;font-size:16px;">{$title}</h3>
@@ -147,6 +156,6 @@ HTML;
 </div>
 <p style="color:#9ca3af;font-size:12px;">Đây là thông báo tự động từ hệ thống UniDorm.</p>
 HTML;
-        return $this->baseTemplate($title, $body);
-    }
+    return $this->baseTemplate($title, $body);
+  }
 }

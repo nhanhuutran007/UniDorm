@@ -49,7 +49,7 @@ if (!$userData) {
 
 $userRole       = strtolower($userData['role']);
 $userId         = $userData['user_id'];
-$profilePicture = '/UniDorm/' . htmlspecialchars($userData['profile_picture'] ?? 'assets/images/default-avatar.jpg');
+$profilePicture = !empty($userData['profile_picture']) ? '/UniDorm/' . htmlspecialchars($userData['profile_picture']) : '/UniDorm/assets/images/default.jpg';
 
 // URL động theo role
 $dashboardUrl = match($userRole) {
@@ -72,17 +72,18 @@ $pageTitle = ($pageTitle ?? 'UniDorm') . ' | UniDorm';
     <meta name="description" content="Hệ thống quản lý ký túc xá UniDorm – Trường Đại học Tôn Đức Thắng">
     <title><?php echo htmlspecialchars($pageTitle); ?></title>
 
-    <!-- Bootstrap 5 -->
-    <link rel="stylesheet" href="/UniDorm/assets/css/bootstrap.min.css">
+    <!-- Bootstrap 5 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <!-- Google Fonts: Inter -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Google Fonts: Outfit & Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Admin Template CSS (giữ lại từ cũ) -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Admin Template Legacy CSS -->
     <link rel="stylesheet" href="/UniDorm/assets/css/style.css">
-    <!-- UniDorm Custom CSS -->
-    <link rel="stylesheet" href="/UniDorm/assets/css/unidorm.css">
+    <!-- Modern Admin Premium Theme -->
+    <link rel="stylesheet" href="/UniDorm/assets/css/modern-admin.css">
 
     <?php if (!empty($extraCss)): ?>
         <?php foreach ($extraCss as $css): ?>
@@ -138,7 +139,7 @@ $pageTitle = ($pageTitle ?? 'UniDorm') . ' | UniDorm';
 
 <!-- Scripts -->
 <script src="/UniDorm/assets/js/jquery.min.js"></script>
-<script src="/UniDorm/assets/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/UniDorm/assets/js/app.js"></script>
 
 <?php if (!empty($extraJs)): ?>

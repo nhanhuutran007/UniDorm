@@ -312,7 +312,7 @@ ob_start();
             <?php foreach ($chatUsers as $cu):
                 $lastMsg = $userModel->getLastMessage($userId, $cu['user_id']);
                 $isActive = $preSelectUserId == $cu['user_id'];
-                $avatar  = '/UniDorm/' . ($cu['profile_picture'] ?? 'assets/images/default-avatar.jpg');
+                $avatar  = '/UniDorm/' . ($cu['profile_picture'] ?? 'assets/images/default.jpg');
                 $roleLabel = match($cu['role']) { 'admin'=>'Quản trị viên', default=>'Sinh viên' };
             ?>
             <div class="chat-contact-item <?php echo $isActive ? 'active' : ''; ?>"
@@ -322,7 +322,7 @@ ob_start();
                  data-user-role="<?php echo htmlspecialchars($roleLabel); ?>">
                 <div class="chat-contact-avatar">
                     <img src="<?php echo htmlspecialchars($avatar); ?>"
-                         onerror="this.src='/UniDorm/assets/images/default-avatar.jpg'" alt="">
+                         onerror="this.onerror=null; this.src='/UniDorm/assets/images/default.jpg'" alt="" class="bg-white">
                     <?php if ($cu['status'] === 'active'): ?>
                     <span class="chat-online-dot"></span>
                     <?php endif; ?>
@@ -351,9 +351,9 @@ ob_start();
                 <i class="bi bi-chevron-left"></i>
             </button>
             <div id="chatHeaderAvatar" class="flex-shrink-0" style="display:none!important;">
-                <img id="chatReceiverAvatar" src="/UniDorm/assets/images/default-avatar.jpg"
-                     class="rounded-circle" width="38" height="38" style="object-fit:cover;"
-                     onerror="this.src='/UniDorm/assets/images/default-avatar.jpg'">
+                <img id="chatReceiverAvatar" src="/UniDorm/assets/images/default.jpg"
+                     class="rounded-circle bg-white" width="38" height="38" style="object-fit:cover;"
+                     onerror="this.onerror=null; this.src='/UniDorm/assets/images/default.jpg'">
             </div>
             <div id="chatHeaderInfo" class="flex-grow-1">
                 <p class="mb-0 text-muted" id="chatPlaceholderText">
@@ -389,7 +389,7 @@ ob_start();
 <script>
 const SELF_ID     = <?php echo $userId; ?>;
 const SELF_NAME   = <?php echo json_encode($userData['fullname']); ?>;
-const SELF_AVATAR = <?php echo json_encode('/UniDorm/' . ($userData['profile_picture'] ?? 'assets/images/default-avatar.jpg')); ?>;
+const SELF_AVATAR = <?php echo json_encode('/UniDorm/' . ($userData['profile_picture'] ?? 'assets/images/default.jpg')); ?>;
 const CHAT_URL    = '/UniDorm/views/shared/chat.php';
 
 let currentReceiverId   = 0;
@@ -406,7 +406,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <?php if ($preSelectUser): ?>
     selectContact(<?php echo $preSelectUser['user_id']; ?>,
                   <?php echo json_encode($preSelectUser['fullname']); ?>,
-                  '/UniDorm/' + (<?php echo json_encode($preSelectUser['profile_picture'] ?? 'assets/images/default-avatar.jpg'); ?>),
+                  '/UniDorm/' + (<?php echo json_encode($preSelectUser['profile_picture'] ?? 'assets/images/default.jpg'); ?>),
                   '<?php echo match(strtolower($preSelectUser['role']??'')) { 'admin'=>'Quản trị viên', default=>'Sinh viên' }; ?>');
     <?php else: ?>
     // Tự động mở contact đầu tiên nếu có
@@ -500,10 +500,10 @@ function renderMessages(messages) {
         const content = msg.content;
 
         return `<div class="msg-row ${isSent ? 'sent' : 'received'}">
-            ${!isSent ? `<div class="msg-avatar"><img src="${avatar}" onerror="this.src='/UniDorm/assets/images/default-avatar.jpg'" alt=""></div>` : ''}
+            ${!isSent ? `<div class="msg-avatar"><img src="${avatar}" onerror="this.onerror=null; this.src='/UniDorm/assets/images/default.jpg'" alt="" class="bg-white"></div>` : ''}
             <div class="msg-bubble">${content}</div>
             <div class="msg-time">${time}</div>
-            ${isSent ? `<div class="msg-avatar"><img src="${SELF_AVATAR}" onerror="this.src='/UniDorm/assets/images/default-avatar.jpg'" alt=""></div>` : ''}
+            ${isSent ? `<div class="msg-avatar"><img src="${SELF_AVATAR}" onerror="this.onerror=null; this.src='/UniDorm/assets/images/default.jpg'" alt="" class="bg-white"></div>` : ''}
         </div>`;
     }).join('');
 

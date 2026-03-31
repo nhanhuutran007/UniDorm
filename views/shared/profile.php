@@ -3,6 +3,16 @@
  * UniDorm – Hồ sơ cá nhân (dùng chung admin + student)
  * path: views/shared/profile.php
  */
+if (session_status() === PHP_SESSION_NONE) session_start();
+if (!isset($_SESSION['user_id'])) {
+    header('Location: /UniDorm/views/auth/login.php');
+    exit;
+}
+
+require_once __DIR__ . '/../../includes/db.php';
+$userId = (int)$_SESSION['user_id'];
+$userRole = strtolower($_SESSION['role'] ?? 'student');
+
 $pageTitle   = 'Hồ sơ cá nhân';
 $breadcrumbs = [['label' => 'Hồ sơ cá nhân', 'url' => '#']];
 ob_start();
@@ -128,9 +138,12 @@ $genderMap = ['male' => 'Nam', 'female' => 'Nữ', 'other' => 'Khác'];
         <div class="card border-0 shadow-sm text-center" style="border-radius:14px;">
             <div class="card-body p-4">
                 <div class="position-relative d-inline-block mb-3">
-                    <img src="/UniDorm/<?php echo htmlspecialchars($profile['profile_picture'] ?? 'assets/images/default-avatar.jpg'); ?>"
-                         onerror="this.src='/UniDorm/assets/images/default-avatar.jpg'"
-                         alt="Avatar" class="rounded-circle border border-3 border-primary"
+                    <?php
+                    $prSrc = !empty($profile['profile_picture']) ? '/UniDorm/'.htmlspecialchars($profile['profile_picture']) : '/UniDorm/assets/images/default.jpg';
+                    ?>
+                    <img src="<?php echo $prSrc; ?>"
+                         onerror="this.onerror=null; this.src='/UniDorm/assets/images/default.jpg';"
+                         alt="Avatar" class="rounded-circle border border-3 border-primary bg-white"
                          style="width:100px;height:100px;object-fit:cover;">
                     <label for="avatarInput" class="position-absolute bottom-0 end-0 bg-white border border-2 border-primary rounded-circle d-flex align-items-center justify-content-center"
                            style="width:28px;height:28px;cursor:pointer;" title="Đổi ảnh">

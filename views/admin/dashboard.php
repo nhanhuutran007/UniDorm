@@ -68,30 +68,29 @@ $recentReports = $stmtRptList->get_result()->fetch_all(MYSQLI_ASSOC);
 ?>
 
 <!-- Stat Cards Row -->
-<div class="row g-4 mb-4">
-
+<div class="row g-4 mb-4 fade-in-up stagger-1">
     <?php
     $stats = [
         ['icon'=>'people-fill',     'color'=>'primary',   'value'=>$totalStudents,    'label'=>'Sinh viên đang ở', 'sub'=>"{$pendingStudents} chờ kích hoạt", 'link'=>'/UniDorm/views/admin/students.php'],
-        ['icon'=>'door-open-fill',  'color'=>'success',   'value'=>$availableRooms,   'label'=>'Phòng còn chỗ',    'sub'=>"{$fullRooms} đã đầy · {$maintenanceRooms} bảo trì", 'link'=>'/UniDorm/views/admin/rooms.php'],
-        ['icon'=>'hospital-fill',   'color'=>'info',      'value'=>"{$occupancyRate}%",'label'=>'Tỉ lệ lấp đầy',   'sub'=>"{$totalStudents}/{$totalBeds} giường", 'link'=>'#'],
+        ['icon'=>'door-open-fill',  'color'=>'success',   'value'=>$availableRooms,   'label'=>'Phòng còn chỗ',    'sub'=>"{$fullRooms} đã đầy", 'link'=>'/UniDorm/views/admin/rooms.php?status=available'],
+        ['icon'=>'bar-chart-fill',  'color'=>'info',      'value'=>"{$occupancyRate}%",'label'=>'Tỉ lệ lấp đầy',   'sub'=>"{$totalStudents}/{$totalBeds} giường", 'link'=>'#'],
         ['icon'=>'tools',           'color'=>'danger',    'value'=>$pendingReports,   'label'=>'Báo cáo hỏng',     'sub'=>'Chờ xử lý', 'link'=>'/UniDorm/views/admin/device_reports.php'],
     ];
     foreach ($stats as $s):
     ?>
     <div class="col-sm-6 col-xl-3">
         <a href="<?php echo $s['link']; ?>" class="text-decoration-none">
-            <div class="card border-0 shadow-sm h-100 hover-lift" style="border-radius:14px; transition:transform .2s;">
+            <div class="modern-card h-100">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center justify-content-between mb-3">
-                        <div class="icon-wrap bg-<?php echo $s['color']; ?> bg-opacity-10 text-<?php echo $s['color']; ?> rounded-3 p-2">
-                            <i class="bi bi-<?php echo $s['icon']; ?> fs-4"></i>
+                        <div class="stat-icon-wrap bg-gradient-<?php echo $s['color']; ?> shadow-sm">
+                            <i class="bi bi-<?php echo $s['icon']; ?>"></i>
                         </div>
-                        <i class="bi bi-arrow-up-right text-<?php echo $s['color']; ?> opacity-50 small"></i>
+                        <i class="bi bi-arrow-up-right text-muted opacity-50 small"></i>
                     </div>
-                    <h3 class="fw-black text-dark mb-0"><?php echo $s['value']; ?></h3>
-                    <p class="fw-semibold text-dark small mb-0"><?php echo $s['label']; ?></p>
-                    <p class="text-muted mb-0" style="font-size:11px;"><?php echo $s['sub']; ?></p>
+                    <h3 class="fw-bold text-dark mb-1" style="font-size: 2.2rem;"><?php echo $s['value']; ?></h3>
+                    <p class="fw-semibold text-secondary small mb-1"><?php echo $s['label']; ?></p>
+                    <p class="text-muted mb-0" style="font-size:11px; opacity: 0.8;"><?php echo $s['sub']; ?></p>
                 </div>
             </div>
         </a>
@@ -100,68 +99,79 @@ $recentReports = $stmtRptList->get_result()->fetch_all(MYSQLI_ASSOC);
 </div>
 
 <!-- Occupancy Bar -->
-<div class="card border-0 shadow-sm mb-4" style="border-radius:14px;">
-    <div class="card-body p-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <div>
-                <h6 class="fw-bold mb-0">Tỉ lệ lấp đầy KTX</h6>
-                <small class="text-muted">Tổng <?php echo $totalBeds; ?> giường / <?php echo $totalRooms; ?> phòng</small>
+<div class="modern-card mb-4 fade-in-up stagger-2">
+    <div class="card-body p-4 d-flex align-items-center justify-content-between">
+        <div class="flex-grow-1 me-4">
+            <h5 class="fw-bold mb-1">Tỉ lệ lấp đầy KTX</h5>
+            <p class="text-muted small mb-3">Tổng <?php echo $totalBeds; ?> giường / <?php echo $totalRooms; ?> phòng</p>
+            <div class="progress" style="height:14px; border-radius:20px; background: rgba(0,0,0,0.05); box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+                <div class="progress-bar bg-gradient-<?php echo $occupancyRate >= 90 ? 'danger' : ($occupancyRate >= 70 ? 'warning' : 'primary'); ?>"
+                     role="progressbar" style="width:<?php echo $occupancyRate; ?>%; border-radius:20px; transition: width 1.5s ease-out;" aria-valuenow="<?php echo $occupancyRate; ?>"></div>
             </div>
-            <span class="badge bg-<?php echo $occupancyRate >= 90 ? 'danger' : ($occupancyRate >= 70 ? 'warning' : 'success'); ?> fs-6 px-3 py-2">
-                <?php echo $occupancyRate; ?>%
-            </span>
+            <div class="d-flex justify-content-between mt-3 small">
+                <span><span class="text-success fw-bold"><?php echo $availableRooms; ?></span> phòng còn chỗ</span>
+                <span><span class="text-warning fw-bold"><?php echo $fullRooms; ?></span> phòng đầy</span>
+                <span><span class="text-secondary fw-bold"><?php echo $maintenanceRooms; ?></span> bảo trì</span>
+            </div>
         </div>
-        <div class="progress" style="height:12px; border-radius:10px;">
-            <div class="progress-bar bg-<?php echo $occupancyRate >= 90 ? 'danger' : ($occupancyRate >= 70 ? 'warning' : 'primary'); ?>"
-                 role="progressbar" style="width:<?php echo $occupancyRate; ?>%; border-radius:10px;" aria-valuenow="<?php echo $occupancyRate; ?>"></div>
-        </div>
-        <div class="d-flex justify-content-between mt-2 small text-muted">
-            <span><span class="text-success fw-semibold"><?php echo $availableRooms; ?></span> phòng còn chỗ</span>
-            <span><span class="text-warning fw-semibold"><?php echo $fullRooms; ?></span> phòng đầy</span>
-            <span><span class="text-secondary fw-semibold"><?php echo $maintenanceRooms; ?></span> bảo trì</span>
+        <div class="flex-shrink-0 d-none d-md-block">
+            <div class="position-relative" style="width: 100px; height: 100px;">
+                <svg viewBox="0 0 36 36" class="circular-chart">
+                    <path class="circle-bg" stroke="rgba(0,0,0,0.05)"
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <path class="circle circle-<?php echo $occupancyRate >= 90 ? 'danger' : ($occupancyRate >= 70 ? 'warning' : 'primary'); ?>"
+                      stroke-dasharray="<?php echo $occupancyRate; ?>, 100"
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <text x="18" y="20.35" class="percentage"><?php echo $occupancyRate; ?>%</text>
+                </svg>
+            </div>
         </div>
     </div>
 </div>
 
-<div class="row g-4">
+<div class="row g-4 fade-in-up stagger-3 mb-4">
     <!-- Sinh viên mới nhất -->
     <div class="col-lg-7">
-        <div class="card border-0 shadow-sm h-100" style="border-radius:14px;">
-            <div class="card-header bg-white border-0 pt-4 pb-0 px-4 d-flex justify-content-between align-items-center">
-                <h6 class="fw-bold mb-0"><i class="bi bi-people-fill text-primary me-2"></i>Sinh viên mới nhất</h6>
-                <a href="/UniDorm/views/admin/students.php" class="btn btn-sm btn-outline-primary">Xem tất cả</a>
+        <div class="modern-card h-100">
+            <div class="modern-card-header d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold mb-0 text-dark d-flex align-items-center">
+                    <span class="stat-icon-wrap bg-primary bg-opacity-10 text-primary rounded-circle me-2" style="width:36px; height:36px; font-size:16px;">
+                        <i class="bi bi-people-fill"></i>
+                    </span>Sinh viên mới
+                </h6>
+                <a href="/UniDorm/views/admin/students.php" class="btn btn-sm btn-light rounded-pill px-3 shadow-sm border" style="font-weight: 500; font-size: 0.8rem;">Xem tất cả</a>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
+                    <table class="modern-table">
+                        <thead>
                             <tr>
-                                <th class="ps-4 py-3 small">Họ tên</th>
-                                <th class="py-3 small">MSSV</th>
-                                <th class="py-3 small text-center">Phòng</th>
-                                <th class="py-3 small text-center">TT</th>
+                                <th>Họ tên</th>
+                                <th>MSSV</th>
+                                <th class="text-center">Phòng</th>
+                                <th class="text-center">Trạng thái</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php foreach ($recentStudents as $sv): ?>
                             <tr>
-                                <td class="ps-4 py-3">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="avatar-initials bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width:32px;height:32px;font-size:12px;">
+                                <td>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="avatar-initials bg-gradient-primary rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width:36px;height:36px;font-size:14px; font-weight:600; color:#fff;">
                                             <?php echo mb_substr($sv['fullname'], 0, 1, 'UTF-8'); ?>
                                         </div>
-                                        <span class="small fw-semibold"><?php echo htmlspecialchars(mb_strimwidth($sv['fullname'], 0, 25, '...')); ?></span>
+                                        <span class="fw-semibold text-dark"><?php echo htmlspecialchars(mb_strimwidth($sv['fullname'], 0, 25, '...')); ?></span>
                                     </div>
                                 </td>
-                                <td class="py-3 small text-muted"><?php echo htmlspecialchars($sv['student_code'] ?? '—'); ?></td>
-                                <td class="py-3 text-center small">
+                                <td class="text-muted fw-medium"><?php echo htmlspecialchars($sv['student_code'] ?? '—'); ?></td>
+                                <td class="text-center">
                                     <?php if ($sv['room_code']): ?>
-                                    <code class="bg-light px-2 py-1 rounded"><?php echo $sv['room_code']; ?>.<?php echo $sv['bed_label']; ?></code>
+                                    <span class="badge bg-white text-dark shadow-sm border px-2 py-1"><?php echo $sv['room_code']; ?>.<?php echo $sv['bed_label']; ?></span>
                                     <?php else: ?><span class="text-muted">—</span><?php endif; ?>
                                 </td>
-                                <td class="py-3 text-center">
+                                <td class="text-center">
                                     <?php $sc = ['active'=>['success','Hoạt động'],'pending'=>['warning','Chờ'],'inactive'=>['secondary','Tắt'],'banned'=>['danger','Khoá']]; [$c,$l] = $sc[$sv['status']] ?? ['secondary','?']; ?>
-                                    <span class="badge bg-<?php echo $c; ?> bg-opacity-75" style="font-size:10px;"><?php echo $l; ?></span>
+                                    <span class="badge badge-soft-<?php echo $c; ?> rounded-pill px-3 py-1"><?php echo $l; ?></span>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
@@ -174,16 +184,22 @@ $recentReports = $stmtRptList->get_result()->fetch_all(MYSQLI_ASSOC);
 
     <!-- Báo cáo hỏng gần nhất -->
     <div class="col-lg-5">
-        <div class="card border-0 shadow-sm h-100" style="border-radius:14px;">
-            <div class="card-header bg-white border-0 pt-4 pb-0 px-4 d-flex justify-content-between align-items-center">
-                <h6 class="fw-bold mb-0"><i class="bi bi-tools text-danger me-2"></i>Báo cáo hỏng gần nhất</h6>
-                <a href="/UniDorm/views/admin/device_reports.php" class="btn btn-sm btn-outline-danger">Xem tất cả</a>
+        <div class="modern-card h-100">
+            <div class="modern-card-header d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold mb-0 text-dark d-flex align-items-center">
+                    <span class="stat-icon-wrap bg-danger bg-opacity-10 text-danger rounded-circle me-2" style="width:36px; height:36px; font-size:16px;">
+                        <i class="bi bi-tools"></i>
+                    </span>Báo cáo hỏng
+                </h6>
+                <a href="/UniDorm/views/admin/device_reports.php" class="btn btn-sm btn-light rounded-pill px-3 shadow-sm border" style="font-weight: 500; font-size: 0.8rem;">Xem tất cả</a>
             </div>
             <div class="card-body p-0">
                 <?php if (empty($recentReports)): ?>
                 <div class="text-center py-5 text-muted">
-                    <i class="bi bi-check-circle fs-2 text-success d-block mb-2"></i>
-                    <small>Không có báo cáo mới</small>
+                    <div class="stat-icon-wrap bg-gradient-success mx-auto mb-3 shadow-sm text-white" style="width:50px; height:50px; border-radius: 50%;">
+                        <i class="bi bi-check-lg" style="font-size: 24px;"></i>
+                    </div>
+                    <span class="fw-medium">Không có báo cáo lỗi mới</span>
                 </div>
                 <?php else: ?>
                 <ul class="list-group list-group-flush">
@@ -191,15 +207,17 @@ $recentReports = $stmtRptList->get_result()->fetch_all(MYSQLI_ASSOC);
                         $stMap = ['pending'=>['warning','Chờ'],'in_progress'=>['info','Xử lý'],'resolved'=>['success','Xong'],'rejected'=>['danger','Từ chối']];
                         [$sc, $sl] = $stMap[$rpt['status']] ?? ['secondary','?'];
                     ?>
-                    <li class="list-group-item border-0 px-4 py-3">
+                    <li class="list-group-item border-0 border-bottom px-4 py-3" style="transition: background 0.2s; cursor: pointer;" onmouseover="this.style.background='var(--primary-light)'" onmouseout="this.style.background='transparent'">
                         <div class="d-flex justify-content-between align-items-start">
                             <div class="flex-grow-1 me-3">
-                                <p class="mb-0 small fw-semibold text-dark"><?php echo htmlspecialchars(mb_strimwidth($rpt['title'], 0, 40, '...')); ?></p>
-                                <small class="text-muted"><?php echo htmlspecialchars($rpt['room_code']); ?> · <?php echo htmlspecialchars($rpt['reporter_name']); ?></small>
+                                <p class="mb-1 fw-bold text-dark" style="font-size:0.95rem;"><?php echo htmlspecialchars(mb_strimwidth($rpt['title'], 0, 40, '...')); ?></p>
+                                <div class="d-flex align-items-center text-muted small mt-1 gap-2">
+                                    <span class="badge bg-white text-dark shadow-sm border px-2 py-0 fw-medium"><i class="bi bi-door-open me-1"></i><?php echo htmlspecialchars($rpt['room_code']); ?></span>
+                                    <span class="fw-medium" style="font-size: 13px;"><i class="bi bi-person me-1"></i><?php echo htmlspecialchars(mb_strimwidth($rpt['reporter_name'], 0, 15, '...')); ?></span>
+                                </div>
                             </div>
-                            <span class="badge bg-<?php echo $sc; ?> bg-opacity-75 flex-shrink-0" style="font-size:10px;"><?php echo $sl; ?></span>
+                            <span class="badge badge-soft-<?php echo $sc; ?> rounded-pill px-3 py-1 flex-shrink-0"><?php echo $sl; ?></span>
                         </div>
-                        <div class="text-muted mt-1" style="font-size:10px;"><?php echo date('d/m/Y H:i', strtotime($rpt['created_at'])); ?></div>
                     </li>
                     <?php endforeach; ?>
                 </ul>
@@ -208,11 +226,6 @@ $recentReports = $stmtRptList->get_result()->fetch_all(MYSQLI_ASSOC);
         </div>
     </div>
 </div>
-
-<style>
-.hover-lift:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,.10) !important; }
-</style>
-
 <?php
 $content = ob_get_clean();
 require_once __DIR__ . '/../layout/main.php';

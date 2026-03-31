@@ -42,9 +42,9 @@
 
         <!-- Thông báo -->
         <li class="nav-item dropdown" id="notif-dropdown">
-            <a href="javascript:void(0);" class="nav-link position-relative" data-bs-toggle="dropdown" id="notif-btn">
-                <i class="bi bi-bell fs-5 text-secondary"></i>
-                <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle" id="notif-count" style="display:none;font-size:10px;">0</span>
+            <a href="javascript:void(0);" class="nav-link header-icon-btn position-relative" data-bs-toggle="dropdown" id="notif-btn">
+                <i class="bi bi-bell fs-5"></i>
+                <span class="badge bg-danger rounded-pill badge-notif" id="notif-count" style="display:none;">0</span>
             </a>
             <div class="dropdown-menu dropdown-menu-end shadow-sm border-0 p-0" style="min-width:340px; border-radius:12px; overflow:hidden;">
                 <div class="d-flex align-items-center justify-content-between px-3 py-2 border-bottom bg-light">
@@ -63,45 +63,39 @@
         <!-- Cài đặt (chỉ hiển thị với Admin) -->
         <?php if (isset($userRole) && $userRole === 'admin'): ?>
         <li class="nav-item">
-            <a href="/UniDorm/views/admin/settings.php" class="nav-link" title="Cài đặt hệ thống">
-                <i class="bi bi-gear fs-5 text-secondary"></i>
+            <a href="/UniDorm/views/admin/settings.php" class="nav-link header-icon-btn" title="Cài đặt hệ thống">
+                <i class="bi bi-gear fs-5"></i>
             </a>
         </li>
         <?php endif; ?>
 
         <!-- Avatar + Dropdown tài khoản -->
-        <li class="nav-item dropdown has-arrow main-drop">
-            <a href="javascript:void(0);" class="dropdown-toggle nav-link userset d-flex align-items-center gap-2" data-bs-toggle="dropdown">
-                <div class="avatar-wrap position-relative">
-                    <img src="<?php echo htmlspecialchars($profilePicture ?? '/UniDorm/assets/images/default-avatar.jpg'); ?>"
+        <li class="nav-item dropdown has-arrow main-drop d-flex align-items-center">
+            <a href="javascript:void(0);" class="dropdown-toggle nav-link userset d-flex align-items-center gap-2 p-0" data-bs-toggle="dropdown">
+                <div class="avatar-wrap position-relative" style="width: 36px; height: 36px;">
+                    <?php
+                    $avatarSrc = !empty($profilePicture) ? htmlspecialchars($profilePicture) : '/UniDorm/assets/images/default.jpg';
+                    ?>
+                    <img src="<?php echo $avatarSrc; ?>"
                          alt="Avatar"
-                         class="rounded-circle object-fit-cover border border-2 border-light shadow-sm"
+                         class="rounded-circle object-fit-cover border border-2 border-light shadow-sm bg-white"
                          width="36" height="36"
-                         onerror="this.src='/UniDorm/assets/images/default-avatar.jpg'">
-                    <span class="position-absolute bottom-0 end-0 translate-middle-x bg-success rounded-circle border border-white"
-                          style="width:9px;height:9px;"></span>
+                         onerror="this.onerror=null; this.src='/UniDorm/assets/images/default.jpg';">
+                    <span class="position-absolute bottom-0 end-0 bg-success rounded-circle border border-2 border-white"
+                          style="width:10px;height:10px; transform: translate(10%, 10%);"></span>
                 </div>
-                <div class="d-none d-lg-block text-start lh-sm">
-                    <p class="mb-0 fw-semibold text-dark" style="font-size:13px; max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                        <?php echo htmlspecialchars($userData['fullname'] ?? 'Người dùng'); ?>
-                    </p>
-                    <small class="text-muted" style="font-size:11px;">
-                        <?php
-                        $roleLabels = ['admin' => 'Quản trị viên', 'student' => 'Sinh viên'];
-                        echo $roleLabels[$userRole] ?? ucfirst($userRole ?? '');
-                        ?>
-                    </small>
-                </div>
-                <i class="bi bi-chevron-down text-muted small ms-1"></i>
             </a>
 
             <div class="dropdown-menu dropdown-menu-end shadow border-0 p-0" style="min-width:220px; border-radius:12px; overflow:hidden;">
                 <!-- User info block -->
                 <div class="px-3 py-3 bg-light border-bottom">
                     <div class="d-flex align-items-center gap-2">
-                        <img src="<?php echo htmlspecialchars($profilePicture ?? '/UniDorm/assets/images/default-avatar.jpg'); ?>"
-                             class="rounded-circle border" width="42" height="42" style="object-fit:cover;"
-                             onerror="this.src='/UniDorm/assets/images/default-avatar.jpg'">
+                        <?php
+                        $avatarSrc = !empty($profilePicture) ? htmlspecialchars($profilePicture) : '/UniDorm/assets/images/default.jpg';
+                        ?>
+                        <img src="<?php echo $avatarSrc; ?>"
+                             class="rounded-circle border bg-white" width="42" height="42" style="object-fit:cover;"
+                             onerror="this.onerror=null; this.src='/UniDorm/assets/images/default.jpg';">
                         <div class="lh-sm overflow-hidden">
                             <p class="mb-0 fw-semibold text-dark small text-truncate" style="max-width:140px;">
                                 <?php echo htmlspecialchars($userData['fullname'] ?? 'Người dùng'); ?>
@@ -150,7 +144,7 @@
 
             if (unread > 0) {
                 badge.textContent = unread;
-                badge.style.display = 'inline';
+                badge.style.display = 'flex';
             }
 
             if (res.data.length === 0) {

@@ -52,7 +52,7 @@ $beds = $bStmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
 // Devices trong phòng
 $dStmt = $conn->prepare("
-    SELECT d.id, d.device_name, d.device_type, d.status, d.notes, d.last_checked
+    SELECT d.id, d.device_name, d.device_type, d.status, d.notes
     FROM devices d
     WHERE d.room_id = ?
     ORDER BY d.device_type, d.device_name
@@ -156,9 +156,12 @@ $reportStatusMap = ['pending'=>['warning','Chờ'],'in_progress'=>['info','Đang
 
                             <?php if ($hasUser): ?>
                             <div class="d-flex align-items-center gap-2">
-                                <img src="/UniDorm/<?php echo htmlspecialchars($bed['profile_picture'] ?? 'assets/images/default-avatar.jpg'); ?>"
-                                     onerror="this.src='/UniDorm/assets/images/default-avatar.jpg'"
-                                     class="rounded-circle" width="36" height="36" style="object-fit:cover;">
+                                <?php
+                                $bedPrSrc = !empty($bed['profile_picture']) ? '/UniDorm/'.htmlspecialchars($bed['profile_picture']) : '/UniDorm/assets/images/default.jpg';
+                                ?>
+                                <img src="<?php echo $bedPrSrc; ?>"
+                                     onerror="this.onerror=null; this.src='/UniDorm/assets/images/default.jpg';"
+                                     class="rounded-circle bg-white" width="36" height="36" style="object-fit:cover;">
                                 <div class="flex-grow-1 min-w-0">
                                     <div class="fw-semibold text-truncate" style="font-size:12px;" title="<?php echo htmlspecialchars($bed['fullname']); ?>">
                                         <?php echo htmlspecialchars($bed['fullname']); ?>

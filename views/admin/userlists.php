@@ -11,6 +11,8 @@ $breadcrumbs = [
 ob_start();
 
 require_once __DIR__ . '/../../includes/db.php';
+if (session_status() === PHP_SESSION_NONE) session_start();
+$userId = (int)($_SESSION['user_id'] ?? 0);
 
 // ── POST: toggle status ───────────────────────────────────────────────
 $toast = '';
