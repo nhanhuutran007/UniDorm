@@ -1,18 +1,16 @@
 <?php
-// Path: network-management/controllers/ChatController.php
+// Path: UniDorm/app/controllers/ChatController.php
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
 require_once __DIR__ . '/../models/MessageModel.php';
-// require_once __DIR__ . '/../functions/device_notification/DeviceNotificationManager.php';
 
 class ChatController
 {
     private $db;
     private $userId;
-    private $deviceNotificationManager;
 
     public function __construct($userId)
     {
@@ -21,12 +19,11 @@ class ChatController
         if (!$this->db instanceof mysqli) {
             throw new Exception("Database connection failed: " . mysqli_connect_error());
         }
-        // $this->deviceNotificationManager = new DeviceNotificationManager($this->db);
     }
 
     private function getDatabaseConnection()
     {
-        return require __DIR__ . '/../includes/db.php';
+        return require __DIR__ . '/../../includes/db.php';
     }
 
     public function storeMessage($data = null)
@@ -76,22 +73,16 @@ class ChatController
     try {
         $messageId = $message->save();
 
-        // Gửi thông báo sau khi lưu tin nhắn thành công
-        $notificationData = [
-            'device_id' => null,
-            'notification_type' => 'message',
-            'message' => "Bạn có tin nhắn mới từ người dùng ID {$data['sender_id']}.",
-            'is_read' => false,
-            'target_user_id' => $data['recipient_id'],
-            'created_by' => $this->userId
-        ];
-        $notificationResult = $this->deviceNotificationManager->handleAction('insert_notification', [
-            'data' => $notificationData
-        ]);
+        // Gửi notification vào bảng notifications cho người nhận
+        $senderName = $_SESSION['fullname'] ?? "Người dùng #{$data['sender_id']}";
+        $notifStmt  = $this->db->prepare(
+            "INSERT INTO notifications (sender_id, target_user_id, title, message, type) VALUES (?, ?, ?, ?, 'message')"
+        );
+        $notifTitle = "Tin nhắn mới từ {$senderName}";
+        $notifMsg   = "Bạn có tin nhắn mới. Nhấn vào đây để xem.";
+        $notifStmt->bind_param('iiss', $data['sender_id'], $data['recipient_id'], $notifTitle, $notifMsg);
+        $notifStmt->execute();
 
-        if (!$notificationResult['success']) {
-            error_log("Không thể gửi thông báo cho tin nhắn ID $messageId: " . $notificationResult['message']);
-        }
 
         return json_encode([
             'success' => true,

@@ -1,169 +1,234 @@
 <?php
-require_once __DIR__ . '/../../controllers/UserController.php';
+/**
+ * UniDorm – Admin: Import sinh viên từ CSV (import.php)
+ * Hỗ trợ import hàng loạt sinh viên từ file CSV
+ * Cột CSV: student_code,fullname,gender,date_of_birth,phone_personal,phone_family,hometown,room_code,bed_label
+ */
+$pageTitle   = 'Import sinh viên từ CSV';
+$breadcrumbs = [
+    ['label' => 'Quản lý sinh viên', 'url' => '/UniDorm/views/admin/students.php'],
+    ['label' => 'Import CSV', 'url' => '#'],
+];
+ob_start();
 
-// Kiểm tra đăng nhập
-if (!isset($_SESSION['user_id'])) {
-    header("Location: /QuanLySV/auth/login.php");
-    exit();
+require_once __DIR__ . '/../../includes/db.php';
+
+$result  = null;
+$preview = [];
+$errors  = [];
+$success = 0;
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
+    $file = $_FILES['csv_file'];
+    $ext  = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+
+    if ($file['error'] !== UPLOAD_ERR_OK || $ext !== 'csv') {
+        $errors[] = 'Vui lòng upload file CSV hợp lệ.';
+    } else {
+        $handle = fopen($file['tmp_name'], 'r');
+        // Đọc header
+        $header = fgetcsv($handle);
+        $header = array_map('strtolower', array_map('trim', $header));
+
+        $required = ['student_code', 'fullname'];
+        foreach ($required as $col) {
+            if (!in_array($col, $header)) {
+                $errors[] = "CSV thiếu cột bắt buộc: <strong>$col</strong>";
+            }
+        }
+
+        if (empty($errors)) {
+            $rowNum = 1;
+            while (($data = fgetcsv($handle)) !== false) {
+                $rowNum++;
+                if (count($data) < count($header)) continue;
+                $row = array_combine($header, array_map('trim', $data));
+
+                $code     = strtoupper($row['student_code'] ?? '');
+                $fullname = $row['fullname'] ?? '';
+
+                if (!$code || !$fullname) {
+                    $errors[] = "Dòng $rowNum: thiếu MSSV hoặc họ tên → bỏ qua.";
+                    continue;
+                }
+                if (!preg_match('/^[A-Z0-9]{5,12}$/', $code)) {
+                    $errors[] = "Dòng $rowNum: MSSV '$code' không hợp lệ → bỏ qua.";
+                    continue;
+                }
+
+                $email = $code . '@student.tdtu.edu.vn';
+
+                // Kiểm tra trùng
+                $chk = $conn->prepare("SELECT user_id FROM users WHERE student_code = ?");
+                $chk->bind_param('s', $code);
+                $chk->execute();
+                if ($chk->get_result()->num_rows > 0) {
+                    $errors[] = "Dòng $rowNum: MSSV '$code' đã tồn tại → bỏ qua.";
+                    continue;
+                }
+
+                // Tìm bed nếu có room_code + bed_label
+                $bedId   = null;
+                $roomCode = $row['room_code'] ?? '';
+                $bedLabel = $row['bed_label'] ?? '';
+                if ($roomCode && $bedLabel) {
+                    $bedStmt = $conn->prepare("
+                        SELECT b.id FROM beds b
+                        JOIN rooms r ON b.room_id = r.id
+                        WHERE r.room_code = ? AND b.bed_label = ? AND b.is_occupied = 0
+                    ");
+                    $bedStmt->bind_param('ss', $roomCode, $bedLabel);
+                    $bedStmt->execute();
+                    $bedRow = $bedStmt->get_result()->fetch_assoc();
+                    $bedId  = $bedRow['id'] ?? null;
+                    if (!$bedId && $bedLabel) {
+                        $errors[] = "Dòng $rowNum: Giường $bedLabel/$roomCode không tồn tại hoặc đã có người → bỏ qua gán giường.";
+                    }
+                }
+
+                // Insert user
+                $gender  = $row['gender'] ?? null;
+                $dob     = $row['date_of_birth'] ?: null;
+                $phonePers  = $row['phone_personal'] ?? '';
+                $phoneFamily = $row['phone_family'] ?? '';
+                $hometown = $row['hometown'] ?? '';
+
+                $ins = $conn->prepare("
+                    INSERT INTO users (student_code, username, fullname, email, gender, date_of_birth,
+                                       phone_personal, phone_family, hometown, role, status, bed_id, created_by)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'student', 'pending', ?, ?)
+                ");
+                $ins->bind_param('sssssssssii',
+                    $code, $code, $fullname, $email, $gender, $dob,
+                    $phonePers, $phoneFamily, $hometown, $bedId, $userId
+                );
+                if ($ins->execute()) {
+                    $newId = $conn->insert_id;
+                    // auth_account
+                    $conn->prepare("INSERT INTO auth_accounts (user_id, password, is_active, must_change_password) VALUES (?, NULL, 0, 1)")->execute() || true;
+                    $aa = $conn->prepare("INSERT INTO auth_accounts (user_id, password, is_active, must_change_password) VALUES (?, NULL, 0, 1)");
+                    $aa->bind_param('i', $newId); $aa->execute();
+                    // Mark bed occupied
+                    if ($bedId) {
+                        $oc = $conn->prepare("UPDATE beds SET is_occupied = 1 WHERE id = ?");
+                        $oc->bind_param('i', $bedId); $oc->execute();
+                    }
+                    $success++;
+                    $preview[] = ['MSSV' => $code, 'Họ tên' => $fullname, 'Email' => $email, 'Phòng' => $roomCode ?: '—', 'Giường' => $bedLabel ?: '—'];
+                } else {
+                    $errors[] = "Dòng $rowNum: Lỗi DB khi thêm '$code'.";
+                }
+            }
+            fclose($handle);
+        }
+    }
 }
-
-$userController = new UserController();
-
-// Gọi đúng phương thức xử lý CSV upload
-$response = $userController->handleCSVUpload();
-
-$show_success_toast = $response['show_success_toast'];
-$show_error_toast = $response['show_error_toast'];
-$error_message = $response['error_message'];
 ?>
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-    <meta charset="utf-8">
-    <title>Trang import danh sách sinh viên</title>
+<?php if ($success > 0): ?>
+<div class="alert alert-success rounded-3 mb-4">
+    <i class="bi bi-check-circle-fill me-2"></i>
+    Import thành công <strong><?php echo $success; ?></strong> sinh viên!
+</div>
+<?php endif; ?>
 
-    <link rel="shortcut icon" type="image/x-icon" href="../../assets/img/favicon.svg">
+<?php if (!empty($errors)): ?>
+<div class="alert alert-warning rounded-3 mb-4 small">
+    <strong><i class="bi bi-exclamation-triangle me-2"></i>Có <?php echo count($errors); ?> cảnh báo:</strong>
+    <ul class="mb-0 mt-2">
+        <?php foreach ($errors as $e): ?>
+        <li><?php echo $e; ?></li>
+        <?php endforeach; ?>
+    </ul>
+</div>
+<?php endif; ?>
 
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
-    <!-- Animate.css -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
-        integrity="sha512-c42qTSw/wiW5oaDSLFhn5z7mS0bIX7PB87LWBRH5iA/YB4iR8v+QYq5uTNkO5D3n4CW4S996zAqRpWIcLtYAiRw=="
-        crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <!-- DataTables Bootstrap 5 CSS -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
-    <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-        integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
-        crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="../../assets/css/style.css">
-</head>
-
-<body>
-    <div id="global-loader">
-        <div class="whirly-loader"></div>
-    </div>
-
-    <div class="main-wrapper">
-        <?php include(__DIR__ . '/../../includes/header.php'); ?>
-        <?php include(__DIR__ . '/../../includes/sidebarAll.php'); ?>
-
-        <div class="page-wrapper">
-            <div class="content">
-                <!-- Toast Container -->
-                <div class="position-fixed top-0 end-0 p-3" style="z-index: 1050">
-                    <!-- Success Toast -->
-                    <?php if ($show_success_toast): ?>
-                    <div id="successToast" class="toast align-items-center text-white bg-success border-0 show"
-                        role="alert" aria-live="assertive" aria-atomic="true">
-                        <div class="d-flex">
-                            <div class="toast-body">
-                                <i class="fas fa-check-circle me-2"></i> Thêm sinh viên mới thành công!
-                            </div>
-                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
-                                aria-label="Close"></button>
-                        </div>
+<div class="row g-4">
+    <!-- Upload form -->
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm" style="border-radius:14px;">
+            <div class="card-header bg-transparent border-0 pt-4 px-4 pb-2">
+                <h6 class="fw-bold mb-0"><i class="bi bi-file-earmark-spreadsheet me-2 text-success"></i>Upload file CSV</h6>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" enctype="multipart/form-data" id="csvForm">
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold small">Chọn file CSV</label>
+                        <input type="file" name="csv_file" id="csvFile" class="form-control rounded-3" accept=".csv" required>
+                        <div class="form-text">Tối đa 500 sinh viên / lần import.</div>
                     </div>
-                    <?php endif; ?>
-                    <!-- Error Toast -->
-                    <?php if ($show_error_toast): ?>
-                    <div id="errorToast" class="toast align-items-center text-white bg-danger border-0 show"
-                        role="alert" aria-live="assertive" aria-atomic="true">
-                        <div class="d-flex">
-                            <div class="toast-body">
-                                <i class="fas fa-exclamation-circle me-2"></i> <span
-                                    id="errorMessage"><?php echo htmlspecialchars($error_message); ?></span>
-                            </div>
-                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
-                                aria-label="Close"></button>
-                        </div>
-                    </div>
-                    <?php endif; ?>
-                </div>
+                    <button type="submit" class="btn btn-success w-100 rounded-3" id="importBtn">
+                        <i class="bi bi-cloud-upload me-2"></i>Import
+                    </button>
+                </form>
+            </div>
+        </div>
 
-                <div class="page-header">
-                    <div class="page-title">
-                        <h4>Quản lý sinh viên</h4>
-                        <h6>Thêm import danh sách sinh viên </h6>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-body">
-                        <form method="POST" action="" enctype="multipart/form-data">
-                            <div class="row justify-content-center">
-                                <div class="col-lg-6 col-sm-12 mb-3">
-                                    <div class="form-group mb-3 text-center">
-                                        <label for="csv_file" class="form-label">Chọn file CSV để import danh sách sinh
-                                            viên</label>
-                                        <div class="image-upload image-upload-new">
-                                            <input type="file" name="csv_file" id="csv_file" class="form-control"
-                                                accept=".csv" required>
-                                            <div class="image-uploads mt-2">
-                                                <img src="../../assets/img/icons/upload.svg" alt="img"
-                                                    style="width:40px;">
-                                                <h6 class="mt-2">Kéo và thả file CSV vào đây hoặc nhấn để chọn file</h6>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="text-center mt-3">
-                                        <button type="submit" class="btn btn-primary me-2">Import</button>
-                                        <a href="userlists.php" class="btn btn-secondary">Hủy</a>
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+        <!-- CSV template -->
+        <div class="card border-0 shadow-sm mt-4" style="border-radius:14px;">
+            <div class="card-header bg-transparent border-0 pt-4 px-4 pb-2">
+                <h6 class="fw-bold mb-0"><i class="bi bi-info-circle me-2 text-info"></i>Cấu trúc file CSV</h6>
+            </div>
+            <div class="card-body p-4">
+                <p class="text-muted small mb-2">Header bắt buộc (theo thứ tự):</p>
+                <code class="d-block bg-light p-3 rounded-3 small">student_code, fullname, gender, date_of_birth, phone_personal, phone_family, hometown, room_code, bed_label</code>
+                <p class="text-muted small mt-3 mb-2">Ví dụ dòng dữ liệu:</p>
+                <code class="d-block bg-light p-3 rounded-3 small">52100001, Nguyễn Văn A, male, 2003-05-10, 0912000001, 0912000002, Bình Dương, L.0801, G3</code>
+                <p class="text-muted small mt-2">
+                    <i class="bi bi-asterisk text-danger me-1" style="font-size:9px;"></i> <em>room_code</em> và <em>bed_label</em> là tuỳ chọn.
+                </p>
+                <a href="/UniDorm/assets/templates/import_students_template.csv" class="btn btn-sm btn-outline-secondary mt-2" download>
+                    <i class="bi bi-download me-1"></i>Tải file mẫu
+                </a>
             </div>
         </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
-        integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.1/feather.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jQuery-slimScroll/1.3.8/jquery.slimscroll.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous">
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.44.0/dist/apexcharts.min.js"></script>
-    <script src="../../assets/js/script.js"></script>
+    <!-- Preview table -->
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm" style="border-radius:14px; min-height:200px;">
+            <div class="card-header bg-transparent border-0 pt-4 px-4 pb-2">
+                <h6 class="fw-bold mb-0"><i class="bi bi-table me-2 text-primary"></i>Kết quả import</h6>
+            </div>
+            <div class="card-body p-0">
+                <?php if (empty($preview)): ?>
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-file-earmark-x fs-2 d-block mb-2"></i>
+                    <p class="small">Upload file CSV để xem kết quả tại đây.</p>
+                </div>
+                <?php else: ?>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover mb-0 align-middle" style="font-size:12px;">
+                        <thead class="table-light">
+                            <tr><?php foreach (array_keys($preview[0]) as $h): ?>
+                                <th class="ps-3"><?php echo $h; ?></th>
+                            <?php endforeach; ?></tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($preview as $row): ?>
+                            <tr>
+                                <?php foreach ($row as $val): ?>
+                                <td class="ps-3"><?php echo htmlspecialchars($val); ?></td>
+                                <?php endforeach; ?>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</div>
 
-    <!-- JavaScript để hiển thị Toast -->
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Khởi tạo Success Toast
-        var successToast = document.getElementById('successToast');
-        var successToastInstance = new bootstrap.Toast(successToast, {
-            autohide: true,
-            delay: 4000 // Toast sẽ tự động ẩn sau 3 giây
-        });
+<script>
+document.getElementById('csvForm').addEventListener('submit', function() {
+    const btn = document.getElementById('importBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang import...';
+});
+</script>
 
-        // Khởi tạo Error Toast
-        var errorToast = document.getElementById('errorToast');
-        var errorToastInstance = new bootstrap.Toast(errorToast, {
-            autohide: true,
-            delay: 4000 // Toast sẽ tự động ẩn sau 3 giây
-        });
-
-        // Hiển thị Success Toast nếu thành công
-        <?php if ($show_success_toast): ?>
-        successToastInstance.show();
-        <?php endif; ?>
-
-        // Hiển thị Error Toast nếu có lỗi
-        <?php if ($show_error_toast): ?>
-        errorToastInstance.show();
-        <?php endif; ?>
-    });
-    </script>
-
-
-</body>
-
-</html>
+<?php
+$content = ob_get_clean();
+require_once __DIR__ . '/../layout/main.php';

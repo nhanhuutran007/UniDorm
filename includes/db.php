@@ -1,18 +1,21 @@
 <?php
-$host = "localhost"; // MySQL Server
-$user = "root";      // Default MySQL username (XAMPP)
-$pass = "";          // Password (empty if using XAMPP)
-$dbname = "quanlysv"; // Database name
+// UniDorm – Database connection
+// Chỉnh theo cấu hình môi trường local của bạn
+$host   = "localhost";
+$user   = "root";
+$pass   = "";          // XAMPP default: empty, WAMP/Laragon: tùy cấu hình
+$dbname = "unidorm";  // Đảm bảo đã import schema.sql + seed.sql vào DB này
 
 $conn = new mysqli($host, $user, $pass, $dbname);
 
-// Check connection
 if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+    // Trong production nên log lỗi thay vì die
+    error_log("DB Connection failed: " . $conn->connect_error);
+    http_response_code(503);
+    die(json_encode(['error' => 'Service Unavailable – DB connection failed']));
 }
 
-// Thêm dòng này để set charset UTF-8
 $conn->set_charset("utf8mb4");
+$conn->options(MYSQLI_OPT_INT_AND_FLOAT_NATIVE, 1);
 
-return $conn; // Trả về kết nối
-?>
+return $conn;

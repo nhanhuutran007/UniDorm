@@ -1,319 +1,332 @@
 <?php
-//path: views/admin/updateuser.php
+/**
+ * UniDorm – Admin: Cập nhật thông tin sinh viên (updateuser.php)
+ * ?id=<user_id>
+ */
+$pageTitle   = 'Chỉnh sửa sinh viên';
+$breadcrumbs = [
+    ['label' => 'Quản lý sinh viên', 'url' => '/UniDorm/views/admin/students.php'],
+    ['label' => 'Chỉnh sửa', 'url' => '#'],
+];
+ob_start();
 
 require_once __DIR__ . '/../../includes/db.php';
-require_once __DIR__ . '/../../controllers/UserController.php';
 
-// Kiểm tra quyền truy cập (chỉ admin mới có quyền)
-if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'admin') {
-    header("Location: /network-management/auth/login.php"); 
-    exit();
+$targetId = (int)($_GET['id'] ?? 0);
+if (!$targetId) {
+    header('Location: /UniDorm/views/admin/students.php');
+    exit;
 }
 
-// Khởi tạo UserController
-$userController = new UserController();
+// Lấy thông tin user
+$uStmt = $conn->prepare("SELECT * FROM users WHERE user_id = ?");
+$uStmt->bind_param('i', $targetId);
+$uStmt->execute();
+$target = $uStmt->get_result()->fetch_assoc();
 
-// Lấy username từ URL (GET)
-$usernameToEdit = $_GET['username'] ?? null;
+if (!$target) {
+    header('Location: /UniDorm/views/admin/students.php?error=not_found');
+    exit;
+}
 
-// Lấy thông tin người dùng đang đăng nhập
-$loggedInUsername = $_SESSION['username'] ?? null;
-$loggedInRole = $_SESSION['role'] ?? null;
+$successMsg = $errorMsg = '';
 
-// Xử lý yêu cầu cập nhật thông tin người dùng qua POST
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    header('Content-Type: application/json');
+// Rooms + beds
+$roomsForSelect = $conn->query("
+    SELECT r.id, r.room_code, f.floor_number
+    FROM rooms r JOIN floors f ON r.floor_id = f.id
+    WHERE r.status NOT IN ('maintenance','closed')
+    ORDER BY f.floor_number, r.room_code
+")->fetch_all(MYSQLI_ASSOC);
 
-    try {
-        $usernameToUpdate = $_POST['username'] ?? null;
-        $student_id = $_POST['student_id'] ?? null; // Mã sinh viên
-        $fullname = $_POST['fullname'] ?? null;
-        $email = $_POST['email'] ?? null;
-        $user_id = $_POST['user_id'] ?? null;
-        $room = $_POST['room'] ?? null; 
+$allBeds = $conn->query("
+    SELECT b.id, b.bed_label, b.room_id, b.is_occupied,
+           u.user_id as occupant_id
+    FROM beds b
+    LEFT JOIN users u ON u.bed_id = b.id AND u.status = 'active'
+    ORDER BY b.room_id, b.bed_label
+")->fetch_all(MYSQLI_ASSOC);
 
-        // $newRole = $_POST['role'] ?? 'staff'; // Mặc định là nhân viên
-
-        if (!$usernameToUpdate) {
-            throw new Exception("Không tìm thấy username người dùng để cập nhật.");
-        }
-
-        // Lấy thông tin người dùng đang được chỉnh sửa
-        $userToEdit = $userController->getUserByUsername($usernameToUpdate);
-        if (!$userToEdit) {
-            throw new Exception("Không tìm thấy thông tin người dùng với username: " . htmlspecialchars($usernameToUpdate));
-        }
-
-        $currentRoleOfUserToEdit = $userToEdit['role'] ?? 'staff';
-
-        // Kiểm tra logic: Admin không được phép sửa role của Admin khác
-        if ($loggedInRole === 'admin' && $currentRoleOfUserToEdit === 'admin' && $usernameToUpdate !== $loggedInUsername) {
-            throw new Exception("Quản trị viên không được phép thay đổi vai trò của quản trị viên khác.");
-        }
-
-        $data = [];
-        if ($fullname !== null && $fullname !== '') {
-            $data['fullname'] = $fullname;
-        }
-        if ($student_id = $_POST['student_id'] ?? null) {
-            $data['student_id'] = (int)$student_id; 
-        }
-        if ($email !== null && $email !== '') {
-            $data['email'] = $email;
-        }
-        if ($room = $_POST['room'] ?? null) {
-            $data['room'] = $room; 
-        }
-        if ($num_bed = $_POST['num_bed'] ?? null) {
-            $data['num_bed'] = (int)$num_bed; // Chuyển đổi sang số nguyên
-        }
-        if ($hometown = $_POST['hometown'] ?? null) {
-            $data['hometown'] = $hometown;
-        }
-
-        if (empty($data)) {
-            throw new Exception("Không có thông tin nào được gửi để cập nhật.");
-        }
-
-        // Gọi trực tiếp phương thức editUser
-        if ($userController->editUser($usernameToUpdate, $data)) {
-            echo json_encode([
-                'status' => 'success',
-                'message' => 'Cập nhật thông tin thành công!'
-            ]);
-        } else {
-            echo json_encode([
-                'status' => 'error',
-                'message' => 'Lỗi khi cập nhật thông tin!'
-            ]);
-        }
-
-    } catch (Exception $e) {
-        error_log("Lỗi trong updateUser.php: " . $e->getMessage());
-        echo json_encode([
-            'status' => 'error',
-            'message' => 'Lỗi hệ thống: ' . $e->getMessage()
-        ]);
+$bedsByRoom = [];
+foreach ($allBeds as $b) {
+    // Giường trống HOẶC là giường hiện tại của SV đang sửa
+    if (!$b['is_occupied'] || $b['occupant_id'] == $targetId) {
+        $bedsByRoom[$b['room_id']][] = $b;
     }
-
-    ob_end_flush();
-    exit();
 }
 
-// Lấy thông tin người dùng để hiển thị trong form
-if (!$usernameToEdit) {
-    die("<div class='alert alert-danger'>Không tìm thấy username người dùng!</div>");
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $fullname    = trim($_POST['fullname']     ?? '');
+    $gender      = $_POST['gender']            ?? null;
+    $dob         = $_POST['date_of_birth']     ?: null;
+    $phonePers   = trim($_POST['phone_personal']  ?? '');
+    $phoneFamily = trim($_POST['phone_family']    ?? '');
+    $hometown    = trim($_POST['hometown']        ?? '');
+    $newRoom     = (int)($_POST['room_id']        ?? 0);
+    $newBed      = (int)($_POST['bed_id']         ?? 0);
+    $isLeader    = isset($_POST['is_room_leader']) ? 1 : 0;
+    $newStatus   = $_POST['status'] ?? $target['status'];
+
+    if (!$fullname) {
+        $errorMsg = 'Họ và tên không được để trống.';
+    } else {
+        $conn->begin_transaction();
+        try {
+            // Nếu giường thay đổi
+            $oldBed = (int)$target['bed_id'];
+            if ($oldBed && $oldBed !== $newBed) {
+                // Giải phóng giường cũ
+                $conn->prepare("UPDATE beds SET is_occupied = 0 WHERE id = ?")->execute() || true;
+                $free = $conn->prepare("UPDATE beds SET is_occupied = 0 WHERE id = ?");
+                $free->bind_param('i', $oldBed); $free->execute();
+                // Cập nhật phòng cũ về available
+                $oldRoom = $conn->query("SELECT room_id FROM beds WHERE id = $oldBed")->fetch_assoc()['room_id'] ?? null;
+                if ($oldRoom) {
+                    $conn->prepare("UPDATE rooms SET status='available' WHERE id = ? AND status='full'")->execute() || true;
+                    $ar = $conn->prepare("UPDATE rooms SET status='available' WHERE id = ? AND status='full'");
+                    $ar->bind_param('i', $oldRoom); $ar->execute();
+                }
+            }
+            if ($newBed && $newBed !== $oldBed) {
+                // Chiếm giường mới
+                $oc = $conn->prepare("UPDATE beds SET is_occupied = 1 WHERE id = ?");
+                $oc->bind_param('i', $newBed); $oc->execute();
+                // Kiểm tra phòng mới có đầy không
+                $freeCheck = $conn->prepare("SELECT COUNT(*) as c FROM beds WHERE room_id = ? AND is_occupied = 0");
+                $freeCheck->bind_param('i', $newRoom); $freeCheck->execute();
+                if ($freeCheck->get_result()->fetch_assoc()['c'] == 0 && $newRoom) {
+                    $fc = $conn->prepare("UPDATE rooms SET status='full' WHERE id = ?");
+                    $fc->bind_param('i', $newRoom); $fc->execute();
+                }
+            }
+            $bedIdVal = $newBed ?: null;
+            // Update user
+            $upd = $conn->prepare("
+                UPDATE users SET fullname=?, gender=?, date_of_birth=?, phone_personal=?,
+                                 phone_family=?, hometown=?, status=?, bed_id=?, is_room_leader=?
+                WHERE user_id=?
+            ");
+            $upd->bind_param('sssssssiii',
+                $fullname, $gender, $dob, $phonePers, $phoneFamily, $hometown,
+                $newStatus, $bedIdVal, $isLeader, $targetId
+            );
+            $upd->execute();
+
+            // Nếu admin reset MK → gửi email
+            if (isset($_POST['reset_password'])) {
+                $token     = bin2hex(random_bytes(32));
+                $expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour'));
+                $rt = $conn->prepare("INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE token=VALUES(token),expires_at=VALUES(expires_at),used=0");
+                $rt->bind_param('iss', $targetId, $token, $expiresAt);
+                $rt->execute();
+                $resetUrl = "https://{$_SERVER['HTTP_HOST']}/UniDorm/views/auth/forgot_password.php?token=$token";
+                $email    = $target['email'] ?? $target['student_code'].'@student.tdtu.edu.vn';
+                @mail($email, '[UniDorm] Yêu cầu đặt lại mật khẩu',
+                    "Xin chào {$target['fullname']},\n\nAdmin đã yêu cầu đặt lại mật khẩu cho tài khoản của bạn.\n\nLink: $resetUrl\n\n(Hiệu lực 1 giờ)",
+                    "From: noreply@unidorm.tdtu.edu.vn\r\n"
+                );
+            }
+
+            $conn->commit();
+            // Reload
+            $uStmt->execute();
+            $target     = $uStmt->get_result()->fetch_assoc();
+            $successMsg = "Cập nhật thông tin sinh viên <strong>" . htmlspecialchars($fullname) . "</strong> thành công!";
+        } catch (Exception $e) {
+            $conn->rollback();
+            $errorMsg = 'Lỗi hệ thống: ' . $e->getMessage();
+        }
+    }
 }
 
-$user = $userController->getUserByUsername($usernameToEdit);
-
-if (!$user) {
-    die("<div class='alert alert-danger'>Không tìm thấy thông tin người dùng với username: " . htmlspecialchars($usernameToEdit) . "</div>");
+// Giường hiện tại của SV
+$curBedInfo = null;
+if ($target['bed_id']) {
+    $bedRow = $conn->query("SELECT b.id, b.bed_label, b.room_id, r.room_code, f.floor_number FROM beds b JOIN rooms r ON b.room_id=r.id JOIN floors f ON r.floor_id=f.id WHERE b.id={$target['bed_id']}")->fetch_assoc();
+    $curBedInfo = $bedRow;
 }
-
-$user_id = htmlspecialchars($user['user_id'] ?? '');
-$student_id = htmlspecialchars($user['student_id'] ?? ''); // Mã sinh viên
-$fullname = htmlspecialchars($user['fullname'] ?? '');
-$email = htmlspecialchars($user['email'] ?? '');
-$num_bed = (int)($user['num_bed'] ?? 1); 
-$hometown = htmlspecialchars($user['hometown'] ?? '');
-$room = htmlspecialchars($user['room'] ?? '');
-
-// Xử lý thông báo toast 
-$show_success_toast = isset($_SESSION['success_message']);
-$show_error_toast = isset($_SESSION['error_message']);
-$success_message = $show_success_toast ? $_SESSION['success_message'] : '';
-$error_message = $show_error_toast ? $_SESSION['error_message'] : '';
-
-if ($show_success_toast) unset($_SESSION['success_message']);
-if ($show_error_toast) unset($_SESSION['error_message']);
-
 ?>
 
-<!DOCTYPE html>
-<html lang="vi">
+<?php if ($successMsg): ?>
+<div class="alert alert-success rounded-3 mb-4 d-flex gap-2 alert-dismissible fade show">
+    <i class="bi bi-check-circle-fill mt-1 flex-shrink-0"></i>
+    <div><?php echo $successMsg; ?></div>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+<?php elseif ($errorMsg): ?>
+<div class="alert alert-danger rounded-3 mb-4 d-flex gap-2">
+    <i class="bi bi-exclamation-triangle-fill mt-1 flex-shrink-0"></i>
+    <div><?php echo htmlspecialchars($errorMsg); ?></div>
+</div>
+<?php endif; ?>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cập nhật thông tin người dùng</title>
-    <link rel="shortcut icon" type="image/x-icon" href="../../assets/img/favicon.svg">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-    <link rel="stylesheet" href="/network-management/assets/css/style.css">
-    <style>
-    </style>
-</head>
-
-<body>
-    <div id="global-loader">
-        <div class="whirly-loader"></div>
+<div class="card border-0 shadow-sm" style="border-radius:14px;">
+    <div class="card-header bg-transparent border-0 pt-4 px-4 pb-2 d-flex justify-content-between align-items-center">
+        <div>
+            <h6 class="fw-bold mb-0"><i class="bi bi-person-gear me-2 text-primary"></i>Cập nhật thông tin</h6>
+            <p class="text-muted small mb-0">MSSV: <code><?php echo htmlspecialchars($target['student_code'] ?? '—'); ?></code>
+            &nbsp;|&nbsp; Email: <code><?php echo htmlspecialchars($target['email'] ?? '—'); ?></code></p>
+        </div>
+        <div class="text-end">
+            <?php $stMap = ['active'=>['success','Hoạt động'],'pending'=>['warning','Chờ kích hoạt'],'inactive'=>['danger','Bị khoá']]; ?>
+            <span class="badge bg-<?php echo $stMap[$target['status']][0] ?? 'secondary'; ?>">
+                <?php echo $stMap[$target['status']][1] ?? $target['status']; ?>
+            </span>
+        </div>
     </div>
-
-    <div class="main-wrapper">
-        <?php include(__DIR__ . '/../../includes/header.php'); ?>
-        <?php include(__DIR__ . '/../../includes/sidebarAll.php'); ?>
-
-        <div class="page-wrapper">
-            <div class="content">
-                <div class="page-header">
-                    <div class="page-title">
-                        <h4>Cập nhật thông tin sinh viên</h4>
-                        <h6>Trang cập nhật thông tin sinh viên cho Admin</h6>
+    <div class="card-body p-4">
+        <form method="POST" id="updateForm">
+            <div class="row g-4">
+                <!-- Left: Personal -->
+                <div class="col-lg-6">
+                    <h6 class="fw-semibold text-muted text-uppercase mb-3" style="font-size:11px;letter-spacing:.8px;">Thông tin cá nhân</h6>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Họ và tên <span class="text-danger">*</span></label>
+                        <input type="text" name="fullname" class="form-control rounded-3"
+                               value="<?php echo htmlspecialchars($target['fullname']); ?>" required>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-semibold small">Ngày sinh</label>
+                            <input type="date" name="date_of_birth" class="form-control rounded-3"
+                                   value="<?php echo $target['date_of_birth'] ?? ''; ?>">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-semibold small">Giới tính</label>
+                            <select name="gender" class="form-select rounded-3">
+                                <option value="">Chưa chọn</option>
+                                <?php foreach (['male'=>'Nam','female'=>'Nữ','other'=>'Khác'] as $v=>$l): ?>
+                                <option value="<?php echo $v; ?>" <?php echo $target['gender']===$v?'selected':''; ?>><?php echo $l; ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-semibold small">SĐT cá nhân</label>
+                            <input type="tel" name="phone_personal" class="form-control rounded-3"
+                                   value="<?php echo htmlspecialchars($target['phone_personal'] ?? ''); ?>">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-semibold small">SĐT gia đình</label>
+                            <input type="tel" name="phone_family" class="form-control rounded-3"
+                                   value="<?php echo htmlspecialchars($target['phone_family'] ?? ''); ?>">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Quê quán</label>
+                        <input type="text" name="hometown" class="form-control rounded-3"
+                               value="<?php echo htmlspecialchars($target['hometown'] ?? ''); ?>">
                     </div>
                 </div>
 
-                <div class="toast-container position-fixed top-0 end-0 p-3">
-                    <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert">
-                        <div class="d-flex">
-                            <div class="toast-body"></div> <button type="button"
-                                class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                <!-- Right: Room + Account -->
+                <div class="col-lg-6">
+                    <h6 class="fw-semibold text-muted text-uppercase mb-3" style="font-size:11px;letter-spacing:.8px;">Phòng ở & Tài khoản</h6>
+
+                    <?php if ($curBedInfo): ?>
+                    <div class="alert alert-info py-2 px-3 rounded-3 mb-3 small">
+                        <i class="bi bi-door-open me-1"></i>
+                        Hiện đang ở: <strong><?php echo $curBedInfo['room_code']; ?></strong> – <?php echo $curBedInfo['bed_label']; ?>
+                        (Lầu <?php echo $curBedInfo['floor_number']; ?>)
+                    </div>
+                    <?php endif; ?>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-7">
+                            <label class="form-label fw-semibold small">Phòng</label>
+                            <select name="room_id" id="roomSelect" class="form-select rounded-3" onchange="updateBedSelect()">
+                                <option value="">-- Chưa gán --</option>
+                                <?php foreach ($roomsForSelect as $r): ?>
+                                <option value="<?php echo $r['id']; ?>"
+                                    <?php echo ($curBedInfo && $curBedInfo['room_id']==$r['id']) ? 'selected' : ''; ?>>
+                                    <?php echo $r['room_code']; ?> (Lầu <?php echo $r['floor_number']; ?>)
+                                </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-5">
+                            <label class="form-label fw-semibold small">Giường</label>
+                            <select name="bed_id" id="bedSelect" class="form-select rounded-3">
+                                <option value="">-- Chọn giường --</option>
+                                <?php if ($curBedInfo): ?>
+                                <option value="<?php echo $curBedInfo['id']; ?>" selected><?php echo $curBedInfo['bed_label']; ?></option>
+                                <?php endif; ?>
+                            </select>
                         </div>
                     </div>
-                    <div id="errorToast" class="toast align-items-center text-white bg-danger border-0" role="alert">
-                        <div class="d-flex">
-                            <div class="toast-body"></div> <button type="button"
-                                class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Trạng thái tài khoản</label>
+                        <select name="status" class="form-select rounded-3">
+                            <option value="active"   <?php echo $target['status']==='active'  ?'selected':''; ?>>Hoạt động</option>
+                            <option value="pending"  <?php echo $target['status']==='pending' ?'selected':''; ?>>Chờ kích hoạt</option>
+                            <option value="inactive" <?php echo $target['status']==='inactive'?'selected':''; ?>>Bị khoá</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="is_room_leader" id="isLeader"
+                                   <?php echo $target['is_room_leader'] ? 'checked' : ''; ?>>
+                            <label class="form-check-label small" for="isLeader">
+                                <i class="bi bi-star-fill text-warning me-1"></i>Đặt làm trưởng phòng
+                            </label>
                         </div>
                     </div>
-                </div>
 
-                <div class="card">
-                    <div class="card-body">
-                        <form id="updateUserForm" method="POST">
-                            <div class="row">
-                                <div class="col-lg-6 col-sm-12 col-12">
-                                    <div class="form-group">
-                                        <label>Username <span class="text-danger">*</span></label>
-                                        <input type="text" name="username" class="form-control" readonly
-                                            value="<?php echo htmlspecialchars($usernameToEdit ?? ''); ?>">
-                                    </div>
-                                </div>
-                                <div class="col-lg-6 col-sm-12 col-12">
-                                    <div class="form-group">
-                                        <label>Mã HV</label>
-                                        <input type="text" name="student_id" class="form-control"
-                                            value="<?php echo $student_id; ?>">
-                                    </div>
-                                </div>
-                                <div class="col-lg-6 col-sm-12 col-12">
-                                    <div class="form-group">
-                                        <label>Họ và tên</label>
-                                        <input type="text" name="fullname" class="form-control"
-                                            value="<?php echo $fullname; ?>">
-                                    </div>
-                                </div>
-                                <div class="col-lg-6 col-sm-12 col-12">
-                                    <div class="form-group">
-                                        <label>Email</label>
-                                        <input type="text" name="email" class="form-control"
-                                            value="<?php echo $email; ?>">
-                                    </div>
-                                </div>
-                                <div class="col-lg-6 col-sm-12 col-12">
-                                    <div class="form-group">
-                                        <label>Số phòng</label>
-                                        <input type="text" name="room" class="form-control"
-                                            value="<?php echo $room; ?>">
-
-                                    </div>
-                                </div>
-                                <div class="col-lg-6 col-sm-12 col-12">
-                                    <div class="form-group">
-                                        <label>Số giường</label>
-                                        <select class="form-select" name="num_bed">
-                                            <?php
-                                            for ($i = 1; $i <= 6; $i++) {
-                                                echo '<option value="' . $i . '" ' . ($num_bed === $i ? 'selected' : '') . '>' . $i . '</option>';
-                                            }
-                                            ?>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-lg-6 col-sm-12 col-12">
-                                    <div class="form-group">
-                                        <label>Quê quán</label>
-                                        <input type="text" name="hometown" class="form-control"
-                                            value="<?php echo $hometown; ?>">
-                                    </div>
-                                </div>
-                                <div class="col-lg-12">
-                                    <button type="submit" class="btn btn-primary me-2">Cập nhật</button>
-                                    <a href="userlists.php" class="btn btn-secondary">Hủy</a>
-                                </div>
-                            </div>
-                        </form>
+                    <hr>
+                    <div class="mb-0">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="reset_password" id="resetPw">
+                            <label class="form-check-label small" for="resetPw">
+                                <i class="bi bi-key-fill text-warning me-1"></i>Gửi email yêu cầu đặt lại mật khẩu
+                            </label>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+
+            <hr class="my-4">
+            <div class="d-flex justify-content-between">
+                <a href="/UniDorm/views/admin/students.php" class="btn btn-outline-secondary rounded-3">
+                    <i class="bi bi-arrow-left me-1"></i>Quay lại
+                </a>
+                <button type="submit" class="btn btn-primary px-4 rounded-3" id="submitBtn">
+                    <i class="bi bi-check2 me-2"></i>Lưu thay đổi
+                </button>
+            </div>
+        </form>
     </div>
+</div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.1/feather.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jQuery-slimScroll/1.3.8/jquery.slimscroll.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.44.0/dist/apexcharts.min.js"></script>
-    <script src="../../assets/js/script.js"></script>
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const loader = document.getElementById('global-loader');
-        setTimeout(() => {
-            loader.classList.add('hidden');
-        }, 500);
+<script>
+const bedsByRoom = <?php echo json_encode($bedsByRoom); ?>;
+const currentBedId = <?php echo (int)($target['bed_id'] ?? 0); ?>;
 
-        const successToast = new bootstrap.Toast(document.getElementById('successToast'), {
-            delay: 4000
+function updateBedSelect() {
+    const roomId = document.getElementById('roomSelect').value;
+    const bedSel = document.getElementById('bedSelect');
+    bedSel.innerHTML = '<option value="">-- Chọn giường --</option>';
+    if (roomId && bedsByRoom[roomId]) {
+        bedsByRoom[roomId].forEach(b => {
+            const opt = document.createElement('option');
+            opt.value = b.id;
+            opt.textContent = b.bed_label;
+            if (parseInt(b.id) === currentBedId) opt.selected = true;
+            bedSel.appendChild(opt);
         });
-        const errorToast = new bootstrap.Toast(document.getElementById('errorToast'), {
-            delay: 4000
-        });
+    }
+}
+document.addEventListener('DOMContentLoaded', updateBedSelect);
 
-        $("#updateUserForm").on('submit', function(event) {
-            event.preventDefault();
-            const formData = new FormData(this);
-            const submitButton = this.querySelector('button[type="submit"]');
-            submitButton.disabled = true;
+document.getElementById('updateForm').addEventListener('submit', function() {
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang lưu...';
+});
+</script>
 
-            $.ajax({
-                url: window.location.pathname +
-                    '?username=<?php echo urlencode($usernameToEdit ?? ''); ?>',
-                type: "POST",
-                data: formData,
-                processData: false,
-                contentType: false,
-                dataType: "json",
-                success: function(response) {
-                    submitButton.disabled = false;
-                    if (response.status === 'success') {
-                        successToast._element.querySelector('.toast-body').textContent =
-                            response.message;
-                        successToast.show();
-                        // Thêm logic chuyển hướng sau khi hiển thị toast
-                        setTimeout(() => {
-                            window.location.href = 'userlists.php';
-                        }, 500); // Chuyển hướng sau 2 giây để người dùng thấy thông báo
-                    } else {
-                        errorToast._element.querySelector('.toast-body').textContent =
-                            response.message;
-                        errorToast.show();
-                    }
-                },
-                error: function(xhr, status, error) {
-                    submitButton.disabled = false;
-                    console.error('AJAX Error:', xhr.responseText);
-                    errorToast._element.querySelector('.toast-body').textContent =
-                        "Lỗi hệ thống: " + (xhr.responseJSON?.message ||
-                            'Không thể xử lý yêu cầu');
-                    errorToast.show();
-                }
-            });
-        });
-    });
-    </script>
-</body>
-
-</html>
+<?php
+$content = ob_get_clean();
+require_once __DIR__ . '/../layout/main.php';

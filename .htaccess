@@ -1,9 +1,9 @@
 RewriteEngine On
+RewriteBase /UniDorm/
 
-# Nếu tệp hoặc thư mục không tồn tại, chuyển hướng đến index.php
+# Bỏ qua file thực tế tồn tại (assets, etc.)
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ index.php?route=$1 [L,QSA]
 
-# Cấu hình trang lỗi 404 (dự phòng, nếu cần)
-ErrorDocument 404 /includes/404.php
+# Tất cả route → index.php (ngoại trừ /api/)
+RewriteRule ^(?!api/)(.*)$ index.php?page=$1 [QSA,L]
