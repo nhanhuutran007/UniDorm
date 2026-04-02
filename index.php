@@ -4,17 +4,16 @@
  * Xử lý tất cả routes và redirect đúng trang theo role
  */
 if (session_status() === PHP_SESSION_NONE) session_start();
+require_once __DIR__ . '/includes/db.php';
 
 // Nếu chưa đăng nhập → login
 if (!isset($_SESSION['user_id'])) {
-    header('Location: /UniDorm/views/auth/login.php');
+    header('Location: ' . BASE_URL . '/views/auth/login.php');
     exit;
 }
 
 $role   = strtolower($_SESSION['role'] ?? '');
 $route  = trim($_GET['page'] ?? '');
-
-require_once __DIR__ . '/includes/db.php';
 
 // Map route → file
 $adminRoutes = [
@@ -33,6 +32,7 @@ $adminRoutes = [
     'import'          => 'views/admin/import.php',
     'chat'            => 'views/shared/chat.php',
     'profile'         => 'views/shared/profile.php',
+    'settings'        => 'views/admin/settings.php',
 ];
 
 $studentRoutes = [
@@ -52,7 +52,7 @@ if ($role === 'admin') {
 } elseif ($role === 'student') {
     $target = $studentRoutes[$route] ?? null;
 } else {
-    header('Location: /UniDorm/views/auth/login.php');
+    header('Location: ' . BASE_URL . '/views/auth/login.php');
     exit;
 }
 

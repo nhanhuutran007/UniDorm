@@ -5,7 +5,7 @@
  */
 $pageTitle   = 'Thông báo';
 $breadcrumbs = [
-    ['label' => 'Trang chủ', 'url' => '/UniDorm/views/student/dashboard.php'],
+    ['label' => 'Trang chủ', 'url' => BASE_URL . '/dashboard'],
     ['label' => 'Thông báo', 'url' => '#'],
 ];
 ob_start();

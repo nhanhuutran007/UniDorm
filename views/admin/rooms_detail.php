@@ -5,8 +5,8 @@
  */
 $pageTitle   = 'Chi tiết phòng';
 $breadcrumbs = [
-    ['label' => 'Dashboard',     'url' => '/UniDorm/views/admin/dashboard.php'],
-    ['label' => 'Quản lý phòng', 'url' => '/UniDorm/views/admin/rooms.php'],
+    ['label' => 'Dashboard',     'url' => BASE_URL . '/dashboard'],
+    ['label' => 'Quản lý phòng', 'url' => BASE_URL . '/rooms'],
     ['label' => 'Chi tiết',      'url' => '#'],
 ];
 ob_start();
@@ -15,7 +15,7 @@ require_once __DIR__ . '/../../includes/db.php';
 
 $roomId = (int)($_GET['id'] ?? 0);
 if (!$roomId) {
-    header('Location: /UniDorm/views/admin/rooms.php');
+    header('Location: ' . BASE_URL . '/rooms');
     exit;
 }
 
@@ -32,17 +32,17 @@ $rStmt->execute();
 $room = $rStmt->get_result()->fetch_assoc();
 
 if (!$room) {
-    header('Location: /UniDorm/views/admin/rooms.php?error=room_not_found');
+    header('Location: ' . BASE_URL . '/rooms?error=room_not_found');
     exit;
 }
 
-// Beds + sinh viên đang ở
+// Beds + sinh viên đang ở (Bao gồm cả trạng thái active và pending)
 $bStmt = $conn->prepare("
     SELECT b.id as bed_id, b.bed_label, b.is_occupied,
            u.user_id, u.fullname, u.student_code, u.phone_personal, u.hometown,
            u.is_room_leader, u.status as user_status, u.profile_picture
     FROM beds b
-    LEFT JOIN users u ON u.bed_id = b.id AND u.status = 'active'
+    LEFT JOIN users u ON u.bed_id = b.id AND u.status IN ('active', 'pending')
     WHERE b.room_id = ?
     ORDER BY b.bed_label ASC
 ");
@@ -106,7 +106,7 @@ $reportStatusMap = ['pending'=>['warning','Chờ'],'in_progress'=>['info','Đang
                 </div>
             </div>
             <div class="col-auto">
-                <a href="/UniDorm/views/admin/rooms.php" class="btn btn-outline-secondary btn-sm">
+                <a href="<?php echo BASE_URL; ?>/rooms" class="btn btn-outline-secondary btn-sm">
                     <i class="bi bi-arrow-left me-1"></i>Quay lại
                 </a>
             </div>
@@ -139,13 +139,14 @@ $reportStatusMap = ['pending'=>['warning','Chờ'],'in_progress'=>['info','Đang
                         $hasUser = !empty($bed['user_id']);
                         $isLeader = $hasUser && $bed['is_room_leader'] == 1;
                     ?>
-                    <div class="col-md-6 col-xl-4">
-                        <div class="border rounded-3 p-3 h-100 <?php echo $hasUser ? 'border-primary' : 'border-dashed'; ?>"
-                             style="border-style:<?php echo $hasUser?'solid':'dashed'; ?>!important; background:<?php echo $hasUser?'#eff6ff':'#f9fafb'; ?>;">
+                    <div class="col-md-6 col-xl-4 bed-column" data-bed-id="<?php echo $bed['bed_id']; ?>" data-user-id="<?php echo (int)($bed['user_id'] ?? 0); ?>">
+                        <div class="border rounded-3 p-3 h-100 <?php echo $hasUser ? 'border-primary student-card' : 'border-dashed empty-bed'; ?>"
+                             draggable="<?php echo $hasUser ? 'true' : 'false'; ?>"
+                             style="border-style:<?php echo $hasUser?'solid':'dashed'; ?>!important; background:<?php echo $hasUser?'#eff6ff':'#f9fafb'; ?>; cursor: <?php echo $hasUser ? 'grab' : 'default'; ?>;">
 
                             <div class="d-flex align-items-center gap-2 mb-2">
-                                <div class="bg-<?php echo $hasUser?'primary':'secondary'; ?> bg-opacity-<?php echo $hasUser?'15':'10'; ?> text-<?php echo $hasUser?'primary':'secondary'; ?> rounded-2 px-2 py-1">
-                                    <strong style="font-size:13px;"><?php echo $bed['bed_label']; ?></strong>
+                                <div class="bg-<?php echo $hasUser?'primary':'secondary'; ?> bg-opacity-<?php echo $hasUser?'25':'20'; ?> text-dark rounded-2 px-2 py-1">
+                                    <strong style="font-size:14px;"><?php echo $bed['bed_label']; ?></strong>
                                 </div>
                                 <?php if ($isLeader): ?>
                                 <span class="badge bg-warning text-dark" style="font-size:9px;"><i class="bi bi-star-fill me-1"></i>Trưởng phòng</span>
@@ -157,10 +158,10 @@ $reportStatusMap = ['pending'=>['warning','Chờ'],'in_progress'=>['info','Đang
                             <?php if ($hasUser): ?>
                             <div class="d-flex align-items-center gap-2">
                                 <?php
-                                $bedPrSrc = !empty($bed['profile_picture']) ? '/UniDorm/'.htmlspecialchars($bed['profile_picture']) : '/UniDorm/assets/images/default.jpg';
+                                $bedPrSrc = !empty($bed['profile_picture']) ? BASE_URL . '/' . $bed['profile_picture'] : BASE_URL . '/assets/images/default.jpg';
                                 ?>
                                 <img src="<?php echo $bedPrSrc; ?>"
-                                     onerror="this.onerror=null; this.src='/UniDorm/assets/images/default.jpg';"
+                                     onerror="if (this.src != '<?php echo BASE_URL; ?>/assets/images/default.jpg') this.src='<?php echo BASE_URL; ?>/assets/images/default.jpg';"
                                      class="rounded-circle bg-white" width="36" height="36" style="object-fit:cover;">
                                 <div class="flex-grow-1 min-w-0">
                                     <div class="fw-semibold text-truncate" style="font-size:12px;" title="<?php echo htmlspecialchars($bed['fullname']); ?>">
@@ -178,7 +179,7 @@ $reportStatusMap = ['pending'=>['warning','Chờ'],'in_progress'=>['info','Đang
                                 <?php endif; ?>
                             </div>
                             <div class="mt-2">
-                                <a href="/UniDorm/views/admin/updateuser.php?id=<?php echo $bed['user_id']; ?>" class="btn btn-xs btn-outline-primary py-0 px-2" style="font-size:10px;">
+                                <a href="<?php echo BASE_URL; ?>/updateuser?id=<?php echo $bed['user_id']; ?>" class="btn btn-xs btn-outline-primary py-0 px-2" style="font-size:10px;">
                                     <i class="bi bi-pencil me-1"></i>Sửa
                                 </a>
                             </div>
@@ -225,7 +226,7 @@ $reportStatusMap = ['pending'=>['warning','Chờ'],'in_progress'=>['info','Đang
         <div class="card border-0 shadow-sm" style="border-radius:14px;">
             <div class="card-header bg-transparent border-0 pt-4 px-4 pb-2 d-flex justify-content-between">
                 <h6 class="fw-bold mb-0"><i class="bi bi-tools me-2 text-danger"></i>Báo cáo hỏng gần đây</h6>
-                <a href="/UniDorm/views/admin/device_reports.php?room_id=<?php echo $roomId; ?>" class="text-primary small">Xem tất cả</a>
+                <a href="<?php echo BASE_URL; ?>/device_reports?room_id=<?php echo $roomId; ?>" class="text-primary small">Xem tất cả</a>
             </div>
             <div class="card-body p-0">
                 <?php if (empty($roomReports)): ?>
@@ -253,6 +254,87 @@ $reportStatusMap = ['pending'=>['warning','Chờ'],'in_progress'=>['info','Đang
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.student-card');
+    const columns = document.querySelectorAll('.bed-column');
+    let draggedUserId = null;
+    let sourceBedId = null;
+
+    cards.forEach(card => {
+        card.addEventListener('dragstart', function(e) {
+            const column = this.closest('.bed-column');
+            draggedUserId = column.dataset.userId;
+            sourceBedId = column.dataset.bedId;
+            this.style.opacity = '0.5';
+            e.dataTransfer.setData('text/plain', draggedUserId);
+        });
+
+        card.addEventListener('dragend', function() {
+            this.style.opacity = '1';
+            columns.forEach(col => col.classList.remove('drag-over'));
+        });
+    });
+
+    columns.forEach(column => {
+        column.addEventListener('dragover', function(e) {
+            e.preventDefault();
+        });
+
+        column.addEventListener('dragenter', function(e) {
+            e.preventDefault();
+            this.classList.add('drag-over');
+        });
+
+        column.addEventListener('dragleave', function() {
+            this.classList.remove('drag-over');
+        });
+
+        column.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+            const targetBedId = this.dataset.bedId;
+
+            if (targetBedId === sourceBedId) return;
+
+            // Call API to swap
+            fetch('<?php echo BASE_URL; ?>/api/swap_beds.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id_1: draggedUserId,
+                    bed_id_1: sourceBedId,
+                    bed_id_2: targetBedId
+                })
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.success) {
+                    location.reload();
+                } else {
+                    alert('Lỗi: ' + res.message);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Có lỗi xảy ra khi hoán đổi giường.');
+            });
+        });
+    });
+});
+</script>
+
+<style>
+.drag-over {
+    background: rgba(37, 99, 235, 0.05);
+    border: 2px dashed #2563eb !important;
+    border-radius: 14px;
+}
+.student-card:active {
+    cursor: grabbing;
+}
+</style>
 
 <?php
 $content = ob_get_clean();

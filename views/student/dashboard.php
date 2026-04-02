@@ -88,7 +88,7 @@ $myReportsCount = $stmt2->get_result()->fetch_assoc()['cnt'] ?? 0;
 
     <!-- Thông báo chưa đọc -->
     <div class="col-sm-6 col-xl-3">
-        <a href="/UniDorm/views/student/notifications.php" class="text-decoration-none">
+        <a href="<?php echo BASE_URL; ?>/notifications" class="text-decoration-none">
             <div class="card border-0 shadow-sm h-100" style="border-radius:12px;">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center justify-content-between mb-3">
@@ -108,7 +108,7 @@ $myReportsCount = $stmt2->get_result()->fetch_assoc()['cnt'] ?? 0;
 
     <!-- Báo cáo đã gửi -->
     <div class="col-sm-6 col-xl-3">
-        <a href="/UniDorm/views/student/report_device.php" class="text-decoration-none">
+        <a href="<?php echo BASE_URL; ?>/report_device" class="text-decoration-none">
             <div class="card border-0 shadow-sm h-100" style="border-radius:12px;">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center justify-content-between mb-3">
@@ -150,14 +150,14 @@ $myReportsCount = $stmt2->get_result()->fetch_assoc()['cnt'] ?? 0;
                     <tr><td class="text-muted">Vai trò</td><td><span class="badge bg-primary bg-opacity-75"><i class="bi bi-star-fill me-1"></i>Trưởng phòng</span></td></tr>
                     <?php endif; ?>
                 </table>
-                <a href="/UniDorm/views/student/room_info.php" class="btn btn-sm btn-outline-primary mt-3">
+                <a href="<?php echo BASE_URL; ?>/room_info" class="btn btn-sm btn-outline-primary mt-3">
                     <i class="bi bi-arrow-right-circle me-1"></i>Xem chi tiết phòng
                 </a>
                 <?php else: ?>
                 <div class="text-center py-4 text-muted">
                     <i class="bi bi-door-closed fs-2 d-block mb-2"></i>
                     <p class="mb-0 small">Bạn chưa được xếp phòng.<br>Liên hệ Ban quản lý để được hỗ trợ.</p>
-                    <a href="/UniDorm/views/shared/chat.php" class="btn btn-sm btn-primary mt-3">Nhắn tin BQL</a>
+                    <a href="<?php echo BASE_URL; ?>/chat" class="btn btn-sm btn-primary mt-3">Nhắn tin BQL</a>
                 </div>
                 <?php endif; ?>
             </div>
@@ -171,22 +171,22 @@ $myReportsCount = $stmt2->get_result()->fetch_assoc()['cnt'] ?? 0;
                 <h6 class="fw-bold text-dark mb-0"><i class="bi bi-lightning-charge me-2 text-warning"></i>Thao tác nhanh</h6>
             </div>
             <div class="card-body px-4 pb-4 d-flex flex-column gap-3">
-                <a href="/UniDorm/views/student/report_device.php" class="btn btn-outline-danger d-flex align-items-center gap-2">
+                <a href="<?php echo BASE_URL; ?>/report_device" class="btn btn-outline-danger d-flex align-items-center gap-2">
                     <i class="bi bi-exclamation-triangle-fill"></i>
                     <span>Báo hỏng thiết bị trong phòng</span>
                 </a>
-                <a href="/UniDorm/views/shared/chat.php" class="btn btn-outline-primary d-flex align-items-center gap-2">
+                <a href="<?php echo BASE_URL; ?>/chat" class="btn btn-outline-primary d-flex align-items-center gap-2">
                     <i class="bi bi-chat-dots-fill"></i>
                     <span>Nhắn tin với Ban quản lý</span>
                 </a>
-                <a href="/UniDorm/views/student/notifications.php" class="btn btn-outline-secondary d-flex align-items-center gap-2">
+                <a href="<?php echo BASE_URL; ?>/notifications" class="btn btn-outline-secondary d-flex align-items-center gap-2">
                     <i class="bi bi-bell-fill"></i>
                     <span>Xem thông báo từ BQL</span>
                     <?php if ($unreadNotif > 0): ?>
                     <span class="badge bg-danger ms-auto"><?php echo $unreadNotif; ?></span>
                     <?php endif; ?>
                 </a>
-                <a href="/UniDorm/views/shared/profile.php" class="btn btn-outline-secondary d-flex align-items-center gap-2">
+                <a href="<?php echo BASE_URL; ?>/profile" class="btn btn-outline-secondary d-flex align-items-center gap-2">
                     <i class="bi bi-person-fill"></i>
                     <span>Cập nhật hồ sơ cá nhân</span>
                 </a>

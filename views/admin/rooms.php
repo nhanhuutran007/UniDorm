@@ -5,7 +5,7 @@
  */
 $pageTitle   = 'Quản lý phòng';
 $breadcrumbs = [
-    ['label' => 'Dashboard', 'url' => '/UniDorm/views/admin/dashboard.php'],
+    ['label' => 'Dashboard', 'url' => BASE_URL . '/dashboard'],
     ['label' => 'Quản lý phòng', 'url' => '#'],
 ];
 ob_start();
@@ -78,7 +78,7 @@ $dataStmt = $conn->prepare("
     JOIN floors f ON r.floor_id = f.id
     JOIN buildings bld ON f.building_id = bld.id
     LEFT JOIN beds b ON b.room_id = r.id
-    LEFT JOIN users u ON u.bed_id = b.id AND u.status = 'active'
+    LEFT JOIN users u ON u.bed_id = b.id AND u.status IN ('active', 'pending')
     WHERE $whereSQL
     GROUP BY r.id, r.room_code, r.status, r.max_capacity, r.created_at, f.floor_number, bld.name
     ORDER BY f.floor_number ASC, r.room_code ASC
@@ -190,7 +190,7 @@ $statusConfig = [
             </div>
             <div class="col-md-2 d-flex gap-2">
                 <button type="submit" class="btn btn-primary flex-grow-1"><i class="bi bi-funnel me-1"></i>Lọc</button>
-                <a href="/UniDorm/views/admin/rooms.php" class="btn btn-outline-secondary" title="Xóa lọc"><i class="bi bi-x-lg"></i></a>
+                <a href="<?php echo BASE_URL; ?>/rooms" class="btn btn-outline-secondary" title="Xóa lọc"><i class="bi bi-x-lg"></i></a>
             </div>
         </form>
     </div>
@@ -210,7 +210,13 @@ $statusConfig = [
 <?php else: ?>
 <div class="row g-3" id="roomGrid">
     <?php foreach ($rooms as $room):
-        [$sc,$sl,$si] = $statusConfig[$room['status']] ?? ['secondary','?','question'];
+        // Tự động chuyển hiển thị sang 'Đã đầy' nếu số người đã đạt tối đa, 
+        // kể cả khi trạng thái trong DB vẫn là 'available'
+        $displayStatus = $room['status'];
+        if ($displayStatus === 'available' && $room['current_count'] >= $room['max_capacity']) {
+            $displayStatus = 'full';
+        }
+        [$sc,$sl,$si] = $statusConfig[$displayStatus] ?? ['secondary','?','question'];
         $pct = $room['max_capacity'] > 0 ? round(($room['current_count'] / $room['max_capacity']) * 100) : 0;
         $barColor = $pct >= 100 ? 'danger' : ($pct >= 80 ? 'warning' : 'success');
     ?>
@@ -240,7 +246,7 @@ $statusConfig = [
 
                 <!-- Actions -->
                 <div class="d-flex gap-2">
-                    <a href="/UniDorm/views/admin/rooms_detail.php?id=<?php echo $room['id']; ?>"
+                    <a href="<?php echo BASE_URL; ?>/rooms_detail?id=<?php echo $room['id']; ?>"
                        class="btn btn-sm btn-outline-primary flex-grow-1" style="font-size:11px;">
                         <i class="bi bi-eye me-1"></i>Chi tiết
                     </a>

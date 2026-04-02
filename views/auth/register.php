@@ -14,7 +14,7 @@ if (isset($_SESSION['user_id'])) {
     exit;
 }
 
-$conn = require_once __DIR__ . '/../../includes/db.php';
+require_once __DIR__ . '/../../includes/db.php';
 
 $error   = '';
 $success = '';

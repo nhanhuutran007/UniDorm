@@ -6,11 +6,11 @@
  */
 if (session_status() === PHP_SESSION_NONE) session_start();
 if (isset($_SESSION['user_id'])) {
-    header('Location: /UniDorm/');
+    header('Location: ../../index.php');
     exit;
 }
 
-$conn  = require_once __DIR__ . '/../../includes/db.php';
+require_once __DIR__ . '/../../includes/db.php';
 $error = '';
 
 if (isset($_GET['error'])) {
@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'MSSV/tên đăng nhập không tồn tại trong hệ thống.';
         } elseif ($user['status'] === 'pending') {
             $error = 'Tài khoản chưa được kích hoạt. Kiểm tra email sinh viên để đặt mật khẩu.
-                      <a href="/UniDorm/views/auth/register.php" class="alert-link">Đăng ký lại</a>';
+                      <a href="register.php" class="alert-link">Đăng ký lại</a>';
         } elseif (!in_array($user['status'], ['active'])) {
             $error = 'Tài khoản đã bị khóa hoặc vô hiệu hóa. Liên hệ Ban quản lý.';
         } else {
@@ -68,9 +68,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // Redirect theo role
                 if ($user['role'] === 'admin') {
-                    header('Location: /UniDorm/views/admin/dashboard.php');
+                    header('Location: ../admin/dashboard.php');
                 } else {
-                    header('Location: /UniDorm/views/student/dashboard.php');
+                    header('Location: ../student/dashboard.php');
                 }
                 exit;
             }
@@ -85,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng nhập – UniDorm</title>
     <meta name="description" content="Đăng nhập hệ thống quản lý ký túc xá UniDorm">
-    <link rel="stylesheet" href="/UniDorm/assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../assets/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -203,7 +203,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-1">
                     <label class="form-label mb-0" for="password">Mật khẩu</label>
-                    <a href="/UniDorm/views/auth/forgot_password.php" class="text-primary text-decoration-none small">Quên mật khẩu?</a>
+                    <a href="forgot_password.php" class="text-primary text-decoration-none small">Quên mật khẩu?</a>
                 </div>
                 <div class="input-group">
                     <span class="input-group-text bg-light border-end-0"><i class="bi bi-lock text-muted"></i></span>
@@ -223,7 +223,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <div class="text-center mt-4 pt-3 border-top">
             <span class="small text-muted">Sinh viên chưa có tài khoản?</span>
-            <a href="/UniDorm/views/auth/register.php" class="small fw-semibold text-primary ms-1">Đăng ký ngay</a>
+            <a href="register.php" class="small fw-semibold text-primary ms-1">Đăng ký ngay</a>
         </div>
     </div>
 </div>

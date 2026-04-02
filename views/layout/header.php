@@ -10,7 +10,7 @@
 
     <!-- Logo + Toggle -->
     <div class="header-left active">
-        <a href="<?php echo $dashboardUrl ?? '/'; ?>" class="logo">
+        <a href="<?php echo $dashboardUrl; ?>" class="logo">
             <div class="logo-inner d-flex align-items-center gap-2 px-3">
                 <i class="bi bi-building-fill text-primary fs-5"></i>
                 <span class="fw-bold fs-6 text-dark">UniDorm</span>
@@ -63,7 +63,7 @@
         <!-- Cài đặt (chỉ hiển thị với Admin) -->
         <?php if (isset($userRole) && $userRole === 'admin'): ?>
         <li class="nav-item">
-            <a href="/UniDorm/views/admin/settings.php" class="nav-link header-icon-btn" title="Cài đặt hệ thống">
+            <a href="<?php echo BASE_URL; ?>/settings" class="nav-link header-icon-btn" title="Cài đặt hệ thống">
                 <i class="bi bi-gear fs-5"></i>
             </a>
         </li>
@@ -74,13 +74,13 @@
             <a href="javascript:void(0);" class="dropdown-toggle nav-link userset d-flex align-items-center gap-2 p-0" data-bs-toggle="dropdown">
                 <div class="avatar-wrap position-relative" style="width: 36px; height: 36px;">
                     <?php
-                    $avatarSrc = !empty($profilePicture) ? htmlspecialchars($profilePicture) : '/UniDorm/assets/images/default.jpg';
+                    $avatarSrc = !empty($profilePicture) ? $profilePicture : '<?php echo BASE_URL; ?>/assets/images/default.jpg';
                     ?>
                     <img src="<?php echo $avatarSrc; ?>"
                          alt="Avatar"
                          class="rounded-circle object-fit-cover border border-2 border-light shadow-sm bg-white"
                          width="36" height="36"
-                         onerror="this.onerror=null; this.src='/UniDorm/assets/images/default.jpg';">
+                         onerror="if (this.src != '<?php echo BASE_URL; ?>/assets/images/default.jpg') this.src='<?php echo BASE_URL; ?>/assets/images/default.jpg';">
                     <span class="position-absolute bottom-0 end-0 bg-success rounded-circle border border-2 border-white"
                           style="width:10px;height:10px; transform: translate(10%, 10%);"></span>
                 </div>
@@ -91,11 +91,11 @@
                 <div class="px-3 py-3 bg-light border-bottom">
                     <div class="d-flex align-items-center gap-2">
                         <?php
-                        $avatarSrc = !empty($profilePicture) ? htmlspecialchars($profilePicture) : '/UniDorm/assets/images/default.jpg';
+                        $avatarSrc = !empty($profilePicture) ? $profilePicture : '<?php echo BASE_URL; ?>/assets/images/default.jpg';
                         ?>
                         <img src="<?php echo $avatarSrc; ?>"
                              class="rounded-circle border bg-white" width="42" height="42" style="object-fit:cover;"
-                             onerror="this.onerror=null; this.src='/UniDorm/assets/images/default.jpg';">
+                             onerror="if (this.src != '<?php echo BASE_URL; ?>/assets/images/default.jpg') this.src='<?php echo BASE_URL; ?>/assets/images/default.jpg';">
                         <div class="lh-sm overflow-hidden">
                             <p class="mb-0 fw-semibold text-dark small text-truncate" style="max-width:140px;">
                                 <?php echo htmlspecialchars($userData['fullname'] ?? 'Người dùng'); ?>
@@ -113,16 +113,16 @@
                         <i class="bi bi-person text-muted"></i> Hồ sơ cá nhân
                     </a>
                     <?php if (isset($userRole) && $userRole === 'student'): ?>
-                    <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="/UniDorm/views/student/room_info.php">
+                    <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="<?php echo BASE_URL; ?>/room">
                         <i class="bi bi-door-open text-muted"></i> Thông tin phòng
                     </a>
                     <?php endif; ?>
-                    <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="/UniDorm/views/shared/chat.php">
+                    <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="<?php echo BASE_URL; ?>/chat">
                         <i class="bi bi-chat-dots text-muted"></i> Tin nhắn
                     </a>
                 </div>
                 <div class="border-top py-1">
-                    <a class="dropdown-item d-flex align-items-center gap-2 py-2 text-danger" href="/UniDorm/views/auth/logout.php">
+                    <a class="dropdown-item d-flex align-items-center gap-2 py-2 text-danger" href="<?php echo BASE_URL; ?>/views/auth/logout.php">
                         <i class="bi bi-box-arrow-right"></i> Đăng xuất
                     </a>
                 </div>
@@ -134,7 +134,7 @@
 <script>
 // Load notifications realtime
 (function loadNotifications() {
-    fetch('/UniDorm/api/notifications.php?limit=5')
+    fetch('<?php echo BASE_URL; ?>/api/notifications.php?limit=5')
         .then(r => r.json())
         .then(res => {
             if (!res.data) return;
@@ -154,7 +154,7 @@
 
             list.innerHTML = res.data.map(n => `
                 <li class="border-bottom">
-                    <a href="/UniDorm/api/notifications.php?mark_read=${n.id}" 
+                    <a href="<?php echo BASE_URL; ?>/api/notifications.php?mark_read=${n.id}" 
                        class="d-flex gap-2 px-3 py-2 text-decoration-none ${n.is_read ? '' : 'bg-primary bg-opacity-5'}">
                         <div class="flex-shrink-0 mt-1">
                             <span class="badge rounded-circle bg-${n.is_read ? 'secondary' : 'primary'} p-1" style="width:8px;height:8px;display:block;"></span>
@@ -171,7 +171,7 @@
 })();
 
 function markAllNotifRead() {
-    fetch('/UniDorm/api/mark_all_notifications.php', { method: 'POST',
+    fetch('<?php echo BASE_URL; ?>/api/mark_all_notifications.php', { method: 'POST',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({user_id: <?php echo (int)($userId ?? 0); ?>})
     }).then(() => {

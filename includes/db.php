@@ -1,6 +1,11 @@
 <?php
-// UniDorm – Database connection
-// Chỉnh theo cấu hình môi trường local của bạn
+/**
+ * UniDorm – Database connection
+ * path: includes/db.php
+ * Chỉnh theo cấu hình môi trường local của bạn
+ */
+require_once __DIR__ . '/config.php';
+
 $host   = "localhost";
 $user   = "root";
 $pass   = "";          // XAMPP default: empty, WAMP/Laragon: tùy cấu hình

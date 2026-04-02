@@ -11,7 +11,7 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'admin') {
     exit;
 }
 
-$conn = require_once __DIR__ . '/../../includes/db.php';
+require_once __DIR__ . '/../../includes/db.php';
 
 $targetId  = (int)($_GET['id'] ?? 0);
 $selfId    = (int)$_SESSION['user_id'];

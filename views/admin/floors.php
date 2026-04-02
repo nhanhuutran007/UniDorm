@@ -4,12 +4,10 @@
  */
 $pageTitle   = 'Quản lý lầu';
 $breadcrumbs = [
-    ['label' => 'Dashboard', 'url' => '/UniDorm/views/admin/dashboard.php'],
+    ['label' => 'Dashboard', 'url' => BASE_URL . '/dashboard'],
     ['label' => 'Quản lý lầu', 'url' => '#'],
 ];
 ob_start();
-
-require_once __DIR__ . '/../../includes/db.php';
 
 require_once __DIR__ . '/../../includes/db.php';
 
@@ -73,20 +71,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 }
 $buildings = $conn->query("SELECT * FROM buildings")->fetch_all(MYSQLI_ASSOC);
 
-// Stats tổng hợp theo lầu
+// Stats tổng hợp theo lầu (đã sửa lỗi đếm lặp và tính toán trạng thái phòng chính xác)
 $floorsData = $conn->query("
     SELECT f.id, f.floor_number, b.name as building_name,
-           COUNT(r.id)                                   as total_rooms,
-           SUM(CASE WHEN r.status='available' THEN 1 ELSE 0 END) as avail_rooms,
-           SUM(CASE WHEN r.status='full'      THEN 1 ELSE 0 END) as full_rooms,
-           SUM(CASE WHEN r.status='maintenance' THEN 1 ELSE 0 END) as maint_rooms,
-           SUM(r.max_capacity)                           as total_capacity,
-           COUNT(u.user_id)                              as current_students
+           COUNT(DISTINCT r.id) as total_rooms,
+           SUM(CASE WHEN r.status = 'maintenance' THEN 1 ELSE 0 END) as maint_rooms,
+           SUM(CASE WHEN (r.status = 'full' OR (r.status = 'available' AND count_active >= r.max_capacity)) THEN 1 ELSE 0 END) as full_rooms,
+           SUM(CASE WHEN (r.status = 'available' AND count_active < r.max_capacity) THEN 1 ELSE 0 END) as avail_rooms,
+           SUM(r.max_capacity) as total_capacity,
+           SUM(count_active) as current_students
     FROM floors f
-    JOIN buildings b   ON f.building_id = b.id
-    LEFT JOIN rooms r  ON r.floor_id = f.id
-    LEFT JOIN beds bd  ON bd.room_id = r.id
-    LEFT JOIN users u  ON u.bed_id = bd.id AND u.status = 'active'
+    JOIN buildings b ON f.building_id = b.id
+    LEFT JOIN (
+        SELECT r.id, r.floor_id, r.status, r.max_capacity, COUNT(u.user_id) as count_active
+        FROM rooms r
+        LEFT JOIN beds bd ON bd.room_id = r.id
+        LEFT JOIN users u ON u.bed_id = bd.id AND u.status IN ('active', 'pending')
+        GROUP BY r.id
+    ) r ON r.floor_id = f.id
     GROUP BY f.id, f.floor_number, b.name
     ORDER BY b.name ASC, f.floor_number ASC
 ")->fetch_all(MYSQLI_ASSOC);
@@ -96,7 +98,6 @@ $totalRooms     = array_sum(array_column($floorsData, 'total_rooms'));
 $totalStudents  = array_sum(array_column($floorsData, 'current_students'));
 $totalCapacity  = array_sum(array_column($floorsData, 'total_capacity'));
 ?>
-?>
 
 <?php if ($successMsg): ?>
 <div class="alert alert-success alert-dismissible fade show mb-4 rounded-3" role="alert">
@@ -165,7 +166,7 @@ $totalCapacity  = array_sum(array_column($floorsData, 'total_capacity'));
         ['Tổng số lầu', $totalFloors,    'primary', 'layers-fill'],
         ['Tổng số phòng', $totalRooms,   'info',    'door-open-fill'],
         ['Sinh viên đang ở', $totalStudents, 'success', 'people-fill'],
-        ['Tổng sức chứa', $totalCapacity, 'warning', 'database-fill'],
+        ['Tổng chỗ hiện có', $totalCapacity, 'warning', 'database-fill'],
     ] as [$label, $val, $color, $icon]): ?>
     <div class="col-6 col-lg-3">
         <div class="card border-0 shadow-sm" style="border-radius:12px;">
@@ -195,7 +196,7 @@ $totalCapacity  = array_sum(array_column($floorsData, 'total_capacity'));
                         <h5 class="fw-bold mb-0">Lầu <?php echo $floor['floor_number']; ?></h5>
                         <small class="text-muted"><?php echo htmlspecialchars($floor['building_name']); ?></small>
                     </div>
-                    <a href="/UniDorm/views/admin/rooms.php?floor_id=<?php echo $floor['id']; ?>"
+                    <a href="<?php echo BASE_URL; ?>/rooms?floor_id=<?php echo $floor['id']; ?>"
                        class="btn btn-sm btn-outline-primary" style="font-size:11px;">
                         <i class="bi bi-door-open me-1"></i>Xem phòng
                     </a>

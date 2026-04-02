@@ -5,7 +5,7 @@
  */
 $pageTitle   = 'Quản lý sinh viên';
 $breadcrumbs = [
-    ['label' => 'Dashboard',         'url' => '/UniDorm/views/admin/dashboard.php'],
+    ['label' => 'Dashboard',         'url' => BASE_URL . '/dashboard'],
     ['label' => 'Quản lý sinh viên', 'url' => '#'],
 ];
 ob_start();
@@ -139,7 +139,7 @@ $statusMap = ['active'=>['success','Hoạt động'],'pending'=>['warning','Ch�
             </div>
             <div class="col-md-2 d-flex gap-2">
                 <button type="submit" class="btn btn-primary flex-grow-1"><i class="bi bi-funnel me-1"></i>Lọc</button>
-                <a href="/UniDorm/views/admin/students.php" class="btn btn-outline-secondary" title="Xóa bộ lọc"><i class="bi bi-x-lg"></i></a>
+                <a href="<?php echo BASE_URL; ?>/students" class="btn btn-outline-secondary" title="Xóa bộ lọc"><i class="bi bi-x-lg"></i></a>
             </div>
         </form>
     </div>
@@ -149,10 +149,10 @@ $statusMap = ['active'=>['success','Hoạt động'],'pending'=>['warning','Ch�
 <div class="d-flex justify-content-between align-items-center mb-3">
     <p class="mb-0 text-muted small">Tìm thấy <strong><?php echo $totalRows; ?></strong> sinh viên</p>
     <div class="d-flex gap-2">
-        <a href="/UniDorm/views/admin/newuser.php" class="btn btn-primary btn-sm d-flex align-items-center gap-1">
+        <a href="<?php echo BASE_URL; ?>/newuser" class="btn btn-primary btn-sm d-flex align-items-center gap-1">
             <i class="bi bi-person-plus-fill"></i> Thêm sinh viên
         </a>
-        <a href="/UniDorm/views/admin/import.php" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1">
+        <a href="<?php echo BASE_URL; ?>/import" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1">
             <i class="bi bi-upload"></i> Import CSV
         </a>
     </div>
@@ -182,7 +182,7 @@ $statusMap = ['active'=>['success','Hoạt động'],'pending'=>['warning','Ch�
                             <i class="bi bi-inbox fs-2 d-block mb-2"></i>
                             Không tìm thấy sinh viên nào.
                             <?php if ($filterSearch || $filterFloor || $filterRoom || $filterStatus): ?>
-                            <a href="/UniDorm/views/admin/students.php" class="d-block mt-2 small">Xóa bộ lọc</a>
+                            <a href="<?php echo BASE_URL; ?>/students" class="d-block mt-2 small">Xóa bộ lọc</a>
                             <?php endif; ?>
                         </td>
                     </tr>
@@ -231,11 +231,11 @@ $statusMap = ['active'=>['success','Hoạt động'],'pending'=>['warning','Ch�
                         </td>
                         <td class="py-3 text-center">
                             <div class="d-flex justify-content-center gap-1">
-                                <a href="/UniDorm/views/admin/updateuser.php?id=<?php echo $sv['user_id']; ?>"
+                                <a href="<?php echo BASE_URL; ?>/updateuser?id=<?php echo $sv['user_id']; ?>"
                                    class="btn btn-sm btn-outline-primary p-1" title="Sửa" style="width:28px;height:28px;line-height:1;">
                                     <i class="bi bi-pencil-fill" style="font-size:11px;"></i>
                                 </a>
-                                <a href="/UniDorm/views/shared/chat.php?with=<?php echo $sv['user_id']; ?>"
+                                <a href="<?php echo BASE_URL; ?>/chat?with=<?php echo $sv['user_id']; ?>"
                                    class="btn btn-sm btn-outline-success p-1" title="Nhắn tin" style="width:28px;height:28px;line-height:1;">
                                     <i class="bi bi-chat-dots-fill" style="font-size:11px;"></i>
                                 </a>
@@ -284,16 +284,54 @@ $statusMap = ['active'=>['success','Hoạt động'],'pending'=>['warning','Ch�
             </div>
             <div class="modal-footer border-0 pt-0">
                 <button class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
-                <a id="deleteConfirmBtn" href="#" class="btn btn-danger">Xóa</a>
+                <button id="deleteConfirmBtn" class="btn btn-danger" onclick="executeDelete()">Xác nhận xóa</button>
             </div>
         </div>
     </div>
 </div>
+
 <script>
+let deleteUserId = null;
+let deleteModalObj = null;
+
 function confirmDelete(id, name) {
+    deleteUserId = id;
     document.getElementById('deleteUserName').textContent = name;
-    document.getElementById('deleteConfirmBtn').href = '/UniDorm/views/admin/deleteUser.php?id=' + id;
-    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+    if (!deleteModalObj) {
+        deleteModalObj = new bootstrap.Modal(document.getElementById('deleteModal'));
+    }
+    deleteModalObj.show();
+}
+
+function executeDelete() {
+    if (!deleteUserId) return;
+    
+    const btn = document.getElementById('deleteConfirmBtn');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang xóa...';
+
+    fetch('<?php echo BASE_URL; ?>/api/delete_student.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: deleteUserId })
+    })
+    .then(r => r.json())
+    .then(res => {
+        if (res.success) {
+            location.reload();
+        } else {
+            alert(res.message || 'Lỗi khi xóa sinh viên');
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert('Lỗi kết nối máy chủ');
+        btn.disabled = false;
+        btn.textContent = originalText;
+    });
 }
 </script>
 

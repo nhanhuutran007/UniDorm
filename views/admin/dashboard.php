@@ -14,7 +14,7 @@ require_once __DIR__ . '/../../app/models/RoomModel.php';
 $roomModel = new RoomModel($conn);
 
 // Thống kê sinh viên
-$stmtSV = $conn->query("SELECT COUNT(*) as total FROM users WHERE role = 'student' AND status = 'active'");
+$stmtSV = $conn->query("SELECT COUNT(*) as total FROM users WHERE role = 'student' AND status IN ('active', 'pending')");
 $totalStudents = $stmtSV->fetch_assoc()['total'] ?? 0;
 
 $stmtPending = $conn->query("SELECT COUNT(*) as total FROM users WHERE role = 'student' AND status = 'pending'");
@@ -71,10 +71,10 @@ $recentReports = $stmtRptList->get_result()->fetch_all(MYSQLI_ASSOC);
 <div class="row g-4 mb-4 fade-in-up stagger-1">
     <?php
     $stats = [
-        ['icon'=>'people-fill',     'color'=>'primary',   'value'=>$totalStudents,    'label'=>'Sinh viên đang ở', 'sub'=>"{$pendingStudents} chờ kích hoạt", 'link'=>'/UniDorm/views/admin/students.php'],
-        ['icon'=>'door-open-fill',  'color'=>'success',   'value'=>$availableRooms,   'label'=>'Phòng còn chỗ',    'sub'=>"{$fullRooms} đã đầy", 'link'=>'/UniDorm/views/admin/rooms.php?status=available'],
+        ['icon'=>'people-fill',     'color'=>'primary',   'value'=>$totalStudents,    'label'=>'Sinh viên đang ở', 'sub'=>"{$pendingStudents} chờ kích hoạt", 'link'=>BASE_URL.'/students'],
+        ['icon'=>'door-open-fill',  'color'=>'success',   'value'=>$availableRooms,   'label'=>'Phòng còn chỗ',    'sub'=>"{$fullRooms} đã đầy", 'link'=>BASE_URL.'/rooms?status=available'],
         ['icon'=>'bar-chart-fill',  'color'=>'info',      'value'=>"{$occupancyRate}%",'label'=>'Tỉ lệ lấp đầy',   'sub'=>"{$totalStudents}/{$totalBeds} giường", 'link'=>'#'],
-        ['icon'=>'tools',           'color'=>'danger',    'value'=>$pendingReports,   'label'=>'Báo cáo hỏng',     'sub'=>'Chờ xử lý', 'link'=>'/UniDorm/views/admin/device_reports.php'],
+        ['icon'=>'tools',           'color'=>'danger',    'value'=>$pendingReports,   'label'=>'Báo cáo hỏng',     'sub'=>'Chờ xử lý', 'link'=>BASE_URL.'/device_reports'],
     ];
     foreach ($stats as $s):
     ?>
@@ -139,8 +139,9 @@ $recentReports = $stmtRptList->get_result()->fetch_all(MYSQLI_ASSOC);
                         <i class="bi bi-people-fill"></i>
                     </span>Sinh viên mới
                 </h6>
-                <a href="/UniDorm/views/admin/students.php" class="btn btn-sm btn-light rounded-pill px-3 shadow-sm border" style="font-weight: 500; font-size: 0.8rem;">Xem tất cả</a>
+                <a href="<?php echo BASE_URL; ?>/students" class="btn btn-sm btn-light rounded-pill px-3 shadow-sm border" style="font-weight: 500; font-size: 0.8rem;">Xem tất cả</a>
             </div>
+
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="modern-table">
@@ -191,7 +192,8 @@ $recentReports = $stmtRptList->get_result()->fetch_all(MYSQLI_ASSOC);
                         <i class="bi bi-tools"></i>
                     </span>Báo cáo hỏng
                 </h6>
-                <a href="/UniDorm/views/admin/device_reports.php" class="btn btn-sm btn-light rounded-pill px-3 shadow-sm border" style="font-weight: 500; font-size: 0.8rem;">Xem tất cả</a>
+                <a href="<?php echo BASE_URL; ?>/device_reports" class="btn btn-sm btn-light rounded-pill px-3 shadow-sm border" style="font-weight: 500; font-size: 0.8rem;">Xem tất cả</a>
+
             </div>
             <div class="card-body p-0">
                 <?php if (empty($recentReports)): ?>

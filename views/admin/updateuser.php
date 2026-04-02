@@ -5,7 +5,7 @@
  */
 $pageTitle   = 'Chỉnh sửa sinh viên';
 $breadcrumbs = [
-    ['label' => 'Quản lý sinh viên', 'url' => '/UniDorm/views/admin/students.php'],
+    ['label' => 'Quản lý sinh viên', 'url' => BASE_URL . '/students'],
     ['label' => 'Chỉnh sửa', 'url' => '#'],
 ];
 ob_start();
@@ -14,7 +14,7 @@ require_once __DIR__ . '/../../includes/db.php';
 
 $targetId = (int)($_GET['id'] ?? 0);
 if (!$targetId) {
-    header('Location: /UniDorm/views/admin/students.php');
+    header('Location: ' . BASE_URL . '/students');
     exit;
 }
 
@@ -25,7 +25,7 @@ $uStmt->execute();
 $target = $uStmt->get_result()->fetch_assoc();
 
 if (!$target) {
-    header('Location: /UniDorm/views/admin/students.php?error=not_found');
+    header('Location: ' . BASE_URL . '/students?error=not_found');
     exit;
 }
 
@@ -51,12 +51,13 @@ $allBeds = $conn->query("
     SELECT b.id, b.bed_label, b.room_id, b.is_occupied,
            u.user_id as occupant_id
     FROM beds b
-    LEFT JOIN users u ON u.bed_id = b.id AND u.status = 'active'
+    LEFT JOIN users u ON u.bed_id = b.id
     ORDER BY b.room_id, b.bed_label
 ")->fetch_all(MYSQLI_ASSOC);
 
 $bedsByRoom = [];
 foreach ($allBeds as $b) {
+    // Giường được coi là "có thể chọn" nếu nó trống, hoặc nó chính là giường sinh viên đang ở
     if (!$b['is_occupied'] || $b['occupant_id'] == $targetId) {
         $bedsByRoom[$b['room_id']][] = $b;
     }
@@ -83,27 +84,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $oldBed = (int)$target['bed_id'];
             if ($oldBed && $oldBed !== $newBed) {
                 // Giải phóng giường cũ
-                $conn->prepare("UPDATE beds SET is_occupied = 0 WHERE id = ?")->execute() || true;
                 $free = $conn->prepare("UPDATE beds SET is_occupied = 0 WHERE id = ?");
-                $free->bind_param('i', $oldBed); $free->execute();
-                // Cập nhật phòng cũ về available
-                $oldRoom = $conn->query("SELECT room_id FROM beds WHERE id = $oldBed")->fetch_assoc()['room_id'] ?? null;
-                if ($oldRoom) {
-                    $conn->prepare("UPDATE rooms SET status='available' WHERE id = ? AND status='full'")->execute() || true;
-                    $ar = $conn->prepare("UPDATE rooms SET status='available' WHERE id = ? AND status='full'");
-                    $ar->bind_param('i', $oldRoom); $ar->execute();
+                $free->bind_param('i', $oldBed); 
+                $free->execute();
+
+                // Cập nhật trạng thái phòng cũ (nếu phòng đó vừa hết đầy)
+                $oldRoomResult = $conn->query("SELECT room_id FROM beds WHERE id = $oldBed");
+                $oldRoomId = $oldRoomResult->fetch_assoc()['room_id'] ?? null;
+                if ($oldRoomId) {
+                    $conn->query("UPDATE rooms SET status='available' WHERE id = $oldRoomId AND status='full'");
                 }
             }
+
             if ($newBed && $newBed !== $oldBed) {
                 // Chiếm giường mới
                 $oc = $conn->prepare("UPDATE beds SET is_occupied = 1 WHERE id = ?");
-                $oc->bind_param('i', $newBed); $oc->execute();
-                // Kiểm tra phòng mới có đầy không
+                $oc->bind_param('i', $newBed); 
+                $oc->execute();
+
+                // Kiểm tra và cập nhật trạng thái phòng mới nếu đã đầy
                 $freeCheck = $conn->prepare("SELECT COUNT(*) as c FROM beds WHERE room_id = ? AND is_occupied = 0");
-                $freeCheck->bind_param('i', $newRoom); $freeCheck->execute();
-                if ($freeCheck->get_result()->fetch_assoc()['c'] == 0 && $newRoom) {
-                    $fc = $conn->prepare("UPDATE rooms SET status='full' WHERE id = ?");
-                    $fc->bind_param('i', $newRoom); $fc->execute();
+                $freeCheck->bind_param('i', $newRoom); 
+                $freeCheck->execute();
+                if ($freeCheck->get_result()->fetch_assoc()['c'] == 0) {
+                    $conn->query("UPDATE rooms SET status='full' WHERE id = $newRoom");
                 }
             }
             $bedIdVal = $newBed ?: null;
@@ -299,7 +303,7 @@ if ($target['bed_id']) {
 
             <hr class="my-4">
             <div class="d-flex justify-content-between">
-                <a href="/UniDorm/views/admin/students.php" class="btn btn-outline-secondary rounded-3">
+                <a href="<?php echo BASE_URL; ?>/students" class="btn btn-outline-secondary rounded-3">
                     <i class="bi bi-arrow-left me-1"></i>Quay lại
                 </a>
                 <button type="submit" class="btn btn-primary px-4 rounded-3" id="submitBtn">
@@ -313,6 +317,7 @@ if ($target['bed_id']) {
 <script>
 const bedsByRoom = <?php echo json_encode($bedsByRoom); ?>;
 const currentBedId = <?php echo (int)($target['bed_id'] ?? 0); ?>;
+let isConfirmed = false;
 
 function updateBedSelect() {
     const roomId = document.getElementById('roomSelect').value;
@@ -330,12 +335,64 @@ function updateBedSelect() {
 }
 document.addEventListener('DOMContentLoaded', updateBedSelect);
 
-document.getElementById('updateForm').addEventListener('submit', function() {
+document.getElementById('updateForm').addEventListener('submit', function(e) {
+    const newRoomVal = document.getElementById('roomSelect').value;
+    const newRoomText = document.getElementById('roomSelect').options[document.getElementById('roomSelect').selectedIndex].text;
+    const newBedVal = document.getElementById('bedSelect').value;
+    const newBedText = document.getElementById('bedSelect').options[document.getElementById('bedSelect').selectedIndex].text;
+
+    // So sánh với giá trị ban đầu (currentBedId đã khai báo ở trên)
+    const initialRoomId = "<?php echo (int)($curBedInfo['room_id'] ?? 0); ?>";
+    const initialBedId = currentBedId.toString();
+
+    if (newBedVal !== initialBedId && !isConfirmed) {
+        let msg = "";
+        if (!initialBedId || initialBedId === "0") {
+            msg = `Bạn đang thực hiện gán sinh viên vào <strong>phòng ${newRoomText}</strong>, <strong>giường ${newBedText}</strong>.`;
+        } else if (!newBedVal || newBedVal === "0") {
+            msg = "Bạn có chắc chắn muốn <strong>đưa sinh viên ra khỏi phòng</strong> (trả giường hiện tại)?";
+        } else {
+            msg = `Bạn có chắc chắn muốn chuyển sinh viên sang <strong>phòng ${newRoomText}</strong>, <strong>giường ${newBedText}</strong>?`;
+        }
+        
+        document.getElementById('modalMsg').innerHTML = msg;
+        const modal = new bootstrap.Modal(document.getElementById('transferModal'));
+        modal.show();
+        
+        e.preventDefault();
+        return false;
+    }
+
     const btn = document.getElementById('submitBtn');
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang lưu...';
 });
+
+function confirmTransfer() {
+    isConfirmed = true;
+    document.getElementById('updateForm').submit();
+}
 </script>
+
+<!-- Transfer Confirmation Modal -->
+<div class="modal fade" id="transferModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow" style="border-radius:14px;">
+            <div class="modal-header border-0 pb-0">
+                <h6 class="modal-title fw-bold"><i class="bi bi-arrow-left-right me-2 text-primary"></i>Xác nhận chuyển phòng</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body py-4">
+                <p class="text-muted mb-0" id="modalMsg"></p>
+                <p class="text-danger small mt-2 mb-0"><i class="bi bi-info-circle me-1"></i>Hành động này sẽ cập nhật trạng thái giường và phòng ngay lập tức.</p>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-light rounded-3 px-4" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary rounded-3 px-4" onclick="confirmTransfer()">Xác nhận chuyển</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <?php
 $content = ob_get_clean();

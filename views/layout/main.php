@@ -15,21 +15,21 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 
 // Guard: Chưa đăng nhập → về trang login
 if (!isset($_SESSION['user_id'])) {
-    header('Location: /UniDorm/views/auth/login.php');
+    header('Location: ' . BASE_URL . '/views/auth/login.php');
     exit;
 }
 
 // Guard: Tài khoản bị khoá hoặc chưa kích hoạt
 if (!isset($_SESSION['status']) || $_SESSION['status'] === 'pending') {
     session_destroy();
-    header('Location: /UniDorm/views/auth/login.php?error=not_activated');
+    header('Location: ' . BASE_URL . '/views/auth/login.php?error=not_activated');
     exit;
 }
 
 // Cập nhật thời gian hoạt động (session timeout 2 giờ)
 if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > 7200)) {
     session_destroy();
-    header('Location: /UniDorm/views/auth/login.php?error=session_expired');
+    header('Location: ' . BASE_URL . '/views/auth/login.php?error=session_expired');
     exit;
 }
 $_SESSION['last_activity'] = time();
@@ -43,24 +43,24 @@ $userData   = $userModel->getUserById($_SESSION['user_id']);
 
 if (!$userData) {
     session_destroy();
-    header('Location: /UniDorm/views/auth/login.php?error=user_not_found');
+    header('Location: ' . BASE_URL . '/views/auth/login.php?error=user_not_found');
     exit;
 }
 
 $userRole       = strtolower($userData['role']);
 $userId         = $userData['user_id'];
-$profilePicture = !empty($userData['profile_picture']) ? '/UniDorm/' . htmlspecialchars($userData['profile_picture']) : '/UniDorm/assets/images/default.jpg';
+$profilePicture = !empty($userData['profile_picture']) ? BASE_URL . '/' . htmlspecialchars($userData['profile_picture']) : BASE_URL . '/assets/images/default.jpg';
 
 // URL động theo role
 $dashboardUrl = match($userRole) {
-    'admin' => '/UniDorm/views/admin/dashboard.php',
-    'student'        => '/UniDorm/views/student/dashboard.php',
-    default          => '/UniDorm/'
+    'admin' => BASE_URL . '/views/admin/dashboard.php',
+    'student'        => BASE_URL . '/views/student/dashboard.php',
+    default          => BASE_URL . '/'
 };
-$profileUrl  = '/UniDorm/views/shared/profile.php';
+$profileUrl  = BASE_URL . '/views/shared/profile.php';
 $notifUrl    = match($userRole) {
-    'student' => '/UniDorm/views/student/notifications.php',
-    default   => '/UniDorm/views/admin/notifications.php'
+    'student' => BASE_URL . '/views/student/notifications.php',
+    default   => BASE_URL . '/views/admin/notifications.php'
 };
 $pageTitle = ($pageTitle ?? 'UniDorm') . ' | UniDorm';
 ?>
@@ -81,13 +81,13 @@ $pageTitle = ($pageTitle ?? 'UniDorm') . ' | UniDorm';
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <!-- Admin Template Legacy CSS -->
-    <link rel="stylesheet" href="/UniDorm/assets/css/style.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/assets/css/style.css">
     <!-- Modern Admin Premium Theme -->
-    <link rel="stylesheet" href="/UniDorm/assets/css/modern-admin.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/assets/css/modern-admin.css">
 
     <?php if (!empty($extraCss)): ?>
         <?php foreach ($extraCss as $css): ?>
-        <link rel="stylesheet" href="/UniDorm/<?php echo htmlspecialchars($css); ?>">
+        <link rel="stylesheet" href="<?php echo BASE_URL; ?>/<?php echo htmlspecialchars($css); ?>">
         <?php endforeach; ?>
     <?php endif; ?>
 </head>
@@ -138,13 +138,13 @@ $pageTitle = ($pageTitle ?? 'UniDorm') . ' | UniDorm';
 </div><!-- /.main-wrapper -->
 
 <!-- Scripts -->
-<script src="/UniDorm/assets/js/jquery.min.js"></script>
+<script src="<?php echo BASE_URL; ?>/assets/js/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/UniDorm/assets/js/app.js"></script>
+<script src="<?php echo BASE_URL; ?>/assets/js/app.js"></script>
 
 <?php if (!empty($extraJs)): ?>
     <?php foreach ($extraJs as $js): ?>
-    <script src="/UniDorm/<?php echo htmlspecialchars($js); ?>"></script>
+    <script src="<?php echo BASE_URL; ?>/<?php echo htmlspecialchars($js); ?>"></script>
     <?php endforeach; ?>
 <?php endif; ?>
 

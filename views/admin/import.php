@@ -14,7 +14,7 @@
  */
 $pageTitle   = 'Import sinh viên từ CSV';
 $breadcrumbs = [
-    ['label' => 'Quản lý sinh viên', 'url' => '/UniDorm/views/admin/students.php'],
+    ['label' => 'Quản lý sinh viên', 'url' => BASE_URL . '/students'],
     ['label' => 'Import CSV', 'url' => '#'],
 ];
 ob_start();
@@ -97,17 +97,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
             if (empty($errors)) {
                 $conn->begin_transaction();
                 try {
-                    // Lấy tất cả giường trống trước để cache, tránh query lặp
+                    // Lấy tất cả giường thực sự trống (không có SV 'active' hoặc 'pending' đang ở)
                     $freeBedCache = [];
                     $bRes = $conn->query("
                         SELECT b.id AS bed_id, b.bed_label, b.room_id, r.room_code
                         FROM beds b
                         JOIN rooms r ON b.room_id = r.id
-                        WHERE b.is_occupied = 0
+                        WHERE b.id NOT IN (
+                            SELECT bed_id FROM users WHERE bed_id IS NOT NULL AND status IN ('active', 'pending')
+                        )
                         ORDER BY r.room_code ASC, b.bed_label ASC
                     ");
                     while ($br = $bRes->fetch_assoc()) {
-                        $freeBedCache[$br['room_code']][] = $br;
+                        $key = strtoupper(trim($br['room_code']));
+                        $freeBedCache[$key][] = $br;
                     }
 
                     $rowNum = 1;
@@ -148,57 +151,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
 
                         $email = $code . '@student.tdtu.edu.vn';
 
-                        // Kiểm tra MSSV trùng
-                        $chk = $conn->prepare("SELECT user_id FROM users WHERE student_code = ?");
+                        // Kiểm tra MSSV đã tồn tại chưa
+                        $chk = $conn->prepare("SELECT user_id, bed_id, fullname, email, gender, date_of_birth, phone_personal, phone_family, hometown, is_room_leader FROM users WHERE student_code = ?");
                         $chk->bind_param('s', $code);
                         $chk->execute();
-                        if ($chk->get_result()->num_rows > 0) {
-                            $errors[] = "Dòng $rowNum: MSSV '$code' đã tồn tại → bỏ qua.";
-                            $skipped++;
-                            continue;
-                        }
+                        $existingUser = $chk->get_result()->fetch_assoc();
 
-                        // Xác định phòng từ cột Phòng
-                        $roomCode  = isset($colMap['room_code']) ? trim($data[$colMap['room_code']] ?? '') : '';
-                        $bedLabel  = isset($colMap['bed_label']) ? trim($data[$colMap['bed_label']] ?? '') : '';
-                        $bedId     = null;
-                        $assignedBed = '—';
+                        // Xác định phòng từ cột Phòng (Chuẩn hóa thành Chữ Hoa)
+                        $roomCodeRaw  = isset($colMap['room_code']) ? trim($data[$colMap['room_code']] ?? '') : '';
+                        $roomCode     = strtoupper($roomCodeRaw);
+                        $bedLabel     = isset($colMap['bed_label']) ? trim($data[$colMap['bed_label']] ?? '') : '';
+                        $bedId        = null;
+                        $assignedBed  = '—';
 
                         if ($roomCode && isset($freeBedCache[$roomCode]) && !empty($freeBedCache[$roomCode])) {
                             if ($bedLabel) {
-                                // Tìm đúng giường theo nhãn
+                                // Tìm đúng giường theo nhãn trong cache giường trống
                                 foreach ($freeBedCache[$roomCode] as $idx => $bed) {
                                     if ($bed['bed_label'] === $bedLabel) {
                                         $bedId = $bed['bed_id'];
                                         $assignedBed = $bedLabel;
-                                        // Xoá khỏi cache để không gán 2 lần
                                         unset($freeBedCache[$roomCode][$idx]);
                                         $freeBedCache[$roomCode] = array_values($freeBedCache[$roomCode]);
                                         break;
                                     }
                                 }
                                 if (!$bedId) {
-                                    $errors[] = "Dòng $rowNum: Giường '$bedLabel' trong phòng '$roomCode' không còn trống → tự gán giường trống khác.";
+                                    $errors[] = "Dòng $rowNum: Giường '$bedLabel' tại phòng '$roomCode' không trống → tự gán giường khác.";
                                 }
                             }
-
-                            // Nếu chưa tìm được giường thì lấy giường trống đầu tiên
                             if (!$bedId && !empty($freeBedCache[$roomCode])) {
                                 $bed = array_shift($freeBedCache[$roomCode]);
                                 $bedId = $bed['bed_id'];
                                 $assignedBed = $bed['bed_label'];
                             }
-                        } elseif ($roomCode) {
-                            $errors[] = "Dòng $rowNum: Phòng '$roomCode' không có giường trống → SV không được gán phòng.";
                         }
 
-                        // Lấy thông tin tùy chọn
-                        $gender      = isset($colMap['gender'])        ? trim($data[$colMap['gender']] ?? '')         : null;
-                        $dob         = isset($colMap['date_of_birth'])  ? trim($data[$colMap['date_of_birth']] ?? '')  : null;
-                        $phonePers   = isset($colMap['phone_personal']) ? trim($data[$colMap['phone_personal']] ?? '') : '';
-                        $phoneFamily = isset($colMap['phone_family'])   ? trim($data[$colMap['phone_family']] ?? '')   : '';
-                        $hometown    = isset($colMap['hometown'])       ? trim($data[$colMap['hometown']] ?? '')       : '';
-                        $isLeader    = 0;
+                        // Lấy thông tin tùy chọn từ CSV
+                        $genderVal    = isset($colMap['gender'])        ? trim($data[$colMap['gender']] ?? '')         : null;
+                        $dobVal       = isset($colMap['date_of_birth'])  ? trim($data[$colMap['date_of_birth']] ?? '')  : null;
+                        $phonePers    = isset($colMap['phone_personal']) ? trim($data[$colMap['phone_personal']] ?? '') : '';
+                        $phoneFamily  = isset($colMap['phone_family'])   ? trim($data[$colMap['phone_family']] ?? '')   : '';
+                        $hometown     = isset($colMap['hometown'])       ? trim($data[$colMap['hometown']] ?? '')       : '';
+                        $isLeader     = 0;
                         if (isset($colMap['is_room_leader'])) {
                             $leaderVal = mb_strtolower(trim($data[$colMap['is_room_leader']] ?? ''), 'UTF-8');
                             $isLeader = ($leaderVal === 'tp' || $leaderVal === '1' || $leaderVal === 'x') ? 1 : 0;
@@ -206,63 +201,140 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
 
                         // Chuẩn hóa gender
                         $genderMap = ['nam' => 'male', 'nữ' => 'female', 'nu' => 'female', 'khác' => 'other'];
-                        if ($gender) {
-                            $genderKey = mb_strtolower($gender, 'UTF-8');
-                            $gender = $genderMap[$genderKey] ?? ($gender ?: null);
-                        } else {
-                            $gender = null;
-                        }
+                        $gender = $genderVal ? ($genderMap[mb_strtolower($genderVal, 'UTF-8')] ?? $genderVal) : null;
 
-                        // Chuẩn hóa ngày sinh từ dd/mm/yyyy → yyyy-mm-dd
-                        if ($dob && preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/', $dob, $m)) {
+                        // Chuẩn hóa ngày sinh
+                        if ($dobVal && preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/', $dobVal, $m)) {
                             $dob = sprintf('%04d-%02d-%02d', $m[3], $m[2], $m[1]);
-                        } elseif (!$dob || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dob)) {
-                            $dob = null;
+                        } else {
+                            $dob = ($dobVal && preg_match('/^\d{4}-\d{2}-\d{2}$/', $dobVal)) ? $dobVal : null;
                         }
 
-                        // Insert sinh viên
-                        $ins = $conn->prepare("
-                            INSERT INTO users
-                                (student_code, username, fullname, email, gender, date_of_birth,
-                                 phone_personal, phone_family, hometown, role, status, bed_id, is_room_leader, created_by)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'student', 'pending', ?, ?, ?)
-                        ");
-                        $ins->bind_param('sssssssssiii',
-                            $code, $code, $fullname, $email, $gender, $dob,
-                            $phonePers, $phoneFamily, $hometown, $bedId, $isLeader, $userId
-                        );
+                        if ($existingUser) {
+                            // TRƯỜNG HỢP 1: CẬP NHẬT SINH VIÊN ĐÃ TỒN TẠI
+                            $userIdToUpd = $existingUser['user_id'];
+                            $oldBedId    = (int)$existingUser['bed_id'];
 
-                        if ($ins->execute()) {
-                            $newId = $conn->insert_id;
-
-                            // Tạo auth_account
-                            $aa = $conn->prepare("INSERT INTO auth_accounts (user_id, password, is_active, must_change_password) VALUES (?, NULL, 0, 1)");
-                            $aa->bind_param('i', $newId);
-                            $aa->execute();
-
-                            // Đánh dấu giường đã có người
-                            if ($bedId) {
-                                $oc = $conn->prepare("UPDATE beds SET is_occupied = 1 WHERE id = ?");
-                                $oc->bind_param('i', $bedId);
-                                $oc->execute();
+                            // Xử lý chuyển phòng nếu bedId mới khác bedId cũ
+                            if ($bedId && $bedId !== $oldBedId) {
+                                // Giải phóng giường cũ
+                                if ($oldBedId) {
+                                    $conn->query("UPDATE beds SET is_occupied = 0 WHERE id = $oldBedId");
+                                }
+                                // Chiếm giường mới
+                                $conn->query("UPDATE beds SET is_occupied = 1 WHERE id = $bedId");
+                            } else {
+                                // Nếu không có giường mới trong CSV, giữ giường cũ
+                                $bedId = $bedId ?: ($oldBedId ?: null);
+                                if ($bedId && $assignedBed === '—') {
+                                    // Lấy lại label giường cũ để hiển thị
+                                    $bLabel = $conn->query("SELECT bed_label FROM beds WHERE id = $bedId")->fetch_assoc();
+                                    $assignedBed = $bLabel['bed_label'] ?? '—';
+                                }
                             }
 
-                            $success++;
-                            $preview[] = [
-                                'MSSV'   => $code,
-                                'Họ tên' => $fullname,
-                                'Email'  => $email,
-                                'Phòng'  => $roomCode ?: '—',
-                                'Giường' => $assignedBed,
-                                'Trạng thái' => 'Chờ kích hoạt',
-                            ];
+                            // Cập nhật thông tin: CHỈ cập nhật fullname và bed_id theo yêu cầu
+                            // Các thông tin khác (SĐT, quê quán...) giữ nguyên dữ liệu cũ trong DB
+                            $upd = $conn->prepare("UPDATE users SET fullname = ?, bed_id = ? WHERE user_id = ?");
+                            $upd->bind_param('sii', $fullname, $bedId, $userIdToUpd);
+
+                            if ($upd->execute()) {
+                                $success++;
+                                $preview[] = [
+                                    'MSSV'   => $code,
+                                    'Họ tên' => $fullname,
+                                    'Email'  => $existingUser['email'],
+                                    'Phòng'  => $roomCode ?: '(Cũ)',
+                                    'Giường' => $assignedBed,
+                                    'Trạng thái' => 'Cập nhật',
+                                ];
+                            } else {
+                                $errors[] = "Dòng $rowNum: Lỗi khi cập nhật '$code'.";
+                                $skipped++;
+                            }
+
                         } else {
-                            $errors[] = "Dòng $rowNum: Lỗi DB khi thêm '$code'.";
-                            $skipped++;
+                            // TRƯỜNG HỢP 2: THÊM MỚI SINH VIÊN
+                            // Với sinh viên mới, ta dùng các thông tin có trong CSV (nếu có)
+                            $ins = $conn->prepare("
+                                INSERT INTO users
+                                    (student_code, username, fullname, email, gender, date_of_birth,
+                                     phone_personal, phone_family, hometown, role, status, bed_id, is_room_leader, created_by)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'student', 'pending', ?, ?, ?)
+                            ");
+                            $ins->bind_param('sssssssssiii',
+                                $code, $code, $fullname, $email, $gender, $dob,
+                                $phonePers, $phoneFamily, $hometown, $bedId, $isLeader, $userId
+                            );
+
+                            if ($ins->execute()) {
+                                $newId = $conn->insert_id;
+                                // Tạo auth_account
+                                $aa = $conn->prepare("INSERT INTO auth_accounts (user_id, password, is_active, must_change_password) VALUES (?, NULL, 0, 1)");
+                                $aa->bind_param('i', $newId);
+                                $aa->execute();
+
+                                // Chiếm giường
+                                if ($bedId) {
+                                    $conn->query("UPDATE beds SET is_occupied = 1 WHERE id = $bedId");
+                                }
+
+                                $success++;
+                                $preview[] = [
+                                    'MSSV'   => $code,
+                                    'Họ tên' => $fullname,
+                                    'Email'  => $email,
+                                    'Phòng'  => $roomCode ?: '—',
+                                    'Giường' => $assignedBed,
+                                    'Trạng thái' => 'Thêm mới',
+                                ];
+                            } else {
+                                $errors[] = "Dòng $rowNum: Lỗi khi thêm mới '$code'.";
+                                $skipped++;
+                            }
                         }
                     }
 
                     $conn->commit();
+
+                    // CẬP NHẬT TRẠNG THÁI PHÒNG (Full) SAU KHI IMPORT
+                    // Lấy danh sách các phòng vừa được tác động
+                    $affectedRooms = $conn->query("
+                        SELECT DISTINCT r.id 
+                        FROM rooms r
+                        JOIN beds b ON b.room_id = r.id
+                        WHERE b.id NOT IN (SELECT bed_id FROM users WHERE bed_id IS NOT NULL AND status IN ('active', 'pending'))
+                        AND r.status = 'available'
+                    ");
+                    // Lưu ý: Query trên hơi ngược, ta nên tìm các phòng KHÔNG CÒN giường trống nào
+                    $roomsToUpdate = $conn->query("
+                        SELECT r.id FROM rooms r 
+                        WHERE r.status = 'available' 
+                        AND NOT EXISTS (
+                            SELECT 1 FROM beds b 
+                            WHERE b.room_id = r.id 
+                            AND b.id NOT IN (SELECT bed_id FROM users WHERE bed_id IS NOT NULL AND status IN ('active', 'pending'))
+                        )
+                    ");
+                    while ($rm = $roomsToUpdate->fetch_assoc()) {
+                        $rid = $rm['id'];
+                        $conn->query("UPDATE rooms SET status = 'full' WHERE id = $rid");
+                    }
+                    
+                    // Ngược lại, nếu phòng đang 'full' mà lại có giường trống (do chuyển đi)
+                    $roomsToAvailable = $conn->query("
+                        SELECT r.id FROM rooms r 
+                        WHERE r.status = 'full' 
+                        AND EXISTS (
+                            SELECT 1 FROM beds b 
+                            WHERE b.room_id = r.id 
+                            AND b.id NOT IN (SELECT bed_id FROM users WHERE bed_id IS NOT NULL AND status IN ('active', 'pending'))
+                        )
+                    ");
+                    while ($rm = $roomsToAvailable->fetch_assoc()) {
+                        $rid = $rm['id'];
+                        $conn->query("UPDATE rooms SET status = 'available' WHERE id = $rid");
+                    }
 
                 } catch (Exception $e) {
                     $conn->rollback();
@@ -345,7 +417,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                     Đã hỗ trợ file CSV lưu ở định dạng <strong>UTF-8</strong>. Tự động gán giường nếu chỉ có phòng.
                 </div>
 
-                <a href="/UniDorm/assets/templates/DiemDanh_mau.csv" class="btn btn-sm btn-outline-secondary w-100 rounded-3" download>
+                <a href="../../assets/templates/DiemDanh_mau.csv" class="btn btn-sm btn-outline-secondary w-100 rounded-3" download>
                     <i class="bi bi-download me-1"></i>Tải file CSV mẫu
                 </a>
             </div>

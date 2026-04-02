@@ -4,7 +4,7 @@
  */
 $pageTitle   = 'Thống kê & Báo cáo';
 $breadcrumbs = [
-    ['label' => 'Dashboard', 'url' => '/UniDorm/views/admin/dashboard.php'],
+    ['label' => 'Dashboard', 'url' => BASE_URL . '/dashboard'],
     ['label' => 'Thống kê & Báo cáo', 'url' => '#'],
 ];
 ob_start();

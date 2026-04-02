@@ -7,13 +7,13 @@
 
 if (session_status() === PHP_SESSION_NONE) session_start();
 
-$conn = require_once __DIR__ . '/../../includes/db.php';
+require_once __DIR__ . '/../../includes/db.php';
 require_once __DIR__ . '/../../app/models/UserModel.php';
 require_once __DIR__ . '/../../app/models/MessageModel.php';
 require_once __DIR__ . '/../../app/controllers/ChatController.php';
 
 if (!isset($_SESSION['user_id'])) {
-    header('Location: /UniDorm/views/auth/login.php');
+    header('Location: ../auth/login.php');
     exit;
 }
 
@@ -24,7 +24,7 @@ $userData  = $userModel->getUserById($userId);
 
 if (!$userData) {
     session_destroy();
-    header('Location: /UniDorm/views/auth/login.php?error=user_not_found');
+    header('Location: ../auth/login.php?error=user_not_found');
     exit;
 }
 
@@ -312,7 +312,7 @@ ob_start();
             <?php foreach ($chatUsers as $cu):
                 $lastMsg = $userModel->getLastMessage($userId, $cu['user_id']);
                 $isActive = $preSelectUserId == $cu['user_id'];
-                $avatar  = '/UniDorm/' . ($cu['profile_picture'] ?? 'assets/images/default.jpg');
+                $avatar  = !empty($cu['profile_picture']) ? BASE_URL . '/' . $cu['profile_picture'] : BASE_URL . '/assets/images/default.jpg';
                 $roleLabel = match($cu['role']) { 'admin'=>'Quản trị viên', default=>'Sinh viên' };
             ?>
             <div class="chat-contact-item <?php echo $isActive ? 'active' : ''; ?>"
@@ -322,7 +322,7 @@ ob_start();
                  data-user-role="<?php echo htmlspecialchars($roleLabel); ?>">
                 <div class="chat-contact-avatar">
                     <img src="<?php echo htmlspecialchars($avatar); ?>"
-                         onerror="this.onerror=null; this.src='/UniDorm/assets/images/default.jpg'" alt="" class="bg-white">
+                         onerror="if (this.src != '<?php echo BASE_URL; ?>/assets/images/default.jpg') this.src='<?php echo BASE_URL; ?>/assets/images/default.jpg'" alt="" class="bg-white">
                     <?php if ($cu['status'] === 'active'): ?>
                     <span class="chat-online-dot"></span>
                     <?php endif; ?>
@@ -350,10 +350,10 @@ ob_start();
             <button class="btn btn-sm btn-outline-secondary d-none chat-back-btn" id="chatBackBtn" onclick="closeChatPanel()">
                 <i class="bi bi-chevron-left"></i>
             </button>
-            <div id="chatHeaderAvatar" class="flex-shrink-0" style="display:none!important;">
-                <img id="chatReceiverAvatar" src="/UniDorm/assets/images/default.jpg"
+            <div id="chatHeaderAvatar" class="flex-shrink-0" style="display:none;">
+                <img id="chatReceiverAvatar" src="<?php echo BASE_URL; ?>/assets/images/default.jpg"
                      class="rounded-circle bg-white" width="38" height="38" style="object-fit:cover;"
-                     onerror="this.onerror=null; this.src='/UniDorm/assets/images/default.jpg'">
+                     onerror="if (this.src != '<?php echo BASE_URL; ?>/assets/images/default.jpg') this.src='<?php echo BASE_URL; ?>/assets/images/default.jpg'">
             </div>
             <div id="chatHeaderInfo" class="flex-grow-1">
                 <p class="mb-0 text-muted" id="chatPlaceholderText">
@@ -389,8 +389,8 @@ ob_start();
 <script>
 const SELF_ID     = <?php echo $userId; ?>;
 const SELF_NAME   = <?php echo json_encode($userData['fullname']); ?>;
-const SELF_AVATAR = <?php echo json_encode('/UniDorm/' . ($userData['profile_picture'] ?? 'assets/images/default.jpg')); ?>;
-const CHAT_URL    = '/UniDorm/views/shared/chat.php';
+const SELF_AVATAR = <?php echo json_encode(!empty($userData['profile_picture']) ? BASE_URL . '/' . $userData['profile_picture'] : BASE_URL . '/assets/images/default.jpg'); ?>;
+const CHAT_URL    = 'chat.php';
 
 let currentReceiverId   = 0;
 let currentReceiverName = '';
@@ -406,7 +406,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <?php if ($preSelectUser): ?>
     selectContact(<?php echo $preSelectUser['user_id']; ?>,
                   <?php echo json_encode($preSelectUser['fullname']); ?>,
-                  '/UniDorm/' + (<?php echo json_encode($preSelectUser['profile_picture'] ?? 'assets/images/default.jpg'); ?>),
+                  '<?php echo !empty($preSelectUser['profile_picture']) ? BASE_URL . '/' . $preSelectUser['profile_picture'] : BASE_URL . '/assets/images/default.jpg'; ?>',
                   '<?php echo match(strtolower($preSelectUser['role']??'')) { 'admin'=>'Quản trị viên', default=>'Sinh viên' }; ?>');
     <?php else: ?>
     // Tự động mở contact đầu tiên nếu có
@@ -444,7 +444,7 @@ function selectContact(uid, name, avatar, role) {
     // Update header
     document.getElementById('chatPlaceholderText').style.display    = 'none';
     document.getElementById('chatReceiverInfo').style.display        = '';
-    document.getElementById('chatHeaderAvatar').style.removeProperty('display');
+    document.getElementById('chatHeaderAvatar').style.display        = 'block';
     document.getElementById('chatReceiverName').textContent          = name;
     document.getElementById('chatReceiverRole').textContent          = role;
     document.getElementById('chatReceiverAvatar').src                = avatar;
@@ -500,10 +500,10 @@ function renderMessages(messages) {
         const content = msg.content;
 
         return `<div class="msg-row ${isSent ? 'sent' : 'received'}">
-            ${!isSent ? `<div class="msg-avatar"><img src="${avatar}" onerror="this.onerror=null; this.src='/UniDorm/assets/images/default.jpg'" alt="" class="bg-white"></div>` : ''}
+            ${!isSent ? `<div class="msg-avatar"><img src="${avatar}" onerror="if (this.src != '<?php echo BASE_URL; ?>/assets/images/default.jpg') this.src='<?php echo BASE_URL; ?>/assets/images/default.jpg'" alt="" class="bg-white"></div>` : ''}
             <div class="msg-bubble">${content}</div>
             <div class="msg-time">${time}</div>
-            ${isSent ? `<div class="msg-avatar"><img src="${SELF_AVATAR}" onerror="this.onerror=null; this.src='/UniDorm/assets/images/default.jpg'" alt="" class="bg-white"></div>` : ''}
+            ${isSent ? `<div class="msg-avatar"><img src="${SELF_AVATAR}" onerror="if (this.src != '<?php echo BASE_URL; ?>/assets/images/default.jpg') this.src='<?php echo BASE_URL; ?>/assets/images/default.jpg'" alt="" class="bg-white"></div>` : ''}
         </div>`;
     }).join('');
 

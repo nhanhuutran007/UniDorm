@@ -5,7 +5,7 @@
  */
 $pageTitle   = 'Thông tin phòng';
 $breadcrumbs = [
-    ['label' => 'Trang chủ',    'url' => '/UniDorm/views/student/dashboard.php'],
+    ['label' => 'Trang chủ',    'url' => BASE_URL . '/dashboard'],
     ['label' => 'Thông tin phòng', 'url' => '#'],
 ];
 ob_start();
@@ -52,7 +52,7 @@ if ($myRoom) {
         <i class="bi bi-door-closed fs-1 text-muted d-block mb-3"></i>
         <h5 class="fw-bold text-dark">Bạn chưa được xếp phòng</h5>
         <p class="text-muted mb-4">Vui lòng liên hệ Ban quản lý ký túc xá để được xếp phòng.</p>
-        <a href="/UniDorm/views/shared/chat.php" class="btn btn-primary">
+        <a href="<?php echo BASE_URL; ?>/chat" class="btn btn-primary">
             <i class="bi bi-chat-dots-fill me-2"></i>Nhắn tin với BQL
         </a>
     </div>
@@ -131,7 +131,7 @@ if ($myRoom) {
                 </ul>
                 <?php endif; ?>
                 <div class="px-4 pb-3 pt-2">
-                    <a href="/UniDorm/views/student/report_device.php" class="btn btn-sm btn-outline-danger w-100">
+                    <a href="<?php echo BASE_URL; ?>/report_device" class="btn btn-sm btn-outline-danger w-100">
                         <i class="bi bi-exclamation-triangle me-1"></i>Báo hỏng thiết bị
                     </a>
                 </div>

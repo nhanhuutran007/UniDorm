@@ -5,7 +5,7 @@
  */
 $pageTitle   = 'Báo cáo thiết bị hỏng';
 $breadcrumbs = [
-    ['label' => 'Dashboard', 'url' => '/UniDorm/views/admin/dashboard.php'],
+    ['label' => 'Dashboard', 'url' => BASE_URL . '/dashboard'],
     ['label' => 'Báo cáo thiết bị hỏng', 'url' => '#'],
 ];
 ob_start();
@@ -121,7 +121,7 @@ $statusConfig = [
                placeholder="Mã phòng..." value="<?php echo htmlspecialchars($filterRoom); ?>">
         <button class="btn btn-sm btn-primary"><i class="bi bi-search me-1"></i>Lọc</button>
         <?php if ($filterStatus || $filterRoom): ?>
-        <a href="/UniDorm/views/admin/device_reports.php" class="btn btn-sm btn-outline-secondary">Xóa lọc</a>
+        <a href="<?php echo BASE_URL; ?>/device_reports" class="btn btn-sm btn-outline-secondary">Xóa lọc</a>
         <?php endif; ?>
     </form>
     <span class="text-muted small">Tìm thấy <strong><?php echo $total; ?></strong> báo cáo</span>

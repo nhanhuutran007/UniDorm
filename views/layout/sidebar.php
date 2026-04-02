@@ -20,7 +20,7 @@ function sidebarActive(string $path, string $current): string {
                 <li class="menu-title"><span>Tổng quan</span></li>
 
                 <li class="<?php echo sidebarActive('dashboard', $currentPath); ?>">
-                    <a href="/UniDorm/views/admin/dashboard.php">
+                    <a href="<?php echo BASE_URL; ?>/dashboard">
                         <i class="bi bi-speedometer2"></i>
                         <span>Dashboard</span>
                     </a>
@@ -29,21 +29,21 @@ function sidebarActive(string $path, string $current): string {
                 <li class="menu-title"><span>Quản lý KTX</span></li>
 
                 <li class="<?php echo sidebarActive('students', $currentPath); ?>">
-                    <a href="/UniDorm/views/admin/students.php">
+                    <a href="<?php echo BASE_URL; ?>/students">
                         <i class="bi bi-people-fill"></i>
                         <span>Quản lý sinh viên</span>
                     </a>
                 </li>
 
                 <li class="<?php echo sidebarActive('rooms', $currentPath); ?>">
-                    <a href="/UniDorm/views/admin/rooms.php">
+                    <a href="<?php echo BASE_URL; ?>/rooms">
                         <i class="bi bi-door-open-fill"></i>
                         <span>Quản lý phòng</span>
                     </a>
                 </li>
 
                 <li class="<?php echo sidebarActive('floors', $currentPath); ?>">
-                    <a href="/UniDorm/views/admin/floors.php">
+                    <a href="<?php echo BASE_URL; ?>/floors">
                         <i class="bi bi-layers-fill"></i>
                         <span>Quản lý lầu</span>
                     </a>
@@ -52,7 +52,7 @@ function sidebarActive(string $path, string $current): string {
                 <li class="menu-title"><span>Tiện ích</span></li>
 
                 <li class="<?php echo sidebarActive('device_reports', $currentPath); ?> subsection">
-                    <a href="/UniDorm/views/admin/device_reports.php">
+                    <a href="<?php echo BASE_URL; ?>/device_reports">
                         <i class="bi bi-tools"></i>
                         <span>Báo cáo thiết bị hỏng</span>
                         <?php
@@ -65,14 +65,14 @@ function sidebarActive(string $path, string $current): string {
                 </li>
 
                 <li class="<?php echo sidebarActive('notifications', $currentPath); ?>">
-                    <a href="/UniDorm/views/admin/notifications.php">
+                    <a href="<?php echo BASE_URL; ?>/notifications">
                         <i class="bi bi-megaphone-fill"></i>
                         <span>Thông báo</span>
                     </a>
                 </li>
 
                 <li class="<?php echo sidebarActive('chat', $currentPath); ?>">
-                    <a href="/UniDorm/views/shared/chat.php">
+                    <a href="<?php echo BASE_URL; ?>/chat">
                         <i class="bi bi-chat-dots-fill"></i>
                         <span>Tin nhắn</span>
                     </a>
@@ -81,14 +81,14 @@ function sidebarActive(string $path, string $current): string {
                 <li class="menu-title"><span>Hệ thống</span></li>
 
                 <li class="<?php echo sidebarActive('userlists', $currentPath); ?>">
-                    <a href="/UniDorm/views/admin/userlists.php">
+                    <a href="<?php echo BASE_URL; ?>/userlists">
                         <i class="bi bi-person-badge-fill"></i>
                         <span>Danh sách tài khoản</span>
                     </a>
                 </li>
 
                 <li class="<?php echo sidebarActive('reports', $currentPath); ?>">
-                    <a href="/UniDorm/views/admin/reports.php">
+                    <a href="<?php echo BASE_URL; ?>/reports">
                         <i class="bi bi-bar-chart-fill"></i>
                         <span>Thống kê & Báo cáo</span>
                     </a>
@@ -103,7 +103,7 @@ function sidebarActive(string $path, string $current): string {
                 <li class="menu-title"><span>Trang chủ</span></li>
 
                 <li class="<?php echo sidebarActive('student/dashboard', $currentPath); ?>">
-                    <a href="/UniDorm/views/student/dashboard.php">
+                    <a href="<?php echo BASE_URL; ?>/dashboard">
                         <i class="bi bi-house-fill"></i>
                         <span>Tổng quan</span>
                     </a>
@@ -112,14 +112,14 @@ function sidebarActive(string $path, string $current): string {
                 <li class="menu-title"><span>Phòng của tôi</span></li>
 
                 <li class="<?php echo sidebarActive('room_info', $currentPath); ?>">
-                    <a href="/UniDorm/views/student/room_info.php">
+                    <a href="<?php echo BASE_URL; ?>/room">
                         <i class="bi bi-door-open-fill"></i>
                         <span>Thông tin phòng</span>
                     </a>
                 </li>
 
                 <li class="<?php echo sidebarActive('report_device', $currentPath); ?>">
-                    <a href="/UniDorm/views/student/report_device.php">
+                    <a href="<?php echo BASE_URL; ?>/report">
                         <i class="bi bi-exclamation-triangle-fill"></i>
                         <span>Báo hỏng thiết bị</span>
                     </a>
@@ -128,7 +128,7 @@ function sidebarActive(string $path, string $current): string {
                 <li class="menu-title"><span>Liên lạc</span></li>
 
                 <li class="<?php echo sidebarActive('notifications', $currentPath); ?>">
-                    <a href="/UniDorm/views/student/notifications.php">
+                    <a href="<?php echo BASE_URL; ?>/notifications">
                         <i class="bi bi-bell-fill"></i>
                         <span>Thông báo</span>
                         <?php if (isset($unreadNotifCount) && $unreadNotifCount > 0): ?>
@@ -138,7 +138,7 @@ function sidebarActive(string $path, string $current): string {
                 </li>
 
                 <li class="<?php echo sidebarActive('chat', $currentPath); ?>">
-                    <a href="/UniDorm/views/shared/chat.php">
+                    <a href="<?php echo BASE_URL; ?>/chat">
                         <i class="bi bi-chat-dots-fill"></i>
                         <span>Nhắn tin với BQL</span>
                     </a>
@@ -147,7 +147,7 @@ function sidebarActive(string $path, string $current): string {
                 <li class="menu-title"><span>Tài khoản</span></li>
 
                 <li class="<?php echo sidebarActive('profile', $currentPath); ?>">
-                    <a href="/UniDorm/views/shared/profile.php">
+                    <a href="<?php echo BASE_URL; ?>/profile">
                         <i class="bi bi-person-fill"></i>
                         <span>Hồ sơ cá nhân</span>
                     </a>

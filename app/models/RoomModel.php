@@ -88,13 +88,44 @@ class RoomModel {
     public function countRoomsByStatus($status = 'all') {
         if ($status === 'all') {
             $result = $this->db->query("SELECT COUNT(*) as total FROM rooms");
+            $row = $result->fetch_assoc();
+            return (int) $row['total'];
+        }
+        
+        // Logic mới: Đếm phòng dựa trên thực tế sĩ số (bao gồm active và pending)
+        // để khớp với Dashboard và Quản lý phòng
+        if ($status === 'available') {
+            $sql = "
+                SELECT COUNT(*) as total FROM rooms r
+                WHERE r.status = 'available'
+                AND (
+                    SELECT COUNT(*) FROM beds b
+                    JOIN users u ON u.bed_id = b.id AND u.status IN ('active', 'pending')
+                    WHERE b.room_id = r.id
+                ) < r.max_capacity
+            ";
+            return (int)$this->db->query($sql)->fetch_assoc()['total'];
+        } elseif ($status === 'full') {
+            $sql = "
+                SELECT COUNT(*) as total FROM rooms r
+                WHERE r.status = 'full'
+                OR (
+                    r.status = 'available'
+                    AND (
+                        SELECT COUNT(*) FROM beds b
+                        JOIN users u ON u.bed_id = b.id AND u.status IN ('active', 'pending')
+                        WHERE b.room_id = r.id
+                    ) >= r.max_capacity
+                )
+            ";
+            return (int)$this->db->query($sql)->fetch_assoc()['total'];
         } else {
             $stmt = $this->db->prepare("SELECT COUNT(*) as total FROM rooms WHERE status = ?");
             $stmt->bind_param("s", $status);
             $stmt->execute();
             $result = $stmt->get_result();
+            $row = $result->fetch_assoc();
+            return (int) $row['total'];
         }
-        $row = $result->fetch_assoc();
-        return (int) $row['total'];
     }
 }

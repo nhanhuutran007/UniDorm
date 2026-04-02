@@ -5,7 +5,7 @@
  */
 $pageTitle   = 'Thêm sinh viên mới';
 $breadcrumbs = [
-    ['label' => 'Quản lý sinh viên', 'url' => '/UniDorm/views/admin/students.php'],
+    ['label' => 'Quản lý sinh viên', 'url' => BASE_URL . '/students'],
     ['label' => 'Thêm mới', 'url' => '#'],
 ];
 ob_start();
@@ -256,7 +256,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <hr class="my-4">
             <div class="d-flex justify-content-end gap-2">
-                <a href="/UniDorm/views/admin/students.php" class="btn btn-outline-secondary rounded-3">Hủy</a>
+                <a href="<?php echo BASE_URL; ?>/students" class="btn btn-outline-secondary rounded-3">Hủy</a>
                 <button type="submit" class="btn btn-primary px-4 rounded-3" id="submitBtn">
                     <i class="bi bi-person-plus-fill me-2"></i>Tạo tài khoản
                 </button>

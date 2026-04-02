@@ -12,7 +12,7 @@ if (isset($_SESSION['user_id'])) {
     exit;
 }
 
-$conn  = require_once __DIR__ . '/../../includes/db.php';
+require_once __DIR__ . '/../../includes/db.php';
 $token = trim($_GET['token'] ?? $_POST['token'] ?? '');
 $error = $success = '';
 

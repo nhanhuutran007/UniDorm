@@ -5,7 +5,7 @@
  */
 $pageTitle   = 'Báo hỏng thiết bị';
 $breadcrumbs = [
-    ['label' => 'Trang chủ',        'url' => '/UniDorm/views/student/dashboard.php'],
+    ['label' => 'Trang chủ',        'url' => BASE_URL . '/dashboard'],
     ['label' => 'Báo hỏng thiết bị','url' => '#']
 ];
 ob_start();
@@ -99,7 +99,7 @@ $statusMap  = ['pending' => ['Đang chờ xử lý', 'warning'], 'in_progress' =
                 <div class="text-center py-4 text-muted">
                     <i class="bi bi-door-closed fs-2 d-block mb-2"></i>
                     <p>Bạn chưa được xếp phòng. Liên hệ BQL để được hỗ trợ.</p>
-                    <a href="/UniDorm/views/shared/chat.php" class="btn btn-sm btn-primary">Nhắn tin BQL</a>
+                    <a href="<?php echo BASE_URL; ?>/chat" class="btn btn-sm btn-primary">Nhắn tin BQL</a>
                 </div>
                 <?php else: ?>
                 <form method="POST" autocomplete="off">
