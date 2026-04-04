@@ -262,9 +262,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                                      phone_personal, phone_family, hometown, role, status, bed_id, is_room_leader, created_by)
                                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'student', 'pending', ?, ?, ?)
                             ");
+                            $currAdminId = $_SESSION['user_id'] ?? null;
                             $ins->bind_param('sssssssssiii',
                                 $code, $code, $fullname, $email, $gender, $dob,
-                                $phonePers, $phoneFamily, $hometown, $bedId, $isLeader, $userId
+                                $phonePers, $phoneFamily, $hometown, $bedId, $isLeader, $currAdminId
                             );
 
                             if ($ins->execute()) {

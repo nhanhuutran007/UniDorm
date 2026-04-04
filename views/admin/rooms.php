@@ -30,7 +30,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_room_status'])
     $newStatus = $_POST['new_status'];
     $validSt   = ['available','full','maintenance','closed'];
     if ($roomId && in_array($newStatus, $validSt)) {
-        $conn->prepare("UPDATE rooms SET status = ? WHERE id = ?")->execute() || true;
         $st = $conn->prepare("UPDATE rooms SET status = ? WHERE id = ?");
         $st->bind_param('si', $newStatus, $roomId);
         $updateMsg = $st->execute() ? 'success' : 'error';

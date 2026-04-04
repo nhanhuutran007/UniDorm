@@ -33,7 +33,8 @@ $successMsg = $errorMsg = '';
 
 // Rooms + beds
 $roomsRaw = $conn->query("
-    SELECT r.id, r.room_code, f.floor_number, bld.name as building_name
+    SELECT r.id, r.room_code, r.max_capacity, f.floor_number, bld.name as building_name,
+           (SELECT COUNT(*) FROM beds b WHERE b.room_id = r.id AND b.is_occupied = 1) as current_occupancy
     FROM rooms r 
     JOIN floors f ON r.floor_id = f.id
     JOIN buildings bld ON f.building_id = bld.id
@@ -252,7 +253,7 @@ if ($target['bed_id']) {
                                     <?php foreach ($rooms as $r): ?>
                                     <option value="<?php echo $r['id']; ?>"
                                         <?php echo ($curBedInfo && $curBedInfo['room_id']==$r['id']) ? 'selected' : ''; ?>>
-                                        <?php echo $r['room_code']; ?> (Lầu <?php echo $r['floor_number']; ?>)
+                                        <?php echo $r['room_code']; ?> (<?php echo $r['current_occupancy']; ?>/<?php echo $r['max_capacity']; ?>)
                                     </option>
                                     <?php endforeach; ?>
                                 </optgroup>

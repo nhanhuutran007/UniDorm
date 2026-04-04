@@ -83,7 +83,7 @@ $pageTitle = ($pageTitle ?? 'UniDorm') . ' | UniDorm';
     <!-- Admin Template Legacy CSS -->
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>/assets/css/style.css">
     <!-- Modern Admin Premium Theme -->
-    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/assets/css/modern-admin.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>/assets/css/modern-admin.css?v=<?php echo time(); ?>">
 
     <?php if (!empty($extraCss)): ?>
         <?php foreach ($extraCss as $css): ?>
@@ -138,9 +138,10 @@ $pageTitle = ($pageTitle ?? 'UniDorm') . ' | UniDorm';
 </div><!-- /.main-wrapper -->
 
 <!-- Scripts -->
-<script src="<?php echo BASE_URL; ?>/assets/js/jquery.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="<?php echo BASE_URL; ?>/assets/js/app.js"></script>
+<script src="https://unpkg.com/feather-icons"></script>
+<script src="<?php echo BASE_URL; ?>/assets/js/script.js?v=<?php echo time(); ?>"></script>
 
 <?php if (!empty($extraJs)): ?>
     <?php foreach ($extraJs as $js): ?>

@@ -14,6 +14,7 @@ $(document).ready(function () {
     $wrapper.toggleClass("slide-nav");
     $(".sidebar-overlay").toggleClass("opened");
     $("html").addClass("menu-opened");
+    $(this).toggleClass("active");
     $("#task_window").removeClass("opened");
     return false;
   });
@@ -222,25 +223,7 @@ $(document).ready(function () {
       focus: true,
     });
   }
-  if ($slimScrolls.length > 0) {
-    $slimScrolls.slimScroll({
-      height: "auto",
-      width: "100%",
-      position: "right",
-      size: "7px",
-      color: "#ccc",
-      wheelStep: 10,
-      touchScrollStep: 100,
-    });
-    var wHeight = $(window).height() - 60;
-    $slimScrolls.height(wHeight);
-    $(".sidebar .slimScrollDiv").height(wHeight);
-    $(window).resize(function () {
-      var rHeight = $(window).height() - 60;
-      $slimScrolls.height(rHeight);
-      $(".sidebar .slimScrollDiv").height(rHeight);
-    });
-  }
+  // Slimscroll replaced by native scroll with modern styling
   var Sidemenu = function () {
     this.$menuItem = $("#sidebar-menu a");
   };
@@ -268,69 +251,46 @@ $(document).ready(function () {
       .trigger("click");
   }
   init();
-  $(document).on("mouseover", function (e) {
-    e.stopPropagation();
-    if ($("body").hasClass("mini-sidebar") && $("#toggle_btn").is(":visible")) {
-      var targ = $(e.target).closest(".sidebar, .header-left").length;
-      if (targ) {
-        $("body").addClass("expand-menu");
-        $(".subdrop + ul").slideDown();
-      } else {
-        $("body").removeClass("expand-menu");
-        $(".subdrop + ul").slideUp();
-      }
-      return false;
-    }
-  });
-  $(document).on("click", "#toggle_btn", function () {
+  // Sidebar Toggle & Expansion Logic
+  $(document).on("click", "#toggle_btn", function (e) {
+    e.preventDefault();
     if ($("body").hasClass("mini-sidebar")) {
       $("body").removeClass("mini-sidebar");
       $(this).addClass("active");
-      $(".subdrop + ul").slideDown();
-      localStorage.setItem("screenModeNightTokenState", "night");
-      setTimeout(function () {
-        $("body").removeClass("mini-sidebar");
-        $(".header-left").addClass("active");
-      }, 100);
+      $(".header-left").addClass("active");
+      localStorage.setItem("sidebar-state", "expanded");
     } else {
       $("body").addClass("mini-sidebar");
       $(this).removeClass("active");
-      $(".subdrop + ul").slideUp();
-      localStorage.removeItem("screenModeNightTokenState", "night");
-      setTimeout(function () {
-        $("body").addClass("mini-sidebar");
-        $(".header-left").removeClass("active");
-      }, 100);
+      $(".header-left").removeClass("active");
+      localStorage.setItem("sidebar-state", "mini");
     }
     return false;
   });
-  if (localStorage.getItem("screenModeNightTokenState") == "night") {
-    setTimeout(function () {
+
+  // Expand sidebar when clicking the logo in mini-mode
+  $(document).on("click", ".header-left .logo", function (e) {
+    if ($("body").hasClass("mini-sidebar")) {
+      e.preventDefault();
       $("body").removeClass("mini-sidebar");
+      $("#toggle_btn").addClass("active");
       $(".header-left").addClass("active");
-    }, 100);
+      localStorage.setItem("sidebar-state", "expanded");
+    }
+  });
+
+  // Load sidebar state (Defaults to expanded)
+  var sidebarState = localStorage.getItem("sidebar-state");
+  if (sidebarState === "mini") {
+    $("body").addClass("mini-sidebar");
+    $("#toggle_btn").removeClass("active");
+    $(".header-left").removeClass("active");
+  } else {
+    $("body").removeClass("mini-sidebar");
+    $("#toggle_btn").addClass("active");
+    $(".header-left").addClass("active");
   }
-  $(".submenus").on("click", function () {
-    $("body").addClass("sidebarrightmenu");
-  });
-  $("#searchdiv").on("click", function () {
-    $(".searchinputs").addClass("show");
-  });
-  $(".search-addon span").on("click", function () {
-    $(".searchinputs").removeClass("show");
-  });
-  $(document).on("click", "#filter_search", function () {
-    $("#filter_inputs").slideToggle("slow");
-  });
-  $(document).on("click", "#filter_search1", function () {
-    $("#filter_inputs1").slideToggle("slow");
-  });
-  $(document).on("click", "#filter_search2", function () {
-    $("#filter_inputs2").slideToggle("slow");
-  });
-  $(document).on("click", "#filter_search", function () {
-    $("#filter_search").toggleClass("setclose");
-  });
+
   $(document).on("click", ".productset", function () {
     $(this).toggleClass("active");
   });

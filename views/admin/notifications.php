@@ -11,6 +11,8 @@ $breadcrumbs = [
 ob_start();
 
 require_once __DIR__ . '/../../includes/db.php';
+require_once __DIR__ . '/../../app/services/MailService.php';
+$mailService = new MailService();
 
 $successMsg = $errorMsg = '';
 
@@ -30,6 +32,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_notif'])) {
             $successMsg = $targetUserId
                 ? "Đã gửi thông báo đến sinh viên được chọn."
                 : "Đã gửi thông báo đến <strong>tất cả sinh viên</strong>.";
+
+            // --- Gửi Email ---
+            if ($targetUserId) {
+                $uStmt = $conn->prepare("SELECT fullname, email, student_code FROM users WHERE user_id = ?");
+                $uStmt->bind_param('i', $targetUserId);
+                $uStmt->execute();
+                $targetUser = $uStmt->get_result()->fetch_assoc();
+                if ($targetUser) {
+                    $targetEmail = $targetUser['email'] ?? ($targetUser['student_code'] . '@student.tdtu.edu.vn');
+                    $mailService->sendNotification($targetEmail, $targetUser['fullname'], $title, $message);
+                }
+            } else {
+                $allStudents = $conn->query("SELECT fullname, email, student_code FROM users WHERE role='student' AND status='active'");
+                while($s = $allStudents->fetch_assoc()){
+                    $sEmail = $s['email'] ?? ($s['student_code'] . '@student.tdtu.edu.vn');
+                    $mailService->sendNotification($sEmail, $s['fullname'], $title, $message);
+                }
+            }
         } else {
             $errorMsg = 'Có lỗi xảy ra khi gửi thông báo. Vui lòng thử lại.';
         }
