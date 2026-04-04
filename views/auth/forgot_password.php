@@ -15,6 +15,8 @@ if (isset($_SESSION['user_id'])) {
 }
 
 require_once __DIR__ . '/../../includes/db.php';
+require_once __DIR__ . '/../../app/services/MailService.php';
+$mailService = new MailService();
 $error = $success = '';
 $step  = 'request'; // 'request' | 'reset'
 
@@ -114,16 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$token) {
 
             $resetUrl = "https://{$_SERVER['HTTP_HOST']}/UniDorm/views/auth/forgot_password.php?token=$resetToken";
             $email    = $foundUser['email'] ?? ($foundUser['student_code'] . '@student.tdtu.edu.vn');
-            $subject  = '[UniDorm] Yêu cầu đặt lại mật khẩu';
-            $body     = "Xin chào {$foundUser['fullname']},\n\n"
-                . "Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn.\n\n"
-                . "Nhấn vào liên kết bên dưới để đặt lại mật khẩu (có hiệu lực trong 1 giờ):\n"
-                . "$resetUrl\n\n"
-                . "Nếu bạn không yêu cầu điều này, hãy bỏ qua email này.\n\n"
-                . "Trân trọng,\nBan Quản lý Ký túc xá – UniDorm";
-            $headers  = "From: noreply@unidorm.tdtu.edu.vn\r\nContent-Type: text/plain; charset=UTF-8\r\n";
-
-            @mail($email, $subject, $body, $headers);
+            $mailService->sendPasswordReset($email, $foundUser['fullname'], $resetUrl);
             $success = 'email_sent';
         }
     }

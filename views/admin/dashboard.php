@@ -156,7 +156,7 @@ $recentReports = $stmtRptList->get_result()->fetch_all(MYSQLI_ASSOC);
                         <tbody>
                             <?php foreach ($recentStudents as $sv): ?>
                             <tr>
-                                <td>
+                                <td data-label="Họ tên">
                                     <div class="d-flex align-items-center gap-3">
                                         <div class="avatar-initials bg-gradient-primary rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width:36px;height:36px;font-size:14px; font-weight:600; color:#fff;">
                                             <?php echo mb_substr($sv['fullname'], 0, 1, 'UTF-8'); ?>
@@ -164,13 +164,13 @@ $recentReports = $stmtRptList->get_result()->fetch_all(MYSQLI_ASSOC);
                                         <span class="fw-semibold text-dark"><?php echo htmlspecialchars(mb_strimwidth($sv['fullname'], 0, 25, '...')); ?></span>
                                     </div>
                                 </td>
-                                <td class="text-muted fw-medium"><?php echo htmlspecialchars($sv['student_code'] ?? '—'); ?></td>
-                                <td class="text-center">
+                                <td data-label="MSSV" class="text-muted fw-medium"><?php echo htmlspecialchars($sv['student_code'] ?? '—'); ?></td>
+                                <td data-label="Phòng" class="text-center">
                                     <?php if ($sv['room_code']): ?>
                                     <span class="badge bg-white text-dark shadow-sm border px-2 py-1"><?php echo $sv['room_code']; ?>.<?php echo $sv['bed_label']; ?></span>
                                     <?php else: ?><span class="text-muted">—</span><?php endif; ?>
                                 </td>
-                                <td class="text-center">
+                                <td data-label="Trạng thái" class="text-center">
                                     <?php $sc = ['active'=>['success','Hoạt động'],'pending'=>['warning','Chờ'],'inactive'=>['secondary','Tắt'],'banned'=>['danger','Khoá']]; [$c,$l] = $sc[$sv['status']] ?? ['secondary','?']; ?>
                                     <span class="badge badge-soft-<?php echo $c; ?> rounded-pill px-3 py-1"><?php echo $l; ?></span>
                                 </td>

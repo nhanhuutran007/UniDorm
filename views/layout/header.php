@@ -74,7 +74,7 @@
             <a href="javascript:void(0);" class="dropdown-toggle nav-link userset d-flex align-items-center gap-2 p-0" data-bs-toggle="dropdown">
                 <div class="avatar-wrap position-relative" style="width: 36px; height: 36px;">
                     <?php
-                    $avatarSrc = !empty($profilePicture) ? $profilePicture : '<?php echo BASE_URL; ?>/assets/images/default.jpg';
+                    $avatarSrc = (!empty($profilePicture) && $profilePicture != BASE_URL . '/') ? $profilePicture : BASE_URL . '/assets/images/default.jpg';
                     ?>
                     <img src="<?php echo $avatarSrc; ?>"
                          alt="Avatar"
@@ -91,7 +91,7 @@
                 <div class="px-3 py-3 bg-light border-bottom">
                     <div class="d-flex align-items-center gap-2">
                         <?php
-                        $avatarSrc = !empty($profilePicture) ? $profilePicture : '<?php echo BASE_URL; ?>/assets/images/default.jpg';
+                        $avatarSrc = (!empty($profilePicture) && $profilePicture != BASE_URL . '/') ? $profilePicture : BASE_URL . '/assets/images/default.jpg';
                         ?>
                         <img src="<?php echo $avatarSrc; ?>"
                              class="rounded-circle border bg-white" width="42" height="42" style="object-fit:cover;"

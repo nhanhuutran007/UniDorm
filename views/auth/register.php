@@ -15,6 +15,8 @@ if (isset($_SESSION['user_id'])) {
 }
 
 require_once __DIR__ . '/../../includes/db.php';
+require_once __DIR__ . '/../../app/services/MailService.php';
+$mailService = new MailService();
 
 $error   = '';
 $success = '';
@@ -71,23 +73,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $tokenStmt->bind_param('iss', $newUserId, $token, $expiresAt);
                 $tokenStmt->execute();
 
-                // Gửi email (dùng PHP mail hoặc phpmailer nếu cấu hình)
                 $setPasswordUrl = "https://{$_SERVER['HTTP_HOST']}/UniDorm/views/auth/set_password.php?token=$token";
-                $mailSubject    = '[UniDorm] Xác nhận tài khoản và đặt mật khẩu';
-                $mailBody       = "Xin chào $fullname,\n\n"
-                    . "Tài khoản sinh viên của bạn tại hệ thống UniDorm đã được tạo thành công.\n"
-                    . "MSSV: $studentCode\n"
-                    . "Email đăng nhập: $email\n\n"
-                    . "Vui lòng nhấn vào liên kết bên dưới để đặt mật khẩu và kích hoạt tài khoản:\n"
-                    . "$setPasswordUrl\n\n"
-                    . "Liên kết có hiệu lực trong 24 giờ.\n\n"
-                    . "Trân trọng,\nBan Quản lý Ký túc xá - UniDorm";
-
-                $mailHeaders = "From: noreply@unidorm.tdtu.edu.vn\r\n"
-                    . "Reply-To: noreply@unidorm.tdtu.edu.vn\r\n"
-                    . "Content-Type: text/plain; charset=UTF-8\r\n";
-
-                $mailSent = @mail($email, $mailSubject, $mailBody, $mailHeaders);
+                $mailSent = $mailService->sendActivation($email, $fullname, $setPasswordUrl);
 
                 if ($mailSent || true) { // Allow success even if mail() not configured in dev
                     $success = "Tài khoản đã được tạo! Email xác nhận đã gửi đến <strong>$email</strong>.<br>

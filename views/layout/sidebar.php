@@ -10,7 +10,20 @@ function sidebarActive(string $path, string $current): string {
 }
 ?>
 <div class="sidebar" id="sidebar">
-    <div class="sidebar-inner slimscroll">
+    <!-- Sidebar Logo Header -->
+    <div class="sidebar-logo-header">
+        <a href="<?php echo $dashboardUrl; ?>" class="sidebar-brand-link">
+            <div class="sidebar-brand-wrap">
+                <img src="<?php echo BASE_URL; ?>/assets/img/logo1.png" alt="JHTs Network Management" class="sidebar-partner-logo">
+                <span class="sidebar-collab-x">×</span>
+                <div class="sidebar-app-brand">
+                    <i class="bi bi-building-fill"></i>
+                    <span>UniDorm</span>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="sidebar-inner">
         <div id="sidebar-menu" class="sidebar-menu">
 
             <?php if (isset($userRole) && $userRole === 'admin'): ?>

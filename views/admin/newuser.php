@@ -16,8 +16,8 @@ $successMsg = $errorMsg = '';
 
 // Lấy danh sách phòng + giường trống để chọn
 $roomsRaw = $conn->query("
-    SELECT r.id, r.room_code, f.floor_number, bld.name as building_name,
-           (SELECT COUNT(*) FROM beds b WHERE b.room_id = r.id AND b.is_occupied = 0) as free_beds
+    SELECT r.id, r.room_code, r.max_capacity, f.floor_number, bld.name as building_name,
+           (SELECT COUNT(*) FROM beds b WHERE b.room_id = r.id AND b.is_occupied = 1) as current_occupancy
     FROM rooms r
     JOIN floors f ON r.floor_id = f.id
     JOIN buildings bld ON f.building_id = bld.id
@@ -27,7 +27,7 @@ $roomsRaw = $conn->query("
 
 $roomsByFloor = [];
 foreach ($roomsRaw as $r) {
-    if ($r['free_beds'] > 0) {
+    if ($r['current_occupancy'] < $r['max_capacity']) {
         $label = $r['building_name'] . ' - Lầu ' . $r['floor_number'];
         $roomsByFloor[$label][] = $r;
     }
@@ -82,9 +82,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'student', 'pending', ?, ?, ?)
                 ");
                 $bedIdVal = $selectedBed ?: null;
+                $currAdminId = $_SESSION['user_id'] ?? null;
                 $ins->bind_param('sssssssssiii',
                     $studentCode, $studentCode, $fullname, $email, $gender, $dob,
-                    $phonePers, $phoneFamily, $hometown, $bedIdVal, $isLeader, $userId
+                    $phonePers, $phoneFamily, $hometown, $bedIdVal, $isLeader, $currAdminId
                 );
                 $ins->execute();
                 $newUserId = $conn->insert_id;
@@ -100,9 +101,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $freeCheck->execute();
                     $freeLeft = $freeCheck->get_result()->fetch_assoc()['c'];
                     if ($freeLeft == 0 && $selectedRoom) {
-                        $conn->prepare("UPDATE rooms SET status='full' WHERE id = ?")->execute() || true;
                         $rs = $conn->prepare("UPDATE rooms SET status='full' WHERE id = ?");
-                        $rs->bind_param('i', $selectedRoom); $rs->execute();
+                        $rs->bind_param('i', $selectedRoom);
+                        $rs->execute();
                     }
                 }
 
@@ -228,7 +229,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <optgroup label="<?php echo htmlspecialchars($groupLabel); ?>">
                                     <?php foreach ($rooms as $r): ?>
                                     <option value="<?php echo $r['id']; ?>" <?php echo ($_POST['room_id']??'')==$r['id']?'selected':''; ?>>
-                                        <?php echo $r['room_code']; ?> (<?php echo $r['free_beds']; ?> chỗ trống)
+                                        <?php echo $r['room_code']; ?> (<?php echo $r['current_occupancy']; ?>/<?php echo $r['max_capacity']; ?>)
                                     </option>
                                     <?php endforeach; ?>
                                 </optgroup>

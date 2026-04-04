@@ -25,8 +25,9 @@ class MailService
 {
 
   private string $senderEmail = '52300235@student.tdtu.edu.vn';
-  private string $senderName = 'Ký túc xá TDTU';
-  private string $appPassword = 'ufrvrrn vqquawepv';  // Thay khoảng trắng sau khi cài
+  private string $senderName = 'Trần Hữu Nhân';
+
+  private string $appPassword = 'ufrvrrnvqquawepv'; // Mặc định để trống
 
   // Phân loại email templates
   public function sendActivation(string $toEmail, string $toName, string $activationUrl): bool
@@ -96,37 +97,26 @@ class MailService
   {
     return <<<HTML
 <!DOCTYPE html>
-<html lang="vi"><head><meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{$title}</title></head>
-<body style="margin:0;padding:0;background:#f3f4f6;font-family:'Segoe UI',Arial,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:40px 20px;">
-<table width="100%" style="max-width:560px;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08);">
-  <tr><td style="background:linear-gradient(135deg,#2563eb,#1d4ed8);padding:32px 40px;text-align:center;">
-    <h1 style="color:#fff;margin:0;font-size:22px;font-weight:700;">🏠 UniDorm</h1>
-    <p style="color:#bfdbfe;margin:6px 0 0;font-size:13px;">Hệ thống Ký túc xá – Đại học Tôn Đức Thắng</p>
-  </td></tr>
-  <tr><td style="padding:36px 40px;">{$body}</td></tr>
-  <tr><td style="background:#f9fafb;padding:20px 40px;text-align:center;border-top:1px solid #e5e7eb;">
-    <p style="color:#9ca3af;font-size:11px;margin:0;">© 2026 UniDorm – TDTU &nbsp;|&nbsp; Đừng reply email này</p>
-  </td></tr>
-</table></td></tr></table>
-</body></html>
+<html lang="vi">
+<head><meta charset="UTF-8"></head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; padding: 20px;">
+  {$body}
+  <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+  <p>Chúc bạn có một ngày tốt lành!</p>
+  <p>Trân trọng,<br><strong>Trần Hữu Nhân</strong></p>
+</body>
+</html>
 HTML;
   }
 
   private function templateActivation(string $name, string $url): string
   {
     $body = <<<HTML
-<p style="color:#374151;font-size:15px;">Xin chào <strong>{$name}</strong>,</p>
-<p style="color:#6b7280;font-size:14px;line-height:1.6;">Tài khoản sinh viên tại UniDorm đã được tạo.
-Hãy nhấn nút bên dưới để đặt mật khẩu và kích hoạt tài khoản của bạn.</p>
-<div style="text-align:center;margin:32px 0;">
-  <a href="{$url}" style="background:#2563eb;color:#fff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:700;font-size:15px;display:inline-block;">
-    🔑 Đặt mật khẩu ngay
-  </a>
-</div>
-<p style="color:#9ca3af;font-size:12px;">Link có hiệu lực trong <strong>24 giờ</strong>. Nếu bạn không yêu cầu điều này, hãy bỏ qua email này.</p>
+<p>Xin chào <strong>{$name}</strong>,</p>
+<p>Tài khoản sinh viên tại hệ thống UniDorm của bạn đã được khởi tạo.</p>
+<p>Vui lòng nhấn vào liên kết bên dưới để đặt mật khẩu và kích hoạt tài khoản:</p>
+<p><a href="{$url}">{$url}</a></p>
+<p><strong>Lưu ý:</strong> Liên kết này có hiệu lực trong vòng 24 giờ. Nếu bạn không yêu cầu điều này, vui lòng bỏ qua email.</p>
 HTML;
     return $this->baseTemplate('Kích hoạt tài khoản UniDorm', $body);
   }
@@ -134,14 +124,11 @@ HTML;
   private function templateReset(string $name, string $url): string
   {
     $body = <<<HTML
-<p style="color:#374151;font-size:15px;">Xin chào <strong>{$name}</strong>,</p>
-<p style="color:#6b7280;font-size:14px;line-height:1.6;">Bạn (hoặc quản trị viên) đã yêu cầu đặt lại mật khẩu cho tài khoản UniDorm.</p>
-<div style="text-align:center;margin:32px 0;">
-  <a href="{$url}" style="background:#dc2626;color:#fff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:700;font-size:15px;display:inline-block;">
-    🔐 Đặt lại mật khẩu
-  </a>
-</div>
-<p style="color:#9ca3af;font-size:12px;">Link có hiệu lực trong <strong>1 giờ</strong>. Nếu bạn không yêu cầu, hãy bỏ qua email này.</p>
+<p>Xin chào <strong>{$name}</strong>,</p>
+<p>Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản UniDorm của bạn.</p>
+<p>Vui lòng nhấn vào liên kết bên dưới để tiến hành thay đổi mật khẩu:</p>
+<p><a href="{$url}">{$url}</a></p>
+<p><strong>Lưu ý:</strong> Liên kết có hiệu lực trong vòng 1 giờ. Nếu bạn không thực hiện yêu cầu này, vui lòng bảo mật tài khoản.</p>
 HTML;
     return $this->baseTemplate('Đặt lại mật khẩu UniDorm', $body);
   }
@@ -149,12 +136,11 @@ HTML;
   private function templateNotif(string $name, string $title, string $message): string
   {
     $body = <<<HTML
-<p style="color:#374151;font-size:15px;">Xin chào <strong>{$name}</strong>,</p>
-<div style="background:#eff6ff;border-left:4px solid #2563eb;border-radius:0 8px 8px 0;padding:16px 20px;margin:20px 0;">
-  <h3 style="color:#1d4ed8;margin:0 0 8px;font-size:16px;">{$title}</h3>
-  <p style="color:#374151;margin:0;font-size:14px;line-height:1.6;">{$message}</p>
-</div>
-<p style="color:#9ca3af;font-size:12px;">Đây là thông báo tự động từ hệ thống UniDorm.</p>
+<p>Xin chào <strong>{$name}</strong>,</p>
+<p>Bạn có thông báo mới với tiêu đề: <strong>{$title}</strong></p>
+<p>Nội dung thông báo:</p>
+<p style="background: #fdfdfd; border: 1px solid #eee; padding: 10px;">{$message}</p>
+<p><strong>Lưu ý:</strong> Đây là email thông báo tự động, nếu có vấn đề cần giải quyết vui lòng Reply lại email này.</p>
 HTML;
     return $this->baseTemplate($title, $body);
   }
