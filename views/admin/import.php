@@ -439,10 +439,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                 </div>
 
                 <div class="d-grid gap-2">
-                    <a href="../../assets/templates/ThongTin_mau.csv" class="btn btn-sm btn-outline-primary rounded-3" download>
+                    <a href="<?= BASE_URL ?>/assets/templates/ThongTin_mau.csv" class="btn btn-sm btn-outline-primary rounded-3" download>
                         <i class="bi bi-download me-1"></i>Tải mẫu Thông tin (đầy đủ)
                     </a>
-                    <a href="../../assets/templates/DiemDanh_mau.csv" class="btn btn-sm btn-outline-secondary rounded-3" download>
+                    <a href="<?= BASE_URL ?>/assets/templates/DiemDanh_mau.csv" class="btn btn-sm btn-outline-secondary rounded-3" download>
                         <i class="bi bi-download me-1"></i>Tải mẫu DiemDanh (rút gọn)
                     </a>
                 </div>
