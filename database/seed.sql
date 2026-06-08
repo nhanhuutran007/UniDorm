@@ -16,7 +16,7 @@ INSERT IGNORE INTO `users` (`student_code`, `username`, `fullname`, `email`, `ro
 
 -- Auth cho admin (pass: Admin@123 – đã hash bằng bcrypt)
 INSERT IGNORE INTO `auth_accounts` (`user_id`, `password`, `is_active`, `must_change_password`) VALUES
-(1, '$2y$10$.RfGwP7gvo21stjz7iQMvvZTytx7TMcH7D5Byu3', 1, 0);
+(1, '$2y$10$H/QTSR89DMmT4.rh8Iw68.IPPOPn/1zSV4LJ0mrJNbbOIbGNaGlQ5i', 1, 0);
 -- NOTE: Hash trên = 'Admin@123'. Đổi ngay sau khi deploy!
 
 -- -------------------------------------------------------

@@ -83,7 +83,9 @@ $monthlyReports = $conn->query("
             <div class="card-body p-4">
                 <h6 class="fw-bold mb-1">Sĩ số theo lầu</h6>
                 <p class="text-muted small mb-4">So sánh số sinh viên hiện tại vs sức chứa</p>
-                <canvas id="floorChart" height="220"></canvas>
+                <div style="height: 250px;">
+                    <canvas id="floorChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
@@ -94,7 +96,9 @@ $monthlyReports = $conn->query("
             <div class="card-body p-4">
                 <h6 class="fw-bold mb-1">Trạng thái phòng</h6>
                 <p class="text-muted small mb-4">Phân bổ <?php echo $stats['rooms_total']; ?> phòng</p>
-                <canvas id="roomPieChart" height="200"></canvas>
+                <div style="height: 250px;">
+                    <canvas id="roomPieChart"></canvas>
+                </div>
                 <div class="d-flex justify-content-center gap-3 mt-3 flex-wrap">
                     <?php foreach ([['Còn chỗ',$stats['rooms_avail'],'#22c55e'],['Đầy',$stats['rooms_full'],'#f59e0b'],['Bảo trì',$stats['rooms_maint'],'#ef4444']] as [$l,$v,$c]): ?>
                     <div class="text-center">
@@ -137,7 +141,9 @@ $monthlyReports = $conn->query("
             <div class="card-body p-4">
                 <h6 class="fw-bold mb-1">Báo cáo hỏng theo tháng</h6>
                 <p class="text-muted small mb-4">6 tháng gần nhất</p>
-                <canvas id="reportLineChart" height="180"></canvas>
+                <div style="height: 200px;">
+                    <canvas id="reportLineChart"></canvas>
+                </div>
 
                 <div class="row g-2 mt-3 text-center">
                     <?php foreach ([
@@ -174,7 +180,29 @@ new Chart(document.getElementById('floorChart'), {
             { label: 'Sức chứa', data: floorCapacity, backgroundColor: 'rgba(209,213,219,.5)', borderRadius:4 },
         ]
     },
-    options: { responsive:true, plugins:{ legend:{ position:'top' } }, scales:{ y:{ beginAtZero:true } } }
+    options: { 
+        responsive: true, 
+        maintainAspectRatio: false,
+        plugins: { 
+            legend: { 
+                position: 'top',
+                labels: { 
+                    boxWidth: 15,
+                    padding: 10,
+                    font: { size: 12 }
+                }
+            }
+        }, 
+        scales: { 
+            y: { 
+                beginAtZero: true,
+                ticks: { font: { size: 11 } }
+            },
+            x: { 
+                ticks: { font: { size: 11 } }
+            }
+        } 
+    }
 });
 
 new Chart(document.getElementById('roomPieChart'), {
@@ -184,7 +212,14 @@ new Chart(document.getElementById('roomPieChart'), {
         datasets: [{ data: [<?php echo $stats['rooms_avail'].','.$stats['rooms_full'].','.$stats['rooms_maint']; ?>],
                      backgroundColor: ['#22c55e','#f59e0b','#ef4444'], borderWidth:0, hoverOffset:6 }]
     },
-    options: { responsive:true, plugins:{ legend:{ display:false } }, cutout:'70%' }
+    options: { 
+        responsive: true, 
+        maintainAspectRatio: false,
+        plugins: { 
+            legend: { display: false }
+        }, 
+        cutout: '70%' 
+    }
 });
 
 const monthlyLabels = <?php echo json_encode(array_map(fn($r)=>$r['month'], $monthlyReports)); ?>;
@@ -197,7 +232,25 @@ new Chart(document.getElementById('reportLineChart'), {
                      borderColor:'#2563eb', backgroundColor:'rgba(37,99,235,.1)',
                      fill:true, tension:.4, pointRadius:4 }]
     },
-    options: { responsive:true, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, ticks:{stepSize:1} } } }
+    options: { 
+        responsive: true, 
+        maintainAspectRatio: false,
+        plugins: { 
+            legend: { display: false }
+        }, 
+        scales: { 
+            y: { 
+                beginAtZero: true,
+                ticks: { 
+                    stepSize: 1,
+                    font: { size: 11 }
+                }
+            },
+            x: { 
+                ticks: { font: { size: 11 } }
+            }
+        } 
+    }
 });
 </script>
 

@@ -39,6 +39,43 @@ if (!$profile) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
+    if ($action === 'upload_avatar' && isset($_FILES['avatar_file'])) {
+        $uploadDir = __DIR__ . '/../../assets/img/user/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+
+        $file = $_FILES['avatar_file'];
+        if ($file['error'] === UPLOAD_ERR_OK) {
+            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            $allowedExts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            if (in_array($ext, $allowedExts)) {
+                $filename = 'avatar_' . $userId . '_' . time() . '.' . $ext;
+                $dest = $uploadDir . $filename;
+                if (move_uploaded_file($file['tmp_name'], $dest)) {
+                    $relPath = 'assets/img/user/' . $filename;
+                    $updStmt = $conn->prepare("UPDATE users SET profile_picture = ? WHERE user_id = ?");
+                    $updStmt->bind_param('si', $relPath, $userId);
+                    if ($updStmt->execute()) {
+                        $successMsg = 'Cập nhật ảnh đại diện thành công!';
+                        // Update current profile data
+                        $stmt->execute();
+                        $profile = $stmt->get_result()->fetch_assoc();
+                        $_SESSION['profile_picture'] = $relPath; // Cho header
+                    } else {
+                        $errorMsg = 'Lỗi lưu vào CSDL: ' . $conn->error;
+                    }
+                } else {
+                    $errorMsg = 'Lỗi di chuyển file tải lên.';
+                }
+            } else {
+                $errorMsg = 'Chỉ hỗ trợ file ảnh: ' . implode(', ', $allowedExts);
+            }
+        } else {
+            $errorMsg = 'Có lỗi xảy ra khi tải lên file.';
+        }
+    }
+
     if ($action === 'update_info') {
         $fullname     = trim($_POST['fullname'] ?? '');
         $phonePers    = trim($_POST['phone_personal'] ?? '');
@@ -141,13 +178,20 @@ $genderMap = ['male' => 'Nam', 'female' => 'Nữ', 'other' => 'Khác'];
                     <?php
                     $prSrc = !empty($profile['profile_picture']) ? BASE_URL . '/' . $profile['profile_picture'] : BASE_URL . '/assets/images/default.jpg';
                     ?>
-                    <img src="<?php echo $prSrc; ?>"
+                    <img id="avatarPreview" src="<?php echo $prSrc; ?>"
                          onerror="if (this.src != '<?php echo BASE_URL; ?>/assets/images/default.jpg') this.src='<?php echo BASE_URL; ?>/assets/images/default.jpg';"
-                         alt="Avatar" class="rounded-circle border border-3 border-primary bg-white"
+                         alt="Avatar" class="rounded-circle border border-3 border-primary bg-white shadow-sm"
                          style="width:100px;height:100px;object-fit:cover;">
-                    <label for="avatarInput" class="position-absolute bottom-0 end-0 bg-white border border-2 border-primary rounded-circle d-flex align-items-center justify-content-center"
-                           style="width:28px;height:28px;cursor:pointer;" title="Đổi ảnh">
-                        <i class="bi bi-camera-fill text-primary" style="font-size:12px;"></i>
+                         
+                    <form method="POST" enctype="multipart/form-data" id="avatarForm" style="display:none;">
+                        <input type="hidden" name="action" value="upload_avatar">
+                        <input type="file" name="avatar_file" id="avatarInput" accept="image/*" onchange="document.body.style.cursor='wait'; document.getElementById('avatarForm').submit();">
+                    </form>
+                    
+                    <label for="avatarInput" class="position-absolute bottom-0 end-0 bg-white border border-2 border-primary rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+                           style="width:32px;height:32px;cursor:pointer;transition:transform 0.2s;" title="Đổi ảnh"
+                           onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                        <i class="bi bi-camera-fill text-primary" style="font-size:14px;"></i>
                     </label>
                 </div>
                 <h5 class="fw-bold mb-1"><?php echo htmlspecialchars($profile['fullname']); ?></h5>
