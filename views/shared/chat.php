@@ -228,20 +228,24 @@ ob_start();
 }
 
 /* Bubbles */
-.msg-row { display: flex; align-items: flex-end; gap: 8px; }
-.msg-row.sent { flex-direction: row-reverse; }
+.msg-row { display: flex; width: 100%; margin-top: 2px; }
+.msg-row.sent { justify-content: flex-end; }
+.msg-row.received { justify-content: flex-start; }
+.msg-bubble-wrap { display: flex; flex-direction: column; max-width: 75%; }
+.msg-row.sent .msg-bubble-wrap { align-items: flex-end; }
+.msg-row.received .msg-bubble-wrap { align-items: flex-start; }
 .msg-bubble {
-    max-width: 70%;
     padding: 10px 14px;
-    border-radius: 18px;
-    font-size: 13px;
+    font-size: 13.5px;
     line-height: 1.5;
     word-break: break-word;
 }
-.msg-row.received .msg-bubble { background: #fff; color: #1f2937; border-radius: 4px 18px 18px 18px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.msg-row.received .msg-bubble { background: #fff; color: #1f2937; border-radius: 18px 18px 18px 4px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
 .msg-row.sent     .msg-bubble { background: #2563eb; color: #fff; border-radius: 18px 18px 4px 18px; }
-.msg-time { font-size: 10px; color: #9ca3af; padding: 0 4px; white-space: nowrap; }
-.msg-avatar img { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; }
+.msg-time { font-size: 11px; color: #9ca3af; margin-top: 4px; padding: 0 4px; display: flex; align-items: center; gap: 8px; }
+.delete-btn { font-size: 11px; color: #ef4444; opacity: 0; cursor: pointer; transition: opacity 0.2s; background: none; border: none; padding: 0; }
+.msg-row:hover .delete-btn { opacity: 0.7; }
+.delete-btn:hover { opacity: 1 !important; transform: scale(1.1); }
 
 /* Input area */
 .chat-input-area {
@@ -390,7 +394,7 @@ ob_start();
 const SELF_ID     = <?php echo $userId; ?>;
 const SELF_NAME   = <?php echo json_encode($userData['fullname']); ?>;
 const SELF_AVATAR = <?php echo json_encode(!empty($userData['profile_picture']) ? BASE_URL . '/' . $userData['profile_picture'] : BASE_URL . '/assets/images/default.jpg'); ?>;
-const CHAT_URL    = 'chat.php';
+const CHAT_URL    = '<?php echo BASE_URL; ?>/chat';
 
 let currentReceiverId   = 0;
 let currentReceiverName = '';
@@ -438,18 +442,28 @@ function bindContactClicks() {
 }
 
 function selectContact(uid, name, avatar, role) {
-    currentReceiverId   = parseInt(uid);
+    const newUid = parseInt(uid);
+    
+    if (currentReceiverId !== newUid) {
+        lastMsgCount = -1; // Reset để ép buộc vẽ lại DOM khi chuyển user
+        document.getElementById('chatMessages').innerHTML = '<div class="text-center my-5 text-muted"><div class="spinner-border spinner-border-sm" role="status"></div> Đang tải...</div>';
+    }
+
+    currentReceiverId   = newUid;
     currentReceiverName = name;
 
     // Update header
-    document.getElementById('chatPlaceholderText').style.display    = 'none';
+    document.getElementById('chatPlaceholderText').style.display     = 'none';
     document.getElementById('chatReceiverInfo').style.display        = '';
     document.getElementById('chatHeaderAvatar').style.display        = 'block';
     document.getElementById('chatReceiverName').textContent          = name;
     document.getElementById('chatReceiverRole').textContent          = role;
     document.getElementById('chatReceiverAvatar').src                = avatar;
     document.getElementById('chatInputArea').style.removeProperty('display');
-    document.getElementById('chatEmptyState').style.display          = 'none';
+    document.getElementById('chatEmptyState')?.style.removeProperty('display');
+    
+    const emptyState = document.getElementById('chatEmptyState');
+    if (emptyState) emptyState.style.display = 'none';
 
     // Active state
     document.querySelectorAll('.chat-contact-item').forEach(el => el.classList.remove('active'));
@@ -496,14 +510,20 @@ function renderMessages(messages) {
     area.innerHTML = messages.map(msg => {
         const isSent  = msg.sender_id == SELF_ID;
         const time    = new Date(msg.created_at.replace(' ', 'T')).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-        const avatar  = isSent ? SELF_AVATAR : document.getElementById('chatReceiverAvatar').src;
         const content = msg.content;
 
+        let actions = '';
+        if (isSent) {
+            actions = `<button class="delete-btn" onclick="deleteMessage(${msg.id})" title="Thu hồi tin nhắn"><i class="bi bi-trash-fill"></i></button>`;
+        }
+
         return `<div class="msg-row ${isSent ? 'sent' : 'received'}">
-            ${!isSent ? `<div class="msg-avatar"><img src="${avatar}" onerror="if (this.src != '<?php echo BASE_URL; ?>/assets/images/default.jpg') this.src='<?php echo BASE_URL; ?>/assets/images/default.jpg'" alt="" class="bg-white"></div>` : ''}
-            <div class="msg-bubble">${content}</div>
-            <div class="msg-time">${time}</div>
-            ${isSent ? `<div class="msg-avatar"><img src="${SELF_AVATAR}" onerror="if (this.src != '<?php echo BASE_URL; ?>/assets/images/default.jpg') this.src='<?php echo BASE_URL; ?>/assets/images/default.jpg'" alt="" class="bg-white"></div>` : ''}
+            <div class="msg-bubble-wrap">
+                <div class="msg-bubble">${content}</div>
+                <div class="msg-time" style="justify-content: ${isSent ? 'flex-end' : 'flex-start'}">
+                    ${isSent ? actions + ' ' + time : time}
+                </div>
+            </div>
         </div>`;
     }).join('');
 
@@ -550,6 +570,30 @@ function sendMessage() {
         btn.disabled = false;
         btn.innerHTML = '<i class="bi bi-send-fill" style="font-size:15px;"></i>';
     });
+}
+
+function deleteMessage(msgId) {
+    if (!confirm('Bạn có chắc chắn muốn thu hồi tin nhắn này?')) return;
+
+    fetch(CHAT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            action: 'deleteMessage',
+            message_id: msgId,
+            user_id: SELF_ID
+        })
+    })
+    .then(r => r.json())
+    .then(res => {
+        if (res.success) {
+            lastMsgCount = -1; // Ép vẽ lại DOM
+            loadMessages();
+        } else {
+            alert('Lỗi: ' + (res.message || 'Không thể thu hồi tin nhắn'));
+        }
+    })
+    .catch(() => alert('Lỗi kết nối hệ thống'));
 }
 
 function handleMsgKeydown(e) {

@@ -1,5 +1,11 @@
 RewriteEngine On
-RewriteBase /UniDorm/
+RewriteBase /
+
+# Đặt index.php làm trang mặc định
+DirectoryIndex index.php index.html
+
+# Tắt Directory Listing
+Options -Indexes
 
 # Bỏ qua file thực tế tồn tại (assets, etc.)
 RewriteCond %{REQUEST_FILENAME} !-f

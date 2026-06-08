@@ -21,6 +21,11 @@ if (!defined('BASE_URL')) {
     $baseUrl = '/' . ltrim($baseUrl, '/');
     $baseUrl = rtrim($baseUrl, '/');
     
+    // If base URL is just "/" or empty, set it to empty string for root domain
+    if ($baseUrl === '/' || $baseUrl === '') {
+        $baseUrl = '';
+    }
+    
     // For local dev, we use relative-root-path (like /UniDorm) or absolute URL
     // Here we use the relative-root-path as it's more portable for XAMPP
     define('BASE_URL', $baseUrl);

@@ -176,10 +176,10 @@ class ChatController
         try {
             $message = MessageModel::find($this->db, $messageId);
             error_log("Message found: " . print_r($message ? $message->toArray() : 'null', true));
-            if (!$message || ($message->getSenderId() != $userId && $message->getRecipientId() != $userId)) {
+            if (!$message || $message->getSenderId() != $userId) {
                 error_log("Permission denied: Condition evaluated to true");
                 http_response_code(403);
-                return json_encode(['success' => false, 'message' => 'Không có quyền xóa tin nhắn này']);
+                return json_encode(['success' => false, 'message' => 'Bạn chỉ có quyền thu hồi tin nhắn của chính mình']);
             }
 
             if (MessageModel::delete($this->db, $messageId)) {

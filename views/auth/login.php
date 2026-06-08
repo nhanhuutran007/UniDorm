@@ -49,12 +49,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Tài khoản đã bị khóa hoặc vô hiệu hóa. Liên hệ Ban quản lý.';
         } else {
             // Kiểm tra mật khẩu từ auth_accounts
-            $authStmt = $conn->prepare("SELECT password FROM auth_accounts WHERE user_id = ? AND is_active = 1");
+            $authStmt = $conn->prepare("SELECT password, is_active FROM auth_accounts WHERE user_id = ?");
             $authStmt->bind_param('i', $user['user_id']);
             $authStmt->execute();
             $auth = $authStmt->get_result()->fetch_assoc();
 
-            if (!$auth || !password_verify($password, $auth['password'])) {
+            if (!$auth) {
+                $error = 'Tài khoản chưa được cấu hình bảo mật. Vui lòng liên hệ BQL.';
+            } elseif ($auth['is_active'] == 0 || empty($auth['password'])) {
+                $error = 'Tài khoản chưa được tạo mật khẩu. Vui lòng chọn <a href="forgot_password.php" class="alert-link fw-bold">Quên mật khẩu</a> để đặt mật khẩu mới.';
+            } elseif (!password_verify($password, $auth['password'])) {
                 $error = 'Mật khẩu không chính xác.';
             } else {
                 // Login thành công
