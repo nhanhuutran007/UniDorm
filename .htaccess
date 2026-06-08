@@ -6,7 +6,7 @@ DirectoryIndex index.php index.html
 
 # Bật Rewrite Engine
 RewriteEngine On
-RewriteBase /
+RewriteBase /UniDorm/
 
 # Bỏ qua file thực tế tồn tại (assets, etc.)
 RewriteCond %{REQUEST_FILENAME} !-f
