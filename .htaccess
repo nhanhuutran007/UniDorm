@@ -1,16 +1,15 @@
-# Tắt Directory Listing
-Options -Indexes +FollowSymLinks
-
 # Đặt index.php và index.html làm trang mặc định
 DirectoryIndex index.php index.html
 
 # Bật Rewrite Engine
-RewriteEngine On
-RewriteBase /UniDorm/
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /UniDorm/
 
-# Bỏ qua file thực tế tồn tại (assets, etc.)
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
+    # Bỏ qua file thực tế tồn tại (assets, etc.)
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
 
-# Tất cả route → index.php (ngoại trừ /api/)
-RewriteRule ^(?!api/)(.*)$ index.php?page=$1 [QSA,L]
+    # Tất cả route → index.php (ngoại trừ /api/)
+    RewriteRule ^(?!api/)(.*)$ index.php?page=$1 [QSA,L]
+</IfModule>
