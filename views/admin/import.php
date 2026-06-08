@@ -71,10 +71,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
             // Hỗ trợ cả format DiemDanh lẫn format chuẩn
             $colMap = [];
             $knownCols = [
-                'room_code'    => ['phòng', 'room_code', 'phong'],
-                'student_code' => ['mã_hv', 'ma_hv', 'student_code', 'mssv', 'mã_sv'],
-                'fullname'     => ['họ_tên', 'ho_ten', 'fullname', 'họ_và_tên', 'ho_va_ten', 'tên', 'ten'],
-                'bed_label'    => ['giường', 'số_giường', 'so_giuong', 'bed_label', 'giuong'],
+                'room_code'      => ['phòng', 'room_code', 'phong'],
+                'student_code'   => ['mã_hv', 'ma_hv', 'student_code', 'mssv', 'mã_sv'],
+                'fullname'       => ['họ_tên', 'ho_ten', 'fullname', 'họ_và_tên', 'ho_va_ten', 'tên', 'ten'],
+                'bed_label'      => ['giường', 'số_giường', 'so_giuong', 'bed_label', 'giuong'],
+                'gender'         => ['giới_tính', 'gioi_tinh', 'gender', 'giới_tính'],
+                'date_of_birth'  => ['ngày_sinh', 'ngay_sinh', 'date_of_birth', 'ngày_sinh'],
+                'phone_personal' => ['sđt_cá_nhân', 'sdt_ca_nhan', 'phone_personal', 'sđt', 'điện_thoại'],
+                'phone_family'   => ['sđt_gia_đình', 'sdt_gia_dinh', 'phone_family'],
+                'hometown'       => ['hộ_khẩu', 'ho_khau', 'hometown', 'quê_quán', 'que_quan'],
+                'is_room_leader' => ['trưởng_phòng', 'truong_phong', 'is_room_leader'],
             ];
 
             foreach ($knownCols as $field => $aliases) {
@@ -233,10 +239,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                                 }
                             }
 
-                            // Cập nhật thông tin: CHỈ cập nhật fullname và bed_id theo yêu cầu
-                            // Các thông tin khác (SĐT, quê quán...) giữ nguyên dữ liệu cũ trong DB
-                            $upd = $conn->prepare("UPDATE users SET fullname = ?, bed_id = ? WHERE user_id = ?");
-                            $upd->bind_param('sii', $fullname, $bedId, $userIdToUpd);
+                            // Cập nhật thông tin đầy đủ nếu CSV có cột tương ứng
+                            $updGender  = isset($colMap['gender'])        ? $gender        : $existingUser['gender'];
+                            $updDob     = isset($colMap['date_of_birth']) ? $dob           : $existingUser['date_of_birth'];
+                            $updPhone   = isset($colMap['phone_personal']) ? $phonePers     : $existingUser['phone_personal'];
+                            $updPFamily = isset($colMap['phone_family'])  ? $phoneFamily   : $existingUser['phone_family'];
+                            $updHome    = isset($colMap['hometown'])      ? $hometown      : $existingUser['hometown'];
+                            $updLeader  = isset($colMap['is_room_leader']) ? $isLeader     : (int)$existingUser['is_room_leader'];
+
+                            $upd = $conn->prepare("UPDATE users SET fullname = ?, bed_id = ?, gender = ?, date_of_birth = ?, phone_personal = ?, phone_family = ?, hometown = ?, is_room_leader = ? WHERE user_id = ?");
+                            $upd->bind_param('sissssiii', $fullname, $bedId, $updGender, $updDob, $updPhone, $updPFamily, $updHome, $updLeader, $userIdToUpd);
 
                             if ($upd->execute()) {
                                 $success++;
@@ -401,26 +413,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                 <h6 class="fw-bold mb-0"><i class="bi bi-info-circle me-2 text-info"></i>Cấu trúc file CSV</h6>
             </div>
             <div class="card-body p-4">
-                <p class="text-muted small mb-2">Hệ thống nhận dạng file theo <strong>dòng header</strong>. Hỗ trợ định dạng:</p>
+                <p class="text-muted small mb-2">Hệ thống nhận dạng file theo <strong>dòng header</strong>. Hỗ trợ 2 định dạng:</p>
 
-                <p class="small fw-semibold text-dark mb-1">📋 Định dạng DiemDanh:</p>
-                <div class="bg-light p-2 rounded-3 mb-3" style="font-size:11px; font-family:monospace; overflow-x:auto; white-space:nowrap;">
+                <p class="small fw-semibold text-dark mb-1">📋 Định dạng Thông tin (đầy đủ):</p>
+                <div class="bg-light p-2 rounded-3 mb-2" style="font-size:10px; font-family:monospace; overflow-x:auto; white-space:nowrap;">
+                    STT, Phòng, Mã HV, Họ tên, Số giường, Giới tính, Ngày sinh, SĐT cá nhân, SĐT gia đình, Hộ khẩu, Trưởng phòng
+                </div>
+
+                <p class="small fw-semibold text-dark mb-1 mt-3">📋 Định dạng DiemDanh (rút gọn):</p>
+                <div class="bg-light p-2 rounded-3 mb-2" style="font-size:10px; font-family:monospace; overflow-x:auto; white-space:nowrap;">
                     STT, Phòng, Mã HV, Họ tên, Số giường, Ngày, Trạng thái, Lý do
                 </div>
 
-                <div class="alert alert-light border small p-2 mb-2">
+                <div class="alert alert-light border small p-2 mb-3 mt-3">
                     <i class="bi bi-lightbulb-fill text-warning me-1"></i>
-                    <strong>Cột bắt buộc:</strong> Mã HV (MSSV), Họ tên<br>
-                    <strong>Cột tuỳ chọn:</strong> Phòng, Số giường
-                </div>
-                <div class="alert alert-light border small p-2 mb-3">
-                    <i class="bi bi-check-circle-fill text-success me-1"></i>
-                    Đã hỗ trợ file CSV lưu ở định dạng <strong>UTF-8</strong>. Tự động gán giường nếu chỉ có phòng.
+                    <strong>Cột bắt buộc:</strong> Mã HV, Họ tên<br>
+                    <strong>Cột tuỳ chọn:</strong> Phòng, Số giường, Giới tính, Ngày sinh, SĐT cá nhân, SĐT gia đình, Hộ khẩu, Trưởng phòng<br>
+                    <strong>Trưởng phòng:</strong> Điền <code>TP</code> hoặc <code>X</code> để đánh dấu
                 </div>
 
-                <a href="../../assets/templates/DiemDanh_mau.csv" class="btn btn-sm btn-outline-secondary w-100 rounded-3" download>
-                    <i class="bi bi-download me-1"></i>Tải file CSV mẫu
-                </a>
+                <div class="d-grid gap-2">
+                    <a href="../../assets/templates/ThongTin_mau.csv" class="btn btn-sm btn-outline-primary rounded-3" download>
+                        <i class="bi bi-download me-1"></i>Tải mẫu Thông tin (đầy đủ)
+                    </a>
+                    <a href="../../assets/templates/DiemDanh_mau.csv" class="btn btn-sm btn-outline-secondary rounded-3" download>
+                        <i class="bi bi-download me-1"></i>Tải mẫu DiemDanh (rút gọn)
+                    </a>
+                </div>
             </div>
         </div>
     </div>
