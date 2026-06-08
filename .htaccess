@@ -1,11 +1,12 @@
-RewriteEngine On
-RewriteBase /
+# Tắt Directory Listing
+Options -Indexes +FollowSymLinks
 
-# Đặt index.php làm trang mặc định
+# Đặt index.php và index.html làm trang mặc định
 DirectoryIndex index.php index.html
 
-# Tắt Directory Listing
-Options -Indexes
+# Bật Rewrite Engine
+RewriteEngine On
+RewriteBase /
 
 # Bỏ qua file thực tế tồn tại (assets, etc.)
 RewriteCond %{REQUEST_FILENAME} !-f
