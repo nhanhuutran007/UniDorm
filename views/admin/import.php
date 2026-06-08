@@ -193,27 +193,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                             }
                         }
 
-                        // Lấy thông tin tùy chọn từ CSV
+                        // Lấy thông tin tùy chọn từ CSV (null nếu cột không tồn tại, '' nếu cột có nhưng ô trống)
                         $genderVal    = isset($colMap['gender'])        ? trim($data[$colMap['gender']] ?? '')         : null;
                         $dobVal       = isset($colMap['date_of_birth'])  ? trim($data[$colMap['date_of_birth']] ?? '')  : null;
-                        $phonePers    = isset($colMap['phone_personal']) ? trim($data[$colMap['phone_personal']] ?? '') : '';
-                        $phoneFamily  = isset($colMap['phone_family'])   ? trim($data[$colMap['phone_family']] ?? '')   : '';
-                        $hometown     = isset($colMap['hometown'])       ? trim($data[$colMap['hometown']] ?? '')       : '';
+                        $phonePers    = isset($colMap['phone_personal']) ? trim($data[$colMap['phone_personal']] ?? '') : null;
+                        $phoneFamily  = isset($colMap['phone_family'])   ? trim($data[$colMap['phone_family']] ?? '')   : null;
+                        $hometown     = isset($colMap['hometown'])       ? trim($data[$colMap['hometown']] ?? '')       : null;
                         $isLeader     = 0;
                         if (isset($colMap['is_room_leader'])) {
                             $leaderVal = mb_strtolower(trim($data[$colMap['is_room_leader']] ?? ''), 'UTF-8');
                             $isLeader = ($leaderVal === 'tp' || $leaderVal === '1' || $leaderVal === 'x') ? 1 : 0;
                         }
 
-                        // Chuẩn hóa gender
+                        // Chuẩn hóa gender (null nếu ô trống)
                         $genderMap = ['nam' => 'male', 'nữ' => 'female', 'nu' => 'female', 'khác' => 'other'];
-                        $gender = $genderVal ? ($genderMap[mb_strtolower($genderVal, 'UTF-8')] ?? $genderVal) : null;
+                        $gender = ($genderVal !== null && $genderVal !== '')
+                            ? ($genderMap[mb_strtolower($genderVal, 'UTF-8')] ?? $genderVal)
+                            : null;
 
-                        // Chuẩn hóa ngày sinh
-                        if ($dobVal && preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/', $dobVal, $m)) {
-                            $dob = sprintf('%04d-%02d-%02d', $m[3], $m[2], $m[1]);
-                        } else {
-                            $dob = ($dobVal && preg_match('/^\d{4}-\d{2}-\d{2}$/', $dobVal)) ? $dobVal : null;
+                        // Chuẩn hóa ngày sinh (null nếu ô trống)
+                        $dob = null;
+                        if ($dobVal !== null && $dobVal !== '') {
+                            if (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/', $dobVal, $m)) {
+                                $dob = sprintf('%04d-%02d-%02d', $m[3], $m[2], $m[1]);
+                            } elseif (preg_match('/^\d{4}-\d{2}-\d{2}$/', $dobVal)) {
+                                $dob = $dobVal;
+                            }
                         }
 
                         if ($existingUser) {
@@ -239,13 +244,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                                 }
                             }
 
-                            // Cập nhật thông tin đầy đủ nếu CSV có cột tương ứng
-                            $updGender  = isset($colMap['gender'])        ? $gender        : $existingUser['gender'];
-                            $updDob     = isset($colMap['date_of_birth']) ? $dob           : $existingUser['date_of_birth'];
-                            $updPhone   = isset($colMap['phone_personal']) ? $phonePers     : $existingUser['phone_personal'];
-                            $updPFamily = isset($colMap['phone_family'])  ? $phoneFamily   : $existingUser['phone_family'];
-                            $updHome    = isset($colMap['hometown'])      ? $hometown      : $existingUser['hometown'];
-                            $updLeader  = isset($colMap['is_room_leader']) ? $isLeader     : (int)$existingUser['is_room_leader'];
+                            // Cập nhật đầy đủ nếu CSV có cột VÀ ô đó không trống
+                            // Nếu cột có trong CSV nhưng ô trống → giữ nguyên giá trị cũ trong DB
+                            $updGender  = (isset($colMap['gender'])        && $gender      !== null && $gender      !== '') ? $gender      : $existingUser['gender'];
+                            $updDob     = (isset($colMap['date_of_birth']) && $dob         !== null)                        ? $dob         : $existingUser['date_of_birth'];
+                            $updPhone   = (isset($colMap['phone_personal'])&& $phonePers   !== null && $phonePers   !== '') ? $phonePers   : $existingUser['phone_personal'];
+                            $updPFamily = (isset($colMap['phone_family'])  && $phoneFamily !== null && $phoneFamily !== '') ? $phoneFamily : $existingUser['phone_family'];
+                            $updHome    = (isset($colMap['hometown'])      && $hometown    !== null && $hometown    !== '') ? $hometown    : $existingUser['hometown'];
+                            $updLeader  = isset($colMap['is_room_leader'])                                                  ? $isLeader    : (int)$existingUser['is_room_leader'];
 
                             $upd = $conn->prepare("UPDATE users SET fullname = ?, bed_id = ?, gender = ?, date_of_birth = ?, phone_personal = ?, phone_family = ?, hometown = ?, is_room_leader = ? WHERE user_id = ?");
                             $upd->bind_param('sissssiii', $fullname, $bedId, $updGender, $updDob, $updPhone, $updPFamily, $updHome, $updLeader, $userIdToUpd);
