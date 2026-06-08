@@ -7,22 +7,17 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 
 // ====== BASE_URL AUTO DETECTION ======
 if (!defined('BASE_URL')) {
-    $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? "https" : "http";
-    $host     = $_SERVER['HTTP_HOST'];
+    // Lấy thư mục chứa script hiện tại (ví dụ: /UniDorm hoặc /)
+    $scriptDir = dirname($_SERVER['SCRIPT_NAME']);
+    $scriptDir = str_replace('\\', '/', $scriptDir);
     
-    // Get the directory of UniDorm relative to document root
-    // Normalizing slashes for Windows compatibility
-    $docRoot    = str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']);
-    $currentDir = str_replace('\\', '/', dirname(__DIR__)); // Points to project root (UniDorm)
+    // Nếu script nằm ở gốc, $scriptDir sẽ là '/'
+    // Nếu nằm trong thư mục UniDorm, sẽ là '/UniDorm'
+    $baseUrl = ($scriptDir === '/' || $scriptDir === '\\') ? '' : $scriptDir;
     
-    $baseUrl    = str_replace($docRoot, '', $currentDir);
-    
-    // Ensure it starts with / and doesn't end with /
-    $baseUrl = '/' . ltrim($baseUrl, '/');
+    // Đảm bảo không có dấu '/' ở cuối
     $baseUrl = rtrim($baseUrl, '/');
     
-    // For local dev, we use relative-root-path (like /UniDorm) or absolute URL
-    // Here we use the relative-root-path as it's more portable for XAMPP
     define('BASE_URL', $baseUrl);
 }
 
