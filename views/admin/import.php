@@ -198,6 +198,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                         $dobVal       = isset($colMap['date_of_birth'])  ? trim($data[$colMap['date_of_birth']] ?? '')  : null;
                         $phonePers    = isset($colMap['phone_personal']) ? trim($data[$colMap['phone_personal']] ?? '') : null;
                         $phoneFamily  = isset($colMap['phone_family'])   ? trim($data[$colMap['phone_family']] ?? '')   : null;
+                        
+                        if ($phonePers !== null) $phonePers = ltrim($phonePers, "'");
+                        if ($phoneFamily !== null) $phoneFamily = ltrim($phoneFamily, "'");
+
                         $hometown     = isset($colMap['hometown'])       ? trim($data[$colMap['hometown']] ?? '')       : null;
                         $isLeader     = 0;
                         if (isset($colMap['is_room_leader'])) {

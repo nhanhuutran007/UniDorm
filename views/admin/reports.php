@@ -45,13 +45,21 @@ $hometops = $conn->query("
     WHERE role='student' AND hometown IS NOT NULL AND hometown != ''
     GROUP BY hometown ORDER BY cnt DESC LIMIT 8
 ")->fetch_all(MYSQLI_ASSOC);
-// Báo cáo hỏng theo tháng (6 tháng gần nhất)
-$monthlyReports = $conn->query("
-    SELECT DATE_FORMAT(created_at, '%Y-%m') as month,
-           COUNT(*) as cnt
-    FROM device_reports
-    WHERE created_at >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
-    GROUP BY month ORDER BY month ASC
+// Danh sách tất cả phòng còn chỗ trống
+$emptyRooms = $conn->query("
+    SELECT r.room_code, f.floor_number,
+           r.max_capacity,
+           COUNT(DISTINCT u.user_id) as current_students,
+           (r.max_capacity - COUNT(DISTINCT u.user_id)) as empty_beds,
+           GROUP_CONCAT(DISTINCT IF(bd.is_occupied = 0, bd.bed_label, NULL) ORDER BY bd.bed_label ASC SEPARATOR ', ') as empty_bed_labels
+    FROM rooms r
+    JOIN floors f ON r.floor_id = f.id
+    LEFT JOIN beds bd ON bd.room_id = r.id
+    LEFT JOIN users u ON u.bed_id = bd.id AND u.status IN ('active', 'pending')
+    WHERE r.status = 'available'
+    GROUP BY r.id
+    HAVING empty_beds > 0
+    ORDER BY f.floor_number ASC, r.room_code ASC
 ")->fetch_all(MYSQLI_ASSOC);
 ?>
 
@@ -135,30 +143,53 @@ $monthlyReports = $conn->query("
         </div>
     </div>
 
-    <!-- Báo cáo hỏng theo tháng -->
+    <!-- Báo cáo phòng trống / giường trống -->
     <div class="col-lg-6">
         <div class="card border-0 shadow-sm h-100" style="border-radius:14px;">
             <div class="card-body p-4">
-                <h6 class="fw-bold mb-1">Báo cáo hỏng theo tháng</h6>
-                <p class="text-muted small mb-4">6 tháng gần nhất</p>
-                <div style="height: 200px;">
-                    <canvas id="reportLineChart"></canvas>
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h6 class="fw-bold mb-1">Phòng còn giường trống</h6>
+                        <p class="text-muted small mb-0">Danh sách tất cả các phòng còn chỗ trống</p>
+                    </div>
+                    <a href="<?php echo BASE_URL; ?>/rooms?status=available" class="btn btn-sm btn-outline-primary" style="font-size:11px;">Xem tất cả</a>
                 </div>
-
-                <div class="row g-2 mt-3 text-center">
-                    <?php foreach ([
-                        ['Chờ xử lý', $stats['reports_pending'],    'warning'],
-                        ['Đang xử lý', $stats['reports_inprogress'],'info'],
-                        ['Đã xong',    $stats['reports_resolved'],    'success'],
-                    ] as [$l,$v,$c]): ?>
-                    <div class="col-4">
-                        <div class="bg-<?php echo $c; ?> bg-opacity-10 rounded-3 py-2">
-                            <div class="fw-bold text-<?php echo $c; ?>"><?php echo $v; ?></div>
-                            <small class="text-muted" style="font-size:10px;"><?php echo $l; ?></small>
+                
+                <?php if (empty($emptyRooms)): ?>
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-door-closed fs-2 d-block mb-2"></i>
+                    <p class="mb-0 small">Hiện không có phòng nào trống.</p>
+                </div>
+                <?php else: ?>
+                <div class="d-flex flex-column gap-3 pe-2" style="max-height: 400px; overflow-y: auto;">
+                    <?php foreach ($emptyRooms as $er):
+                        $isEmpty = ($er['current_students'] == 0);
+                        $badgeColor = $isEmpty ? 'success' : 'info';
+                        $badgeLabel = $isEmpty ? 'Trống hoàn toàn' : 'Còn ' . $er['empty_beds'] . ' giường';
+                        $pct = $er['max_capacity'] > 0 ? ($er['current_students'] / $er['max_capacity']) * 100 : 0;
+                    ?>
+                    <div class="d-flex justify-content-between align-items-center border-bottom pb-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="bg-<?php echo $badgeColor; ?> bg-opacity-10 text-<?php echo $badgeColor; ?> rounded d-flex align-items-center justify-content-center flex-shrink-0" style="width:40px;height:40px;">
+                                <i class="bi bi-door-open fs-5"></i>
+                            </div>
+                            <div>
+                                <p class="mb-0 fw-semibold text-dark"><?php echo htmlspecialchars($er['room_code']); ?> <span class="badge bg-<?php echo $badgeColor; ?> bg-opacity-75 ms-1 fw-normal" style="font-size:10px;"><?php echo $badgeLabel; ?></span></p>
+                                <small class="text-muted d-block" style="font-size:11px;">Lầu <?php echo $er['floor_number']; ?> · Đang có <?php echo $er['current_students']; ?>/<?php echo $er['max_capacity']; ?> SV</small>
+                                <?php if ($er['empty_bed_labels']): ?>
+                                <small class="text-muted d-block" style="font-size:11px;">Trống: <span class="fw-medium text-dark"><?php echo htmlspecialchars($er['empty_bed_labels']); ?></span></small>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <div style="width: 60px;">
+                            <div class="progress" style="height:6px; border-radius:4px;">
+                                <div class="progress-bar bg-primary" style="width:<?php echo $pct; ?>%;"></div>
+                            </div>
                         </div>
                     </div>
                     <?php endforeach; ?>
                 </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -222,36 +253,7 @@ new Chart(document.getElementById('roomPieChart'), {
     }
 });
 
-const monthlyLabels = <?php echo json_encode(array_map(fn($r)=>$r['month'], $monthlyReports)); ?>;
-const monthlyCounts = <?php echo json_encode(array_map(fn($r)=>(int)$r['cnt'], $monthlyReports)); ?>;
-new Chart(document.getElementById('reportLineChart'), {
-    type: 'line',
-    data: {
-        labels: monthlyLabels,
-        datasets: [{ label: 'Số báo cáo', data: monthlyCounts,
-                     borderColor:'#2563eb', backgroundColor:'rgba(37,99,235,.1)',
-                     fill:true, tension:.4, pointRadius:4 }]
-    },
-    options: { 
-        responsive: true, 
-        maintainAspectRatio: false,
-        plugins: { 
-            legend: { display: false }
-        }, 
-        scales: { 
-            y: { 
-                beginAtZero: true,
-                ticks: { 
-                    stepSize: 1,
-                    font: { size: 11 }
-                }
-            },
-            x: { 
-                ticks: { font: { size: 11 } }
-            }
-        } 
-    }
-});
+
 </script>
 
 <?php

@@ -16,60 +16,61 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'admin') {
 }
 
 $input = json_decode(file_get_contents('php://input'), true);
-$targetId = (int)($input['user_id'] ?? 0);
-$selfId   = (int)$_SESSION['user_id'];
+$targetIds = [];
+if (isset($input['user_ids']) && is_array($input['user_ids'])) {
+    $targetIds = array_map('intval', $input['user_ids']);
+} elseif (isset($input['user_id'])) {
+    $targetIds = [(int)$input['user_id']];
+}
 
-if (!$targetId) {
+$selfId = (int)$_SESSION['user_id'];
+
+if (empty($targetIds)) {
     echo json_encode(['success' => false, 'message' => 'ID người dùng không hợp lệ']);
     exit;
 }
 
-if ($targetId === $selfId) {
+if (in_array($selfId, $targetIds)) {
     echo json_encode(['success' => false, 'message' => 'Bạn không thể tự xóa tài khoản của mình']);
-    exit;
-}
-
-// 1. Fetch user data before deleting
-$chk = $conn->prepare("SELECT user_id, fullname, role, bed_id FROM users WHERE user_id = ?");
-$chk->bind_param('i', $targetId);
-$chk->execute();
-$target = $chk->get_result()->fetch_assoc();
-
-if (!$target) {
-    echo json_encode(['success' => false, 'message' => 'Không tìm thấy người dùng']);
-    exit;
-}
-
-if ($target['role'] !== 'student') {
-    echo json_encode(['success' => false, 'message' => 'Chỉ có thể xóa tài khoản sinh viên']);
     exit;
 }
 
 $conn->begin_transaction();
 try {
-    // 2. Release bed
-    if ($target['bed_id']) {
-        $freeBed = $conn->prepare("UPDATE beds SET is_occupied = 0 WHERE id = ?");
-        $freeBed->bind_param('i', $target['bed_id']);
-        $freeBed->execute();
+    foreach ($targetIds as $targetId) {
+        $chk = $conn->prepare("SELECT user_id, fullname, role, bed_id FROM users WHERE user_id = ?");
+        $chk->bind_param('i', $targetId);
+        $chk->execute();
+        $target = $chk->get_result()->fetch_assoc();
 
-        // Check room status
-        $qRoom = $conn->query("SELECT room_id FROM beds WHERE id = {$target['bed_id']}");
-        $roomId = $qRoom ? $qRoom->fetch_assoc()['room_id'] : null;
-        if ($roomId) {
-            $ar = $conn->prepare("UPDATE rooms SET status='available' WHERE id = ? AND status='full'");
-            $ar->bind_param('i', $roomId);
-            $ar->execute();
+        if (!$target || $target['role'] !== 'student') {
+            continue; // Bỏ qua nếu không hợp lệ
         }
+
+        // Release bed
+        if ($target['bed_id']) {
+            $freeBed = $conn->prepare("UPDATE beds SET is_occupied = 0 WHERE id = ?");
+            $freeBed->bind_param('i', $target['bed_id']);
+            $freeBed->execute();
+
+            // Check room status
+            $qRoom = $conn->query("SELECT room_id FROM beds WHERE id = {$target['bed_id']}");
+            $roomId = $qRoom ? $qRoom->fetch_assoc()['room_id'] : null;
+            if ($roomId) {
+                $ar = $conn->prepare("UPDATE rooms SET status='available' WHERE id = ? AND status='full'");
+                $ar->bind_param('i', $roomId);
+                $ar->execute();
+            }
+        }
+
+        // Delete user
+        $del = $conn->prepare("DELETE FROM users WHERE user_id = ? AND role = 'student'");
+        $del->bind_param('i', $targetId);
+        $del->execute();
     }
 
-    // 3. Delete user
-    $del = $conn->prepare("DELETE FROM users WHERE user_id = ? AND role = 'student'");
-    $del->bind_param('i', $targetId);
-    $del->execute();
-
     $conn->commit();
-    echo json_encode(['success' => true, 'message' => 'Đã xóa tài khoản sinh viên ' . $target['fullname']]);
+    echo json_encode(['success' => true, 'message' => 'Đã xóa tài khoản sinh viên thành công']);
 
 } catch (Exception $e) {
     $conn->rollback();

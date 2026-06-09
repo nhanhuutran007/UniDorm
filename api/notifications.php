@@ -36,15 +36,36 @@ if ($method === 'GET' && isset($_GET['mark_read'])) {
 // GET → Lấy notifications của user
 // -------------------------------------------------------
 if ($method === 'GET') {
+    // Xóa thông báo
+    if (isset($_GET['delete'])) {
+        $notifId = (int)$_GET['delete'];
+        if ($userRole === 'admin') {
+            $stmt = $conn->prepare("DELETE FROM notifications WHERE id = ?");
+            $stmt->bind_param("i", $notifId);
+        } else {
+            $stmt = $conn->prepare("DELETE FROM notifications WHERE id = ? AND (target_user_id = ? OR target_user_id IS NULL)");
+            $stmt->bind_param("ii", $notifId, $userId);
+        }
+        $stmt->execute();
+        header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? BASE_URL . '/views/student/notifications.php'));
+        exit;
+    }
+
     $limit  = min((int)($_GET['limit'] ?? 20), 50);
     $offset = (int)($_GET['offset'] ?? 0);
+    $unreadOnly = isset($_GET['unread_only']) ? 1 : 0;
+
+    $whereSQL = "(n.target_user_id = ? OR n.target_user_id IS NULL)";
+    if ($unreadOnly) {
+        $whereSQL .= " AND n.is_read = 0";
+    }
 
     $stmt = $conn->prepare("
         SELECT n.id, n.title, n.message, n.type, n.is_read, n.created_at,
                u.fullname as sender_name
         FROM notifications n
         LEFT JOIN users u ON n.sender_id = u.user_id
-        WHERE n.target_user_id = ? OR n.target_user_id IS NULL
+        WHERE $whereSQL
         ORDER BY n.created_at DESC
         LIMIT ? OFFSET ?
     ");

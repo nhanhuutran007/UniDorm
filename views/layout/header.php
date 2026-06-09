@@ -134,7 +134,7 @@
 <script>
 // Load notifications realtime
 (function loadNotifications() {
-    fetch('<?php echo BASE_URL; ?>/api/notifications.php?limit=5')
+    fetch('<?php echo BASE_URL; ?>/api/notifications.php?limit=5&unread_only=1')
         .then(r => r.json())
         .then(res => {
             if (!res.data) return;
