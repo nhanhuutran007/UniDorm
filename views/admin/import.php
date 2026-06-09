@@ -64,33 +64,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
         } else {
             // Xác định header (dòng đầu tiên)
             $header = array_map(function($h) {
-                return mb_strtolower(trim(preg_replace('/\s+/', '_', $h)), 'UTF-8');
+                // Loại bỏ BOM, khoảng trắng đầu cuối
+                $h = trim($h);
+                // Loại bỏ CHÍNH XÁC ký tự điều khiển (0x00-0x1F, 0x7F), GIỮ NGUYÊN ký tự Unicode Vietnamese
+                $h = preg_replace('/[\x00-\x1F\x7F]/', '', $h);
+                // Chuyển về lowercase (quan trọng: dùng mb_strtolower để xử lý Unicode)
+                $h = mb_strtolower($h, 'UTF-8');
+                // Thay khoảng trắng bằng dấu _
+                $h = preg_replace('/\s+/', '_', $h);
+                return $h;
             }, $allRows[0]);
 
-            // Phát hiện vị trí cột theo tên
-            // Hỗ trợ cả format DiemDanh lẫn format chuẩn
+            // Debug: Log header để kiểm tra
+            error_log("CSV Headers detected: " . json_encode($header, JSON_UNESCAPED_UNICODE));
+
+            // Phát hiện vị trí cột theo tên (hỗ trợ nhiều alias)
             $colMap = [];
             $knownCols = [
-                'room_code'      => ['phòng', 'room_code', 'phong'],
-                'student_code'   => ['mã_hv', 'ma_hv', 'student_code', 'mssv', 'mã_sv'],
-                'fullname'       => ['họ_tên', 'ho_ten', 'fullname', 'họ_và_tên', 'ho_va_ten', 'tên', 'ten'],
-                'bed_label'      => ['giường', 'số_giường', 'so_giuong', 'bed_label', 'giuong'],
-                'gender'         => ['giới_tính', 'gioi_tinh', 'gender', 'giới_tính'],
-                'date_of_birth'  => ['ngày_sinh', 'ngay_sinh', 'date_of_birth', 'ngày_sinh'],
-                'phone_personal' => ['sđt_cá_nhân', 'sdt_ca_nhan', 'phone_personal', 'sđt', 'điện_thoại'],
-                'phone_family'   => ['sđt_gia_đình', 'sdt_gia_dinh', 'phone_family'],
-                'hometown'       => ['hộ_khẩu', 'ho_khau', 'hometown', 'quê_quán', 'que_quan'],
-                'is_room_leader' => ['trưởng_phòng', 'truong_phong', 'is_room_leader'],
+                'room_code'      => ['phòng', 'room_code', 'phong', 'mã_phòng', 'ma_phong'],
+                'student_code'   => ['mã_hv', 'ma_hv', 'student_code', 'mssv', 'mã_sv', 'ma_sv'],
+                'fullname'       => ['họ_tên', 'ho_ten', 'fullname', 'họ_và_tên', 'ho_va_ten', 'tên', 'ten', 'họ_tên_sv', 'ho_ten_sv'],
+                'bed_label'      => ['giường', 'số_giường', 'so_giuong', 'bed_label', 'giuong', 'số_gường', 'so_guong'],
+                'gender'         => ['giới_tính', 'gioi_tinh', 'gender', 'giới_tinh', 'gioi_tinh', 'gt'],
+                'date_of_birth'  => ['ngày_sinh', 'ngay_sinh', 'date_of_birth', 'ngày_sinh', 'ns', 'sinh_nhật', 'sinh_nhat'],
+                'phone_personal' => ['sđt_cá_nhân', 'sdt_ca_nhan', 'phone_personal', 'sđt', 'sdt', 'điện_thoại', 'dien_thoai', 'dt_cá_nhân', 'dt_ca_nhan'],
+                'phone_family'   => ['sđt_gia_đình', 'sdt_gia_dinh', 'phone_family', 'dt_gia_đình', 'dt_gia_dinh'],
+                'hometown'       => ['hộ_khẩu', 'ho_khau', 'hometown', 'quê_quán', 'que_quan', 'địa_chỉ', 'dia_chi'],
+                'is_room_leader' => ['trưởng_phòng', 'truong_phong', 'is_room_leader', 'tp'],
             ];
 
             foreach ($knownCols as $field => $aliases) {
                 foreach ($header as $idx => $h) {
                     if (in_array($h, $aliases)) {
                         $colMap[$field] = $idx;
+                        error_log("Mapped field '$field' to column $idx: '$h'");
                         break;
                     }
                 }
             }
+
+            // Log các cột đã map được
+            error_log("Column mapping result: " . json_encode($colMap, JSON_UNESCAPED_UNICODE));
 
             // Bắt buộc phải có student_code và fullname
             if (!isset($colMap['student_code'])) {
@@ -101,6 +115,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
             }
 
             if (empty($errors)) {
+                // Hiển thị thông tin column mapping để debug
+                $mappingInfo = [];
+                foreach ($colMap as $field => $idx) {
+                    $mappingInfo[] = "$field => Cột " . ($idx + 1) . " (" . $allRows[0][$idx] . ")";
+                }
+                
                 $conn->begin_transaction();
                 try {
                     // Lấy tất cả giường thực sự trống (không có SV 'active' hoặc 'pending' đang ở)
@@ -135,6 +155,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
 
                         $code     = strtoupper(trim($data[$colMap['student_code']] ?? ''));
                         $fullname = trim($data[$colMap['fullname']] ?? '');
+                        
+                        // Debug first row
+                        if ($rowNum === 2) {
+                            error_log("First data row: " . json_encode($data, JSON_UNESCAPED_UNICODE));
+                            error_log("Extracted - Code: '$code', Fullname: '$fullname'");
+                            if (isset($colMap['room_code'])) {
+                                error_log("Room code raw: '" . ($data[$colMap['room_code']] ?? 'N/A') . "'");
+                            }
+                            if (isset($colMap['phone_personal'])) {
+                                error_log("Phone raw: '" . ($data[$colMap['phone_personal']] ?? 'N/A') . "'");
+                            }
+                        }
 
                         // Bỏ qua dòng trống
                         if (!$code && !$fullname) continue;
@@ -320,43 +352,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
 
                     $conn->commit();
 
-                    // CẬP NHẬT TRẠNG THÁI PHÒNG (Full) SAU KHI IMPORT
-                    // Lấy danh sách các phòng vừa được tác động
-                    $affectedRooms = $conn->query("
-                        SELECT DISTINCT r.id 
+                    // CẬP NHẬT TRẠNG THÁI PHÒNG SAU KHI IMPORT
+                    // Logic: So sánh số giường có người ở vs tổng số giường trong phòng
+                    
+                    // 1. Đánh dấu phòng là 'full' nếu TẤT CẢ giường đều có người ở
+                    $roomsToFull = $conn->query("
+                        SELECT r.id, r.room_code,
+                               COUNT(b.id) AS total_beds,
+                               COUNT(u.bed_id) AS occupied_beds
                         FROM rooms r
                         JOIN beds b ON b.room_id = r.id
-                        WHERE b.id NOT IN (SELECT bed_id FROM users WHERE bed_id IS NOT NULL AND status IN ('active', 'pending'))
-                        AND r.status = 'available'
+                        LEFT JOIN users u ON u.bed_id = b.id AND u.status IN ('active', 'pending')
+                        WHERE r.status != 'maintenance'
+                        GROUP BY r.id
+                        HAVING total_beds = occupied_beds AND total_beds > 0
                     ");
-                    // Lưu ý: Query trên hơi ngược, ta nên tìm các phòng KHÔNG CÒN giường trống nào
-                    $roomsToUpdate = $conn->query("
-                        SELECT r.id FROM rooms r 
-                        WHERE r.status = 'available' 
-                        AND NOT EXISTS (
-                            SELECT 1 FROM beds b 
-                            WHERE b.room_id = r.id 
-                            AND b.id NOT IN (SELECT bed_id FROM users WHERE bed_id IS NOT NULL AND status IN ('active', 'pending'))
-                        )
-                    ");
-                    while ($rm = $roomsToUpdate->fetch_assoc()) {
+                    while ($rm = $roomsToFull->fetch_assoc()) {
                         $rid = $rm['id'];
                         $conn->query("UPDATE rooms SET status = 'full' WHERE id = $rid");
+                        error_log("Room {$rm['room_code']} marked as FULL ({$rm['occupied_beds']}/{$rm['total_beds']} beds)");
                     }
                     
-                    // Ngược lại, nếu phòng đang 'full' mà lại có giường trống (do chuyển đi)
+                    // 2. Đánh dấu phòng là 'available' nếu CÒN giường trống
                     $roomsToAvailable = $conn->query("
-                        SELECT r.id FROM rooms r 
-                        WHERE r.status = 'full' 
-                        AND EXISTS (
-                            SELECT 1 FROM beds b 
-                            WHERE b.room_id = r.id 
-                            AND b.id NOT IN (SELECT bed_id FROM users WHERE bed_id IS NOT NULL AND status IN ('active', 'pending'))
-                        )
+                        SELECT r.id, r.room_code,
+                               COUNT(b.id) AS total_beds,
+                               COUNT(u.bed_id) AS occupied_beds
+                        FROM rooms r
+                        JOIN beds b ON b.room_id = r.id
+                        LEFT JOIN users u ON u.bed_id = b.id AND u.status IN ('active', 'pending')
+                        WHERE r.status != 'maintenance'
+                        GROUP BY r.id
+                        HAVING total_beds > occupied_beds
                     ");
                     while ($rm = $roomsToAvailable->fetch_assoc()) {
                         $rid = $rm['id'];
                         $conn->query("UPDATE rooms SET status = 'available' WHERE id = $rid");
+                        error_log("Room {$rm['room_code']} marked as AVAILABLE ({$rm['occupied_beds']}/{$rm['total_beds']} beds)");
                     }
 
                 } catch (Exception $e) {
@@ -377,6 +409,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
     Import thành công <strong><?php echo $success; ?></strong> sinh viên!
     <?php if ($skipped > 0): ?> <span class="text-muted small">(Bỏ qua <?php echo $skipped; ?> dòng lỗi)</span><?php endif; ?>
     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    
+    <?php if (!empty($mappingInfo)): ?>
+    <details class="mt-2">
+        <summary class="small" style="cursor:pointer;">🔍 Xem mapping cột CSV</summary>
+        <div class="small mt-2 bg-light p-2 rounded">
+            <?php foreach ($mappingInfo as $info): ?>
+            <div>• <?php echo $info; ?></div>
+            <?php endforeach; ?>
+        </div>
+    </details>
+    <?php endif; ?>
 </div>
 <?php endif; ?>
 

@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $q       = trim($_GET['q']      ?? '');
 $status  = trim($_GET['status'] ?? '');
 $role    = trim($_GET['role']   ?? 'student');   // Mặc định sinh viên
-$page    = max(1, (int)($_GET['page'] ?? 1));
+$page    = max(1, (int)($_GET['p'] ?? 1));
 $perPage = 25;
 $offset  = ($page - 1) * $perPage;
 
@@ -291,7 +291,7 @@ $statsPending = $conn->query("SELECT COUNT(*) as c FROM users WHERE role='studen
         <nav><ul class="pagination pagination-sm gap-1 mb-0">
             <?php for ($p = max(1,$page-2); $p <= min($totalPages,$page+2); $p++): ?>
             <li class="page-item <?php echo $p===$page?'active':''; ?>">
-                <a class="page-link rounded" href="?<?php echo http_build_query(array_merge($_GET,['page'=>$p])); ?>"><?php echo $p; ?></a>
+                <a class="page-link rounded" href="?<?php $q=$_GET; unset($q['page']); $q['p']=$p; echo http_build_query($q); ?>"><?php echo $p; ?></a>
             </li>
             <?php endfor; ?>
         </ul></nav>
