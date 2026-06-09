@@ -194,8 +194,9 @@ $typeConfig = [
                             <h6 class="fw-bold mb-1 text-dark"><?php echo htmlspecialchars($n['title']); ?></h6>
                             <p class="mb-0 text-muted small"><?php echo nl2br(htmlspecialchars(mb_strimwidth($n['message'], 0, 150, '...'))); ?></p>
                         </div>
-                        <div class="text-end flex-shrink-0">
-                            <small class="text-muted d-block" style="font-size:11px;"><?php echo date('d/m/Y H:i', strtotime($n['created_at'])); ?></small>
+                        <div class="text-end flex-shrink-0 d-flex flex-column align-items-end">
+                            <small class="text-muted mb-2" style="font-size:11px;"><?php echo date('d/m/Y H:i', strtotime($n['created_at'])); ?></small>
+                            <a href="<?php echo BASE_URL; ?>/api/notifications.php?delete=<?php echo $n['id']; ?>" class="btn btn-sm btn-outline-danger p-1" style="line-height: 1;" title="Xóa thông báo" onclick="return confirm('Bạn có chắc chắn muốn xóa thông báo này (bao gồm cả phía sinh viên)?');"><i class="bi bi-trash" style="font-size: 12px;"></i></a>
                         </div>
                     </div>
                 </div>

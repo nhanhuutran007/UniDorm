@@ -99,6 +99,14 @@ $allFloors = $allFloors->fetch_all(MYSQLI_ASSOC);
 $statusMap = ['active'=>['success','Hoạt động'],'pending'=>['warning','Chờ kích hoạt'],'inactive'=>['secondary','Không hoạt động'],'banned'=>['danger','Bị khoá']];
 ?>
 
+<style>
+.stt-cell .form-check-input { display: none; margin: 0 auto; cursor: pointer; }
+.stt-cell:hover .stt-text { display: none; }
+.stt-cell:hover .form-check-input { display: block; }
+.stt-cell.checked .stt-text { display: none; }
+.stt-cell.checked .form-check-input { display: block; }
+</style>
+
 <!-- Toolbar -->
 <div class="card border-0 shadow-sm mb-4" style="border-radius:14px;">
     <div class="card-body p-3">
@@ -149,6 +157,9 @@ $statusMap = ['active'=>['success','Hoạt động'],'pending'=>['warning','Ch�
 <div class="d-flex justify-content-between align-items-center mb-3">
     <p class="mb-0 text-muted small">Tìm thấy <strong><?php echo $totalRows; ?></strong> sinh viên</p>
     <div class="d-flex gap-2">
+        <button id="bulkDeleteBtn" class="btn btn-danger btn-sm d-none align-items-center gap-1" onclick="confirmBulkDelete()">
+            <i class="bi bi-trash-fill"></i> Xóa đã chọn (<span id="selectedCount">0</span>)
+        </button>
         <a href="<?php echo BASE_URL; ?>/newuser" class="btn btn-primary btn-sm d-flex align-items-center gap-1">
             <i class="bi bi-person-plus-fill"></i> Thêm sinh viên
         </a>
@@ -165,7 +176,9 @@ $statusMap = ['active'=>['success','Hoạt động'],'pending'=>['warning','Ch�
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th class="ps-4 py-3 small" style="width:40px;">#</th>
+                        <th class="ps-4 py-3 small text-center" style="width:40px;">
+                            <input type="checkbox" class="form-check-input" id="checkAll" onchange="toggleAll(this)" style="cursor: pointer;" title="Chọn tất cả">
+                        </th>
                         <th class="py-3 small">Họ tên & MSSV</th>
                         <th class="py-3 small">Phòng / Giường</th>
                         <th class="py-3 small">SĐT Cá nhân</th>
@@ -191,7 +204,10 @@ $statusMap = ['active'=>['success','Hoạt động'],'pending'=>['warning','Ch�
                         [$sc, $sl] = $statusMap[$sv['status']] ?? ['secondary', '?'];
                     ?>
                     <tr>
-                        <td class="ps-4 py-3 text-muted small"><?php echo $offset + $i + 1; ?></td>
+                        <td class="ps-4 py-3 text-muted small text-center stt-cell" style="vertical-align: middle;">
+                            <span class="stt-text"><?php echo $offset + $i + 1; ?></span>
+                            <input type="checkbox" class="form-check-input student-checkbox" value="<?php echo $sv['user_id']; ?>" onchange="updateRowState(this)">
+                        </td>
                         <td class="py-3">
                             <div class="d-flex align-items-center gap-2">
                                 <div class="rounded-circle bg-primary bg-opacity-10 text-primary fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
@@ -332,6 +348,74 @@ function executeDelete() {
         btn.disabled = false;
         btn.textContent = originalText;
     });
+}
+
+function updateRowState(checkbox) {
+    if(checkbox.checked) {
+        checkbox.closest('.stt-cell').classList.add('checked');
+        checkbox.closest('tr').classList.add('table-light');
+    } else {
+        checkbox.closest('.stt-cell').classList.remove('checked');
+        checkbox.closest('tr').classList.remove('table-light');
+        document.getElementById('checkAll').checked = false;
+    }
+    updateBulkDeleteBtn();
+}
+
+function toggleAll(source) {
+    const checkboxes = document.querySelectorAll('.student-checkbox');
+    checkboxes.forEach(cb => {
+        cb.checked = source.checked;
+        updateRowState(cb);
+    });
+}
+
+function updateBulkDeleteBtn() {
+    const checked = document.querySelectorAll('.student-checkbox:checked');
+    const btn = document.getElementById('bulkDeleteBtn');
+    if(checked.length > 0) {
+        btn.classList.remove('d-none');
+        btn.classList.add('d-flex');
+        document.getElementById('selectedCount').textContent = checked.length;
+    } else {
+        btn.classList.add('d-none');
+        btn.classList.remove('d-flex');
+    }
+}
+
+function confirmBulkDelete() {
+    const checked = document.querySelectorAll('.student-checkbox:checked');
+    if(checked.length === 0) return;
+    const ids = Array.from(checked).map(cb => cb.value);
+    
+    if(confirm('Bạn có chắc chắn muốn xóa ' + ids.length + ' sinh viên đã chọn? Hành động này không thể hoàn tác.')) {
+        const btn = document.getElementById('bulkDeleteBtn');
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Đang xóa...';
+
+        fetch('<?php echo BASE_URL; ?>/api/delete_student.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_ids: ids })
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) {
+                location.reload();
+            } else {
+                alert(res.message || 'Lỗi khi xóa sinh viên');
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Lỗi kết nối máy chủ');
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        });
+    }
 }
 </script>
 

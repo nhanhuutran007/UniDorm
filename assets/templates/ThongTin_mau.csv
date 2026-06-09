@@ -1,3 +1,3 @@
-STT,Phòng,Mã HV,Họ tên,Số giường,Giới tính,Ngày sinh,SĐT cá nhân,SĐT gia đình,Hộ khẩu,Trưởng phòng
-1,L.0810,52100001,Nguyễn Văn An,1,Nam,01/01/2003,0901234567,0901234568,Hà Nội,
-
+﻿STT,Phòng,Mã HV,Họ tên,Số giường,Giới tính,Ngày sinh,SĐT cá nhân,SĐT gia đình,Hộ khẩu,Trưởng phòng
+1,L.0810,52100001,Nguyễn Văn An,1,Nam,01/01/2003,'0901234567,'0901234568,Hà Nội,
+2,L.0810,52100002,Trần Thị Bình,2,Nữ,15/05/2003,'0912345678,'0912345679,TP.HCM,TP

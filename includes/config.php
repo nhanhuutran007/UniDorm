@@ -7,13 +7,14 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 
 // ====== BASE_URL AUTO DETECTION ======
 if (!defined('BASE_URL')) {
-    // Lấy thư mục chứa script hiện tại (ví dụ: /UniDorm hoặc /)
-    $scriptDir = dirname($_SERVER['SCRIPT_NAME']);
-    $scriptDir = str_replace('\\', '/', $scriptDir);
+    $docRoot = rtrim(str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']), '/');
+    $projectRoot = str_replace('\\', '/', dirname(__DIR__));
+    $baseUrl = str_replace($docRoot, '', $projectRoot);
     
-    // Nếu script nằm ở gốc, $scriptDir sẽ là '/'
-    // Nếu nằm trong thư mục UniDorm, sẽ là '/UniDorm'
-    $baseUrl = ($scriptDir === '/' || $scriptDir === '\\') ? '' : $scriptDir;
+    // Đảm bảo có dấu '/' ở đầu nếu không rỗng
+    if (!empty($baseUrl) && $baseUrl[0] !== '/') {
+        $baseUrl = '/' . $baseUrl;
+    }
     
     // Đảm bảo không có dấu '/' ở cuối
     $baseUrl = rtrim($baseUrl, '/');

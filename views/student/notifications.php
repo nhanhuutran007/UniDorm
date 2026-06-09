@@ -102,7 +102,10 @@ $typeConfig = [
                 <div class="flex-grow-1">
                     <div class="d-flex justify-content-between align-items-start mb-1">
                         <h6 class="fw-bold mb-0 text-dark"><?php echo htmlspecialchars($n['title']); ?></h6>
-                        <span class="badge bg-<?php echo $tc; ?> bg-opacity-75 ms-2 flex-shrink-0" style="font-size:10px;"><?php echo $tl; ?></span>
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-<?php echo $tc; ?> bg-opacity-75 ms-2 flex-shrink-0" style="font-size:10px;"><?php echo $tl; ?></span>
+                            <a href="<?php echo BASE_URL; ?>/api/notifications.php?delete=<?php echo $n['id']; ?>" class="btn btn-sm btn-link text-danger p-0 ms-2 text-decoration-none" title="Xóa thông báo" onclick="return confirm('Bạn có chắc chắn muốn xóa thông báo này?');"><i class="bi bi-trash"></i></a>
+                        </div>
                     </div>
                     <p class="mb-2 text-muted small"><?php echo nl2br(htmlspecialchars($n['message'])); ?></p>
                     <div class="d-flex align-items-center gap-3">
