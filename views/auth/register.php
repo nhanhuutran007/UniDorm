@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($existing['status'] === 'pending') {
                 $error = 'MSSV này đã đăng ký nhưng chưa kích hoạt. Vui lòng kiểm tra email sinh viên để đặt mật khẩu.';
             } elseif ($existing['status'] === 'active') {
-                $error = 'MSSV này đã có tài khoản. Hãy <a href="/UniDorm/views/auth/login.php">đăng nhập</a>.';
+                $error = 'MSSV này đã có tài khoản. Hãy <a href="login.php" style="color: #667eea; font-weight: 600;">đăng nhập</a>.';
             } else {
                 $error = 'Tài khoản với MSSV này không khả dụng. Liên hệ Ban quản lý.';
             }
@@ -99,194 +99,514 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng ký tài khoản – UniDorm</title>
     <meta name="description" content="Đăng ký tài khoản sinh viên ký túc xá UniDorm">
-    <link rel="stylesheet" href="/UniDorm/assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../assets/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-    *, *::before, *::after { box-sizing: border-box; }
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
     body {
         font-family: 'Inter', sans-serif;
-        background: linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 100%);
+        background: url('../../assets/img/ktx-layout-1_0.png') no-repeat center center fixed;
+        background-size: cover;
         min-height: 100vh;
+        display: flex;
+        align-items: flex-start;
+        justify-content: flex-start;
+        padding: 40px;
+        padding-left: calc(5% + 40px);
+        position: relative;
+        overflow: hidden;
+        transition: background-image 0.8s ease-in-out;
+    }
+    
+    body::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: transparent;
+        z-index: 1;
+    }
+    
+    /* Main Container */
+    .register-container {
+        position: relative;
+        z-index: 10;
+        width: 100%;
+        max-width: 500px;
+        text-align: center;
+        margin-top: 20px;
+        animation: slideInLeft 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    
+    @keyframes slideInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-100px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    /* Logo */
+    .logo-section {
+        margin-bottom: 30px;
+    }
+    
+    .logo-wrapper {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 12px 24px;
+        border-radius: 50px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    }
+    
+    .logo-icon {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 20px;
+        color: white;
+        font-size: 20px;
     }
-    .auth-card {
-        background: #fff;
-        border-radius: 20px;
-        box-shadow: 0 20px 60px rgba(37,99,235,.12);
-        overflow: hidden;
+    
+    .logo-text {
+        font-size: 24px;
+        font-weight: 800;
+        color: #2d3748;
+    }
+    
+    /* Main Title */
+    .main-title {
+        font-size: 32px;
+        font-weight: 800;
+        color: #ffffff;
+        margin-bottom: 35px;
+        letter-spacing: -0.5px;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* Register Card */
+    .register-card {
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        padding: 45px 40px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+        position: relative;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        max-height: calc(100vh - 250px);
+        overflow-y: auto;
+    }
+    
+    /* Decorative Blob on Card */
+    .card-blob {
+        position: absolute;
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        filter: blur(40px);
+        opacity: 0.3;
+        top: -40px;
+        left: -30px;
+        z-index: -1;
+    }
+    
+    /* Form Groups */
+    .form-group {
+        margin-bottom: 20px;
+        text-align: left;
+    }
+    
+    .form-label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: #4a5568;
+        margin-bottom: 8px;
+    }
+    
+    .input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+    
+    .input-icon {
+        position: absolute;
+        left: 18px;
+        color: #a0aec0;
+        font-size: 18px;
+        z-index: 10;
+    }
+    
+    .form-input {
         width: 100%;
-        max-width: 900px;
-        display: flex;
-    }
-    .auth-left {
-        background: linear-gradient(160deg, #1e3a5f 0%, #2563eb 100%);
-        color: #fff;
-        padding: 48px 40px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        flex: 0 0 42%;
-    }
-    .auth-left .logo-wrap { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; }
-    .auth-left .logo-icon { width: 44px; height: 44px; background: rgba(255,255,255,.15); border-radius: 12px; display: flex; align-items: center; justify-content: center; }
-    .auth-left h1 { font-size: 24px; font-weight: 700; margin-bottom: 12px; }
-    .auth-left p  { font-size: 14px; opacity: .8; line-height: 1.7; }
-    .auth-feature { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
-    .auth-feature .icon { width: 32px; height: 32px; background: rgba(255,255,255,.12); border-radius: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 15px; }
-    .auth-feature .text { font-size: 13px; opacity: .85; }
-    .auth-right { padding: 48px 44px; flex: 1; display: flex; flex-direction: column; justify-content: center; }
-    .auth-right h2 { font-size: 22px; font-weight: 700; color: #1f2937; margin-bottom: 4px; }
-    .auth-right .subtitle { font-size: 14px; color: #6b7280; margin-bottom: 28px; }
-    .form-label { font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 6px; }
-    .form-control {
-        border: 1px solid #e5e7eb;
-        border-radius: 10px;
-        padding: 10px 14px;
+        padding: 14px 18px 14px 50px;
+        border: 2px solid #e2e8f0;
+        border-radius: 14px;
         font-size: 14px;
-        transition: border-color .2s, box-shadow .2s;
-        background: #f9fafb;
+        color: #2d3748;
+        background: #f7fafc;
+        transition: all 0.3s ease;
+        outline: none;
     }
-    .form-control:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.1); background: #fff; }
+    
+    .form-input.no-icon {
+        padding-left: 18px;
+    }
+    
+    .form-input::placeholder {
+        color: #cbd5e0;
+    }
+    
+    .form-input:focus {
+        background: white;
+        border-color: #667eea;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    }
+    
     .email-preview {
-        font-size: 12px; color: #6b7280;
-        background: #f3f4f6; border-radius: 8px;
-        padding: 8px 12px; margin-top: 6px;
+        font-size: 12px;
+        color: #667eea;
+        background: rgba(102, 126, 234, 0.1);
+        border-radius: 10px;
+        padding: 8px 12px;
+        margin-top: 8px;
+        font-weight: 600;
     }
-    .btn-primary-custom {
-        background: linear-gradient(135deg, #2563eb, #1d4ed8);
-        color: #fff; border: none; border-radius: 10px;
-        padding: 12px; font-size: 15px; font-weight: 600;
-        width: 100%; cursor: pointer;
-        transition: opacity .2s, transform .1s;
+    
+    /* Sign Up Button */
+    .btn-signup {
+        width: 100%;
+        padding: 16px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-size: 16px;
+        font-weight: 700;
+        border: none;
+        border-radius: 14px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+        margin-top: 10px;
     }
-    .btn-primary-custom:hover   { opacity: .92; }
-    .btn-primary-custom:active  { transform: scale(.98); }
-    .btn-primary-custom:disabled { opacity: .6; cursor: not-allowed; }
-    .divider { text-align: center; color: #9ca3af; font-size: 13px; margin: 18px 0; position: relative; }
-    .divider::before, .divider::after { content: ''; position: absolute; top: 50%; width: 40%; height: 1px; background: #e5e7eb; }
-    .divider::before { left: 0; } .divider::after { right: 0; }
+    
+    .btn-signup:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 32px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-signup:active {
+        transform: translateY(0);
+    }
+    
+    .btn-signup:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    /* Links */
+    .links-wrapper {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+        font-size: 14px;
+    }
+    
+    .link {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+        transition: color 0.3s;
+    }
+    
+    .link:hover {
+        color: #764ba2;
+        text-decoration: underline;
+    }
+    
+    /* Alert */
+    .alert {
+        padding: 14px 18px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        font-size: 14px;
+        display: flex;
+        align-items: start;
+        gap: 10px;
+    }
+    
+    .alert-danger {
+        background: #fee;
+        color: #c53030;
+        border-left: 4px solid #fc8181;
+    }
+    
+    .alert-success {
+        background: #f0fdf4;
+        color: #166534;
+        border-left: 4px solid #86efac;
+    }
+    
+    /* Footer Badges */
+    .footer-badges {
+        margin-top: 30px;
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 0;
+    }
+    
+    .badge-item {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        color: #ffffff;
+        font-weight: 600;
+        background: rgba(255, 255, 255, 0.25);
+        backdrop-filter: blur(15px);
+        padding: 10px 20px;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        letter-spacing: 0.5px;
+        border-radius: 50px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        white-space: nowrap;
+    }
+    
+    .badge-dot {
+        display: none;
+    }
+    
+    /* Row for form inputs */
+    .row {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+    
+    .col-6 {
+        flex: 1;
+    }
+    
+    .form-check {
+        display: flex;
+        align-items: start;
+        gap: 8px;
+        font-size: 13px;
+        color: #6b7280;
+        margin-bottom: 20px;
+    }
+    
+    .form-check input {
+        margin-top: 2px;
+        cursor: pointer;
+    }
+    
+    /* Responsive */
+    @media (max-width: 576px) {
+        body {
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .register-card {
+            padding: 35px 25px;
+            max-height: calc(100vh - 180px);
+        }
+        
+        .main-title {
+            font-size: 26px;
+            margin-bottom: 30px;
+        }
+        
+        .row {
+            flex-direction: column;
+            gap: 0;
+        }
+        
+        .badge-item {
+            font-size: 9px;
+            padding: 8px 14px;
+            letter-spacing: 0.3px;
+        }
+    }
+    
     @media (max-width: 768px) {
-        .auth-card { flex-direction: column; }
-        .auth-left { flex: 0 0 auto; padding: 32px 28px; }
+        .badge-item {
+            font-size: 10px;
+            padding: 9px 16px;
+        }
+    }
+    
+    @media (max-width: 992px) {
+        body {
+            justify-content: center;
+            padding-left: 40px;
+        }
     }
     </style>
 </head>
 <body>
-<div class="auth-card">
-    <!-- Left Panel -->
-    <div class="auth-left">
-        <div class="logo-wrap">
-            <div class="logo-icon"><i class="bi bi-building-fill text-white fs-5"></i></div>
-            <span style="font-size:20px;font-weight:700;">UniDorm</span>
-        </div>
-        <h1>Ký túc xá Đại học Tôn Đức Thắng</h1>
-        <p>Hệ thống quản lý ký túc xá hiện đại – đăng ký tài khoản sinh viên để theo dõi phòng ở, báo hỏng thiết bị và nhận thông báo từ Ban quản lý.</p>
-        <div class="mt-4">
-            <div class="auth-feature">
-                <div class="icon"><i class="bi bi-shield-check"></i></div>
-                <div class="text">Tài khoản được xác thực qua email sinh viên TDTU</div>
+
+<div class="register-container">
+    <!-- Logo -->
+    <div class="logo-section">
+        <div class="logo-wrapper">
+            <div class="logo-icon">
+                <i class="bi bi-building-fill"></i>
             </div>
-            <div class="auth-feature">
-                <div class="icon"><i class="bi bi-bell"></i></div>
-                <div class="text">Nhận thông báo từ Ban quản lý theo thời gian thực</div>
-            </div>
-            <div class="auth-feature">
-                <div class="icon"><i class="bi bi-tools"></i></div>
-                <div class="text">Báo hỏng thiết bị trực tuyến nhanh chóng</div>
-            </div>
+            <span class="logo-text">UniDorm</span>
         </div>
     </div>
-
-    <!-- Right Form -->
-    <div class="auth-right">
-        <h2>Tạo tài khoản sinh viên</h2>
-        <p class="subtitle">Dùng MSSV để đăng ký – email xác nhận sẽ được gửi đến hộp thư sinh viên</p>
-
+    
+    <!-- Main Title -->
+    <h1 class="main-title">Tạo tài khoản mới</h1>
+    
+    <!-- Register Card -->
+    <div class="register-card">
+        <div class="card-blob"></div>
+        
         <?php if ($success): ?>
-        <div class="alert alert-success rounded-3 d-flex gap-2 align-items-start">
-            <i class="bi bi-check-circle-fill mt-1 flex-shrink-0"></i>
+        <div class="alert alert-success">
+            <i class="bi bi-check-circle-fill"></i>
             <div><?php echo $success; ?></div>
         </div>
         <div class="text-center mt-3">
-            <a href="/UniDorm/views/auth/login.php" class="btn btn-outline-primary rounded-3 btn-sm">
-                <i class="bi bi-box-arrow-in-right me-1"></i>Đến trang đăng nhập
+            <a href="login.php" class="btn-signup" style="display: inline-block; width: auto; padding: 12px 30px;">
+                <i class="bi bi-box-arrow-in-right me-2"></i>Đến trang đăng nhập
             </a>
         </div>
         <?php else: ?>
-
+        
         <?php if ($error): ?>
-        <div class="alert alert-danger rounded-3 d-flex gap-2 align-items-start mb-3">
-            <i class="bi bi-exclamation-triangle-fill mt-1 flex-shrink-0"></i>
+        <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle-fill"></i>
             <div><?php echo $error; ?></div>
         </div>
         <?php endif; ?>
-
+        
         <form method="POST" id="registerForm" autocomplete="off">
-            <div class="mb-3">
-                <label class="form-label">Mã số sinh viên (MSSV) <span class="text-danger">*</span></label>
-                <input type="text" name="student_code" id="studentCode" class="form-control"
-                       placeholder="VD: 52100001"
-                       value="<?php echo htmlspecialchars($_POST['student_code'] ?? ''); ?>"
-                       maxlength="8" pattern="\d{8}" required
-                       oninput="updateEmailPreview()">
+            <!-- MSSV Field -->
+            <div class="form-group">
+                <label class="form-label">Mã số sinh viên (MSSV)</label>
+                <div class="input-wrapper">
+                    <i class="bi bi-person-badge input-icon"></i>
+                    <input 
+                        type="text" 
+                        name="student_code" 
+                        id="studentCode"
+                        class="form-input"
+                        placeholder="VD: 52100001"
+                        value="<?php echo htmlspecialchars($_POST['student_code'] ?? ''); ?>"
+                        maxlength="8"
+                        pattern="\d{8}"
+                        oninput="updateEmailPreview()"
+                        required
+                    >
+                </div>
                 <div class="email-preview" id="emailPreview">
                     <i class="bi bi-envelope me-1"></i>
-                    Email đăng nhập: <strong id="emailDisplay">MSSV@student.tdtu.edu.vn</strong>
+                    Email: <strong id="emailDisplay">MSSV@student.tdtu.edu.vn</strong>
                 </div>
             </div>
-
-            <div class="mb-3">
-                <label class="form-label">Họ và tên <span class="text-danger">*</span></label>
-                <input type="text" name="fullname" class="form-control"
-                       placeholder="Nhập họ và tên đầy đủ"
-                       value="<?php echo htmlspecialchars($_POST['fullname'] ?? ''); ?>" required>
-            </div>
-
-            <div class="row g-3 mb-3">
-                <div class="col-md-6">
-                    <label class="form-label">Số điện thoại cá nhân</label>
-                    <input type="tel" name="phone_personal" class="form-control"
-                           placeholder="VD: 0912345678"
-                           value="<?php echo htmlspecialchars($_POST['phone_personal'] ?? ''); ?>">
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Quê quán / Hộ khẩu</label>
-                    <input type="text" name="hometown" class="form-control"
-                           placeholder="VD: Bình Dương"
-                           value="<?php echo htmlspecialchars($_POST['hometown'] ?? ''); ?>">
+            
+            <!-- Fullname Field -->
+            <div class="form-group">
+                <label class="form-label">Họ và tên</label>
+                <div class="input-wrapper">
+                    <i class="bi bi-person input-icon"></i>
+                    <input 
+                        type="text" 
+                        name="fullname"
+                        class="form-input"
+                        placeholder="Nhập họ và tên đầy đủ"
+                        value="<?php echo htmlspecialchars($_POST['fullname'] ?? ''); ?>"
+                        required
+                    >
                 </div>
             </div>
-
-            <div class="mb-4">
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="agreeTerms" required>
-                    <label class="form-check-label small text-muted" for="agreeTerms">
-                        Tôi đồng ý với <a href="#" class="text-primary">Quy định ký túc xá</a> và
-                        <a href="#" class="text-primary">Chính sách bảo mật</a>
-                    </label>
+            
+            <!-- Phone & Hometown -->
+            <div class="row">
+                <div class="col-6">
+                    <div class="form-group">
+                        <label class="form-label">Số điện thoại</label>
+                        <input 
+                            type="tel" 
+                            name="phone_personal"
+                            class="form-input no-icon"
+                            placeholder="0912345678"
+                            value="<?php echo htmlspecialchars($_POST['phone_personal'] ?? ''); ?>"
+                        >
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="form-group">
+                        <label class="form-label">Quê quán</label>
+                        <input 
+                            type="text" 
+                            name="hometown"
+                            class="form-input no-icon"
+                            placeholder="Bình Dương"
+                            value="<?php echo htmlspecialchars($_POST['hometown'] ?? ''); ?>"
+                        >
+                    </div>
                 </div>
             </div>
-
-            <button type="submit" class="btn-primary-custom" id="submitBtn">
-                <i class="bi bi-person-plus-fill me-2"></i>Tạo tài khoản
+            
+            <!-- Terms Checkbox -->
+            <div class="form-check">
+                <input type="checkbox" id="agreeTerms" required>
+                <label for="agreeTerms">
+                    Tôi đồng ý với quy định ký túc xá và chính sách bảo mật
+                </label>
+            </div>
+            
+            <!-- Submit Button -->
+            <button type="submit" class="btn-signup" id="submitBtn">
+                Tạo tài khoản
             </button>
+            
+            <!-- Links -->
+            <div class="links-wrapper">
+                <span class="text-muted me-1">Đã có tài khoản?</span>
+                <a href="login.php" class="link">Đăng nhập</a>
+            </div>
         </form>
-
-        <div class="divider">hoặc</div>
-        <div class="text-center">
-            <span class="small text-muted">Đã có tài khoản?</span>
-            <a href="/UniDorm/views/auth/login.php" class="small fw-semibold text-primary ms-1">Đăng nhập</a>
-        </div>
         <?php endif; ?>
+    </div>
+    
+    <!-- Footer Badge -->
+    <div class="footer-badges">
+        <div class="badge-item">
+            Kỷ luật - Lễ phép - Chuyên nghiệp - Sáng tạo - Phụng sự
+        </div>
     </div>
 </div>
 
 <script>
+// Update Email Preview
 function updateEmailPreview() {
     const code = document.getElementById('studentCode').value.trim();
     document.getElementById('emailDisplay').textContent = code
@@ -294,10 +614,53 @@ function updateEmailPreview() {
         : 'MSSV@student.tdtu.edu.vn';
 }
 
+// Form Submit
 document.getElementById('registerForm')?.addEventListener('submit', function() {
     const btn = document.getElementById('submitBtn');
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang tạo tài khoản...';
+});
+
+// Smooth crossfade page transition
+document.addEventListener('DOMContentLoaded', function() {
+    // Initial page load animation
+    document.body.style.opacity = '1';
+    
+    // Intercept navigation for crossfade effect
+    const links = document.querySelectorAll('a[href*="login.php"], a[href*="forgot_password.php"]');
+    links.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const targetUrl = this.href;
+            const container = document.querySelector('.register-container');
+            
+            // Determine direction based on target
+            const isLogin = targetUrl.includes('login.php');
+            const slideOutDirection = isLogin ? '100vw' : '-100vw';
+            
+            // Animate current content out
+            container.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s ease';
+            container.style.transform = `translateX(${slideOutDirection})`;
+            container.style.opacity = '0';
+            
+            // Preload and change background smoothly
+            const newBgImage = isLogin 
+                ? "url('../../assets/img/KTX-TDT-KL-1024x525.png')" 
+                : "url('../../assets/img/KTX-TDT-KL-1024x525.png')";
+            
+            const img = new Image();
+            img.onload = function() {
+                document.body.style.transition = 'background-image 0.6s ease';
+                document.body.style.backgroundImage = newBgImage;
+            };
+            img.src = isLogin ? '../../assets/img/KTX-TDT-KL-1024x525.png' : '../../assets/img/KTX-TDT-KL-1024x525.png';
+            
+            // Navigate after animation
+            setTimeout(() => {
+                window.location.href = targetUrl;
+            }, 600);
+        });
+    });
 });
 </script>
 </body>
