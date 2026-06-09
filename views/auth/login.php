@@ -5,12 +5,13 @@
  * Hỗ trợ cả admin (username) và student (MSSV)
  */
 if (session_status() === PHP_SESSION_NONE) session_start();
+require_once __DIR__ . '/../../includes/db.php';
+
 if (isset($_SESSION['user_id'])) {
-    header('Location: ../../index.php');
+    header('Location: ' . BASE_URL . '/dashboard');
     exit;
 }
 
-require_once __DIR__ . '/../../includes/db.php';
 $error = '';
 
 if (isset($_GET['error'])) {
@@ -71,11 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['last_activity']  = time();
 
                 // Redirect theo role
-                if ($user['role'] === 'admin') {
-                    header('Location: ../admin/dashboard.php');
-                } else {
-                    header('Location: ../student/dashboard.php');
-                }
+                header('Location: ' . BASE_URL . '/dashboard');
                 exit;
             }
         }
@@ -548,53 +545,42 @@ document.getElementById('loginForm').addEventListener('submit', function() {
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang đăng nhập...';
 });
 
-// Smooth crossfade page transition
-document.addEventListener('DOMContentLoaded', function() {
-    // Initial page load animation
-    document.body.style.opacity = '1';
+// Smooth continuous slide transition
+window.addEventListener('load', function() {
+    const logo = document.querySelector('.logo-section');
+    const title = document.querySelector('.main-title');
+    const card = document.querySelector('.login-card');
+    const footer = document.querySelector('.footer-badges');
     
-    // Intercept navigation for crossfade effect
+    if (!title || !card) return;
+    
+    // Intercept navigation for continuous slide
     const links = document.querySelectorAll('a[href*="register.php"], a[href*="forgot_password.php"]');
     links.forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
             const targetUrl = this.href;
-            const container = document.querySelector('.login-container');
-            
-            // Create overlay for new page content
-            const overlay = document.createElement('div');
-            overlay.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                z-index: 9999;
-                pointer-events: none;
-            `;
-            
-            // Determine direction based on target
             const isRegister = targetUrl.includes('register.php');
-            const slideOutDirection = isRegister ? '-100vw' : '100vw';
             
-            // Animate current content out
-            container.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s ease';
-            container.style.transform = `translateX(${slideOutDirection})`;
-            container.style.opacity = '0';
-            
-            // Preload and change background smoothly
+            // Start background transition immediately
             const newBgImage = isRegister 
                 ? "url('../../assets/img/ktx-layout-1_0.png')" 
                 : "url('../../assets/img/ktx-layout-1_0.png')";
             
-            const img = new Image();
-            img.onload = function() {
-                document.body.style.transition = 'background-image 0.6s ease';
-                document.body.style.backgroundImage = newBgImage;
-            };
-            img.src = isRegister ? '../../assets/img/ktx-layout-1_0.png' : '../../assets/img/ktx-layout-1_0.png';
+            document.body.style.transition = 'background-image 0.6s ease';
+            document.body.style.backgroundImage = newBgImage;
             
-            // Navigate after animation
+            // Slide out to left
+            if (logo) logo.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+            title.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.05s';
+            card.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.1s';
+            if (footer) footer.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.15s';
+            
+            if (logo) logo.style.transform = 'translateX(-100vw)';
+            title.style.transform = 'translateX(-100vw)';
+            card.style.transform = 'translateX(-100vw)';
+            if (footer) footer.style.transform = 'translateX(-100vw)';
+            
             setTimeout(() => {
                 window.location.href = targetUrl;
             }, 600);
@@ -604,3 +590,4 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 </body>
 </html>
+
