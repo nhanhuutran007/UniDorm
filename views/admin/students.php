@@ -22,7 +22,7 @@ $filterFloor  = $_GET['floor_id']   ?? '';
 $filterRoom   = $_GET['room_code']  ?? '';
 $filterStatus = $_GET['status']     ?? '';
 $filterSearch = trim($_GET['q']     ?? '');
-$page         = max(1, (int)($_GET['page'] ?? 1));
+$page         = max(1, (int)($_GET['p'] ?? 1));
 $perPage      = 20;
 $offset       = ($page - 1) * $perPage;
 
@@ -277,7 +277,7 @@ $statusMap = ['active'=>['success','Hoạt động'],'pending'=>['warning','Ch�
             <ul class="pagination pagination-sm mb-0 gap-1">
                 <?php for ($p = max(1, $page-2); $p <= min($totalPages, $page+2); $p++): ?>
                 <li class="page-item <?php echo $p === $page ? 'active' : ''; ?>">
-                    <a class="page-link rounded" href="?<?php echo http_build_query(array_merge($_GET, ['page'=>$p])); ?>"><?php echo $p; ?></a>
+                    <a class="page-link rounded" href="?<?php $q=$_GET; unset($q['page']); $q['p']=$p; echo http_build_query($q); ?>"><?php echo $p; ?></a>
                 </li>
                 <?php endfor; ?>
             </ul>
