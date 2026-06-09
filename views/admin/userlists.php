@@ -111,6 +111,14 @@ $statsPending = $conn->query("SELECT COUNT(*) as c FROM users WHERE role='studen
 <script>setTimeout(() => document.getElementById('pageToast')?.remove(), 4000);</script>
 <?php endif; ?>
 
+<style>
+.stt-cell .form-check-input { display: none; margin: 0 auto; cursor: pointer; }
+.stt-cell:hover .stt-text { display: none; }
+.stt-cell:hover .form-check-input { display: block; }
+.stt-cell.checked .stt-text { display: none; }
+.stt-cell.checked .form-check-input { display: block; }
+</style>
+
 <!-- Stat cards -->
 <div class="row g-3 mb-4">
     <?php foreach ([
@@ -180,13 +188,22 @@ $statsPending = $conn->query("SELECT COUNT(*) as c FROM users WHERE role='studen
 <div class="card border-0 shadow-sm" style="border-radius:14px;">
     <div class="card-header bg-transparent border-0 pt-3 pb-0 px-4 d-flex justify-content-between align-items-center">
         <p class="mb-0 text-muted small">Tìm thấy <strong><?php echo $total; ?></strong> tài khoản</p>
+        <div id="bulkActions" class="d-none gap-2">
+            <span class="text-muted small align-self-center me-2">Đã chọn: <strong id="selectedCount">0</strong></span>
+            <button class="btn btn-sm btn-success d-flex align-items-center gap-1" onclick="confirmBulkStatus('active')"><i class="bi bi-unlock-fill"></i> Kích hoạt</button>
+            <button class="btn btn-sm btn-warning d-flex align-items-center gap-1" onclick="confirmBulkStatus('inactive')"><i class="bi bi-lock-fill"></i> Khoá</button>
+            <button class="btn btn-sm btn-danger d-flex align-items-center gap-1" onclick="confirmBulkDelete()"><i class="bi bi-trash-fill"></i> Xoá</button>
+        </div>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-hover mb-0 align-middle" style="font-size:13px;">
                 <thead class="table-light">
                     <tr>
-                        <th class="px-4">MSSV / Username</th>
+                        <th class="ps-4 py-3 small text-center" style="width:40px;">
+                            <input type="checkbox" class="form-check-input" id="checkAll" onchange="toggleAll(this)" style="cursor: pointer;" title="Chọn tất cả">
+                        </th>
+                        <th>MSSV / Username</th>
                         <th>Họ và tên</th>
                         <th>Phòng / Giường</th>
                         <th>Trạng thái TK</th>
@@ -198,13 +215,17 @@ $statsPending = $conn->query("SELECT COUNT(*) as c FROM users WHERE role='studen
                     <?php if (empty($users)): ?>
                     <tr><td colspan="6" class="text-center py-4 text-muted">Không có tài khoản nào.</td></tr>
                     <?php else: ?>
-                    <?php foreach ($users as $u):
+                    <?php foreach ($users as $i => $u):
                         $stMap = ['active'=>['success','Hoạt động'],'pending'=>['warning','Chờ kích hoạt'],'inactive'=>['danger','Bị khoá'],'banned'=>['dark','Đã khoá']];
                         [$stColor, $stLabel] = $stMap[$u['status']] ?? ['secondary','?'];
                         $isLeader = $u['is_room_leader'] == 1;
                     ?>
                     <tr>
-                        <td class="px-4">
+                        <td class="ps-4 py-3 text-muted small text-center stt-cell" style="vertical-align: middle;">
+                            <span class="stt-text"><?php echo $offset + $i + 1; ?></span>
+                            <input type="checkbox" class="form-check-input user-checkbox" value="<?php echo $u['user_id']; ?>" onchange="updateRowState(this)">
+                        </td>
+                        <td>
                             <code class="bg-light px-2 py-1 rounded" style="font-size:12px;">
                                 <?php echo htmlspecialchars($u['student_code'] ?? $u['role']); ?>
                             </code>
@@ -340,6 +361,102 @@ function executeDelete() {
         btn.disabled = false;
         btn.textContent = originalText;
     });
+}
+
+function updateRowState(checkbox) {
+    if(checkbox.checked) {
+        checkbox.closest('.stt-cell').classList.add('checked');
+        checkbox.closest('tr').classList.add('table-light');
+    } else {
+        checkbox.closest('.stt-cell').classList.remove('checked');
+        checkbox.closest('tr').classList.remove('table-light');
+        document.getElementById('checkAll').checked = false;
+    }
+    updateBulkActionsBtn();
+}
+
+function toggleAll(source) {
+    const checkboxes = document.querySelectorAll('.user-checkbox');
+    checkboxes.forEach(cb => {
+        cb.checked = source.checked;
+        updateRowState(cb);
+    });
+}
+
+function updateBulkActionsBtn() {
+    const checked = document.querySelectorAll('.user-checkbox:checked');
+    const container = document.getElementById('bulkActions');
+    if(checked.length > 0) {
+        container.classList.remove('d-none');
+        container.classList.add('d-flex');
+        document.getElementById('selectedCount').textContent = checked.length;
+    } else {
+        container.classList.add('d-none');
+        container.classList.remove('d-flex');
+    }
+}
+
+function confirmBulkDelete() {
+    const checked = document.querySelectorAll('.user-checkbox:checked');
+    if(checked.length === 0) return;
+    const ids = Array.from(checked).map(cb => cb.value);
+    
+    if(confirm('Bạn có chắc chắn muốn xóa ' + ids.length + ' tài khoản sinh viên đã chọn? Hành động này không thể hoàn tác.')) {
+        const btns = document.querySelectorAll('#bulkActions button');
+        btns.forEach(b => b.disabled = true);
+
+        fetch('<?php echo BASE_URL; ?>/api/delete_student.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_ids: ids })
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) {
+                location.reload();
+            } else {
+                alert(res.message || 'Lỗi khi xóa tài khoản');
+                btns.forEach(b => b.disabled = false);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Lỗi kết nối máy chủ');
+            btns.forEach(b => b.disabled = false);
+        });
+    }
+}
+
+function confirmBulkStatus(status) {
+    const checked = document.querySelectorAll('.user-checkbox:checked');
+    if(checked.length === 0) return;
+    const ids = Array.from(checked).map(cb => cb.value);
+    const actionText = status === 'active' ? 'kích hoạt' : 'khoá';
+    
+    if(confirm('Bạn có chắc chắn muốn ' + actionText + ' ' + ids.length + ' tài khoản đã chọn?')) {
+        const btns = document.querySelectorAll('#bulkActions button');
+        btns.forEach(b => b.disabled = true);
+
+        fetch('<?php echo BASE_URL; ?>/api/bulk_status_users.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_ids: ids, status: status })
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) {
+                location.reload();
+            } else {
+                alert(res.message || 'Lỗi cập nhật trạng thái');
+                btns.forEach(b => b.disabled = false);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Lỗi kết nối máy chủ');
+            btns.forEach(b => b.disabled = false);
+        });
+    }
 }
 </script>
 

@@ -9,13 +9,13 @@
  *  3. Sinh viên vào link email → đặt mật khẩu → status='active'
  */
 if (session_status() === PHP_SESSION_NONE) session_start();
-if (isset($_SESSION['user_id'])) {
-    header('Location: /UniDorm/');
-    exit;
-}
-
 require_once __DIR__ . '/../../includes/db.php';
 require_once __DIR__ . '/../../app/services/MailService.php';
+
+if (isset($_SESSION['user_id'])) {
+    header('Location: ' . BASE_URL . '/dashboard');
+    exit;
+}
 $mailService = new MailService();
 
 $error   = '';
@@ -73,7 +73,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $tokenStmt->bind_param('iss', $newUserId, $token, $expiresAt);
                 $tokenStmt->execute();
 
-                $setPasswordUrl = "https://{$_SERVER['HTTP_HOST']}/UniDorm/views/auth/set_password.php?token=$token";
+                $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+                $setPasswordUrl = $protocol . "://{$_SERVER['HTTP_HOST']}" . BASE_URL . "/views/auth/set_password.php?token=$token";
                 $mailSent = $mailService->sendActivation($email, $fullname, $setPasswordUrl);
 
                 if ($mailSent || true) { // Allow success even if mail() not configured in dev
@@ -199,6 +200,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         margin-bottom: 35px;
         letter-spacing: -0.5px;
         text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s ease;
     }
     
     /* Register Card */
@@ -621,41 +623,40 @@ document.getElementById('registerForm')?.addEventListener('submit', function() {
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang tạo tài khoản...';
 });
 
-// Smooth crossfade page transition
+// Smooth continuous slide transition
 document.addEventListener('DOMContentLoaded', function() {
-    // Initial page load animation
-    document.body.style.opacity = '1';
+    const logo = document.querySelector('.logo-section');
+    const title = document.querySelector('.main-title');
+    const card = document.querySelector('.register-card');
+    const footer = document.querySelector('.footer-badges');
     
-    // Intercept navigation for crossfade effect
+    // Intercept navigation for continuous slide
     const links = document.querySelectorAll('a[href*="login.php"], a[href*="forgot_password.php"]');
     links.forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
             const targetUrl = this.href;
-            const container = document.querySelector('.register-container');
-            
-            // Determine direction based on target
             const isLogin = targetUrl.includes('login.php');
-            const slideOutDirection = isLogin ? '100vw' : '-100vw';
             
-            // Animate current content out
-            container.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s ease';
-            container.style.transform = `translateX(${slideOutDirection})`;
-            container.style.opacity = '0';
-            
-            // Preload and change background smoothly
+            // Start background transition immediately
             const newBgImage = isLogin 
                 ? "url('../../assets/img/KTX-TDT-KL-1024x525.png')" 
                 : "url('../../assets/img/KTX-TDT-KL-1024x525.png')";
             
-            const img = new Image();
-            img.onload = function() {
-                document.body.style.transition = 'background-image 0.6s ease';
-                document.body.style.backgroundImage = newBgImage;
-            };
-            img.src = isLogin ? '../../assets/img/KTX-TDT-KL-1024x525.png' : '../../assets/img/KTX-TDT-KL-1024x525.png';
+            document.body.style.transition = 'background-image 0.6s ease';
+            document.body.style.backgroundImage = newBgImage;
             
-            // Navigate after animation
+            // Slide out to right
+            if (logo) logo.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+            title.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.05s';
+            card.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.1s';
+            if (footer) footer.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.15s';
+            
+            if (logo) logo.style.transform = 'translateX(100vw)';
+            title.style.transform = 'translateX(100vw)';
+            card.style.transform = 'translateX(100vw)';
+            if (footer) footer.style.transform = 'translateX(100vw)';
+            
             setTimeout(() => {
                 window.location.href = targetUrl;
             }, 600);

@@ -26,10 +26,14 @@ $availableRooms = $roomModel->countRoomsByStatus('available');
 $fullRooms      = $roomModel->countRoomsByStatus('full');
 $maintenanceRooms = $roomModel->countRoomsByStatus('maintenance');
 
-// Tổng giường
-$stmtBeds       = $conn->query("SELECT COUNT(*) as total FROM beds");
+// Số giường đang được thuê
+$stmtOccupiedBeds = $conn->query("SELECT COUNT(DISTINCT u.bed_id) as total FROM users u JOIN beds b ON u.bed_id = b.id WHERE u.role = 'student' AND u.status IN ('active', 'pending')");
+$occupiedBeds = $stmtOccupiedBeds->fetch_assoc()['total'] ?? 0;
+
+// Tổng giường bằng tổng sức chứa (max_capacity) của tất cả các phòng hiện có
+$stmtBeds       = $conn->query("SELECT SUM(max_capacity) as total FROM rooms");
 $totalBeds      = $stmtBeds->fetch_assoc()['total'] ?? 0;
-$occupancyRate  = $totalBeds > 0 ? round(($totalStudents / $totalBeds) * 100) : 0;
+$occupancyRate  = $totalBeds > 0 ? round(($occupiedBeds / $totalBeds) * 100) : 0;
 
 // Báo cáo thiết bị hỏng chưa xử lý
 $stmtRpt = $conn->query("SELECT COUNT(*) as cnt FROM device_reports WHERE status = 'pending'");
@@ -73,7 +77,7 @@ $recentReports = $stmtRptList->get_result()->fetch_all(MYSQLI_ASSOC);
     $stats = [
         ['icon'=>'people-fill',     'color'=>'primary',   'value'=>$totalStudents,    'label'=>'Sinh viên đang ở', 'sub'=>"{$pendingStudents} chờ kích hoạt", 'link'=>BASE_URL.'/students'],
         ['icon'=>'door-open-fill',  'color'=>'success',   'value'=>$availableRooms,   'label'=>'Phòng còn chỗ',    'sub'=>"{$fullRooms} đã đầy", 'link'=>BASE_URL.'/rooms?status=available'],
-        ['icon'=>'bar-chart-fill',  'color'=>'info',      'value'=>"{$occupancyRate}%",'label'=>'Tỉ lệ lấp đầy',   'sub'=>"{$totalStudents}/{$totalBeds} giường", 'link'=>'#'],
+        ['icon'=>'bar-chart-fill',  'color'=>'info',      'value'=>"{$occupancyRate}%",'label'=>'Tỉ lệ lấp đầy',   'sub'=>"{$occupiedBeds}/{$totalBeds} giường", 'link'=>'#'],
         ['icon'=>'tools',           'color'=>'danger',    'value'=>$pendingReports,   'label'=>'Báo cáo hỏng',     'sub'=>'Chờ xử lý', 'link'=>BASE_URL.'/device_reports'],
     ];
     foreach ($stats as $s):
