@@ -7,9 +7,19 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 
 // ====== BASE_URL AUTO DETECTION ======
 if (!defined('BASE_URL')) {
-    $docRoot = rtrim(str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']), '/');
-    $projectRoot = str_replace('\\', '/', dirname(__DIR__));
-    $baseUrl = str_replace($docRoot, '', $projectRoot);
+    // Tự động nhận diện BASE_URL
+    $baseUrl = '';
+    
+    // Nếu đang chạy trên localhost (XAMPP)
+    if (isset($_SERVER['HTTP_HOST']) && ($_SERVER['HTTP_HOST'] === 'localhost' || $_SERVER['HTTP_HOST'] === '127.0.0.1')) {
+        $docRoot = rtrim(str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']), '/');
+        $projectRoot = str_replace('\\', '/', dirname(__DIR__));
+        $baseUrl = str_replace($docRoot, '', $projectRoot);
+    } else {
+        // Khi deploy lên hosting/cPanel và dùng .htaccess trỏ domain vào thư mục
+        // thì BASE_URL phải là rỗng để domain chính hiển thị trực tiếp.
+        $baseUrl = ''; 
+    }
     
     // Đảm bảo có dấu '/' ở đầu nếu không rỗng
     if (!empty($baseUrl) && $baseUrl[0] !== '/') {
