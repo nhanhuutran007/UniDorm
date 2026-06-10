@@ -6,7 +6,9 @@ Options -Indexes
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteBase /UniDorm/
+    # Khi chạy thật trên domain chính, base là /
+    # Chú ý: Nếu chạy localhost dạng http://localhost/UniDorm/ thì vẫn cần RewriteBase /UniDorm/
+    RewriteBase /
 
     # Bỏ qua file và thư mục thực
     RewriteCond %{REQUEST_FILENAME} -f [OR]
