@@ -75,6 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $newBed      = (int)($_POST['bed_id']         ?? 0);
     $isLeader    = isset($_POST['is_room_leader']) ? 1 : 0;
     $newStatus   = $_POST['status'] ?? $target['status'];
+    $newRole     = $_POST['role']   ?? $target['role'];
 
     if (!$fullname) {
         $errorMsg = 'Họ và tên không được để trống.';
@@ -115,27 +116,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Update user
             $upd = $conn->prepare("
                 UPDATE users SET fullname=?, gender=?, date_of_birth=?, phone_personal=?,
-                                 phone_family=?, hometown=?, status=?, bed_id=?, is_room_leader=?
+                                 phone_family=?, hometown=?, status=?, bed_id=?, is_room_leader=?, role=?
                 WHERE user_id=?
             ");
-            $upd->bind_param('sssssssiii',
+            $upd->bind_param('sssssssiisi',
                 $fullname, $gender, $dob, $phonePers, $phoneFamily, $hometown,
-                $newStatus, $bedIdVal, $isLeader, $targetId
+                $newStatus, $bedIdVal, $isLeader, $newRole, $targetId
             );
             $upd->execute();
 
             if (isset($_POST['reset_password'])) {
-                $token     = bin2hex(random_bytes(32));
-                $expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour'));
-                $rt = $conn->prepare("INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE token=VALUES(token),expires_at=VALUES(expires_at),used=0");
-                $rt->bind_param('iss', $targetId, $token, $expiresAt);
-                $rt->execute();
-                $resetUrl = "https://{$_SERVER['HTTP_HOST']}/UniDorm/views/auth/forgot_password.php?token=$token";
-                $email    = $target['email'] ?? $target['student_code'].'@student.tdtu.edu.vn';
-                @mail($email, '[UniDorm] Yêu cầu đặt lại mật khẩu',
-                    "Xin chào {$target['fullname']},\n\nAdmin đã yêu cầu đặt lại mật khẩu cho tài khoản của bạn.\n\nLink: $resetUrl\n\n(Hiệu lực 1 giờ)",
-                    "From: noreply@unidorm.tdtu.edu.vn\r\n"
-                );
+                // Tạo mật khẩu ngẫu nhiên
+                $upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                $lower = 'abcdefghijklmnopqrstuvwxyz';
+                $numbers = '0123456789';
+                $special = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+                $password = '';
+                $password .= $upper[random_int(0, strlen($upper) - 1)];
+                $password .= $lower[random_int(0, strlen($lower) - 1)];
+                $password .= $numbers[random_int(0, strlen($numbers) - 1)];
+                $password .= $special[random_int(0, strlen($special) - 1)];
+                $all = $upper . $lower . $numbers . $special;
+                for ($i = 4; $i < 8; $i++) {
+                    $password .= $all[random_int(0, strlen($all) - 1)];
+                }
+                $newPassword = str_shuffle($password);
+                $hashed = password_hash($newPassword, PASSWORD_BCRYPT);
+
+                // Cập nhật vào auth_accounts
+                $authUpd = $conn->prepare("
+                    INSERT INTO auth_accounts (user_id, password, is_active, must_change_password, last_password_change)
+                    VALUES (?, ?, 1, 1, NOW())
+                    ON DUPLICATE KEY UPDATE password = VALUES(password), is_active = 1, must_change_password = 1, last_password_change = NOW()
+                ");
+                $authUpd->bind_param('is', $targetId, $hashed);
+                $authUpd->execute();
+                
+                // Gửi email
+                $email = $target['email'] ?? $target['student_code'].'@student.tdtu.edu.vn';
+                $subject = '[UniDorm] Cấp lại mật khẩu tài khoản Ký túc xá';
+                $body = "Xin chào {$target['fullname']},\n\n"
+                      . "Ban quản lý Ký túc xá UniDorm vừa tạo mới mật khẩu cho tài khoản của bạn.\n\n"
+                      . "Thông tin đăng nhập:\n"
+                      . "- Tên đăng nhập (MSSV): {$target['student_code']}\n"
+                      . "- Mật khẩu mới: $newPassword\n\n"
+                      . "Lưu ý: Vì lý do bảo mật, bạn sẽ được yêu cầu đổi lại mật khẩu này ngay trong lần đăng nhập đầu tiên.\n\n"
+                      . "Trân trọng,\nBan Quản lý Ký túc xá UniDorm.";
+                      
+                @mail($email, $subject, $body, "From: noreply@unidorm.tdtu.edu.vn\r\nContent-Type: text/plain; charset=utf-8\r\n");
             }
 
             $conn->commit();
@@ -271,13 +299,22 @@ if ($target['bed_id']) {
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold small">Trạng thái tài khoản</label>
-                        <select name="status" class="form-select rounded-3">
-                            <option value="active"   <?php echo $target['status']==='active'  ?'selected':''; ?>>Hoạt động</option>
-                            <option value="pending"  <?php echo $target['status']==='pending' ?'selected':''; ?>>Chờ kích hoạt</option>
-                            <option value="inactive" <?php echo $target['status']==='inactive'?'selected':''; ?>>Bị khoá</option>
-                        </select>
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-semibold small">Trạng thái tài khoản</label>
+                            <select name="status" class="form-select rounded-3">
+                                <option value="active"   <?php echo $target['status']==='active'  ?'selected':''; ?>>Hoạt động</option>
+                                <option value="pending"  <?php echo $target['status']==='pending' ?'selected':''; ?>>Chờ kích hoạt</option>
+                                <option value="inactive" <?php echo $target['status']==='inactive'?'selected':''; ?>>Bị khoá</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-semibold small">Phân quyền</label>
+                            <select name="role" class="form-select rounded-3">
+                                <option value="student" <?php echo $target['role']==='student'?'selected':''; ?>>Sinh viên</option>
+                                <option value="admin"   <?php echo $target['role']==='admin'  ?'selected':''; ?>>Quản trị viên (Admin)</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div class="mb-3">
@@ -295,7 +332,7 @@ if ($target['bed_id']) {
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" name="reset_password" id="resetPw">
                             <label class="form-check-label small" for="resetPw">
-                                <i class="bi bi-key-fill text-warning me-1"></i>Gửi email yêu cầu đặt lại mật khẩu
+                                <i class="bi bi-envelope-fill text-warning me-1"></i>Tạo và gửi mật khẩu mới qua email cho sinh viên
                             </label>
                         </div>
                     </div>

@@ -8,7 +8,7 @@ Options -Indexes
     RewriteEngine On
     # Khi chạy thật trên domain chính, base là /
     # Chú ý: Nếu chạy localhost dạng http://localhost/UniDorm/ thì vẫn cần RewriteBase /UniDorm/
-    RewriteBase /
+    # RewriteBase /
 
     # Bỏ qua file và thư mục thực
     RewriteCond %{REQUEST_FILENAME} -f [OR]

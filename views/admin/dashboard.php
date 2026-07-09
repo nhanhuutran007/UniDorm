@@ -14,10 +14,10 @@ require_once __DIR__ . '/../../app/models/RoomModel.php';
 $roomModel = new RoomModel($conn);
 
 // Thống kê sinh viên
-$stmtSV = $conn->query("SELECT COUNT(*) as total FROM users WHERE role = 'student' AND status IN ('active', 'pending')");
+$stmtSV = $conn->query("SELECT COUNT(*) as total FROM users WHERE (role = 'student' OR (role = 'admin' AND student_code IS NOT NULL AND student_code != 'admin')) AND status IN ('active', 'pending')");
 $totalStudents = $stmtSV->fetch_assoc()['total'] ?? 0;
 
-$stmtPending = $conn->query("SELECT COUNT(*) as total FROM users WHERE role = 'student' AND status = 'pending'");
+$stmtPending = $conn->query("SELECT COUNT(*) as total FROM users WHERE (role = 'student' OR (role = 'admin' AND student_code IS NOT NULL AND student_code != 'admin')) AND status = 'pending'");
 $pendingStudents = $stmtPending->fetch_assoc()['total'] ?? 0;
 
 // Thống kê phòng
@@ -27,7 +27,7 @@ $fullRooms      = $roomModel->countRoomsByStatus('full');
 $maintenanceRooms = $roomModel->countRoomsByStatus('maintenance');
 
 // Số giường đang được thuê
-$stmtOccupiedBeds = $conn->query("SELECT COUNT(DISTINCT u.bed_id) as total FROM users u JOIN beds b ON u.bed_id = b.id WHERE u.role = 'student' AND u.status IN ('active', 'pending')");
+$stmtOccupiedBeds = $conn->query("SELECT COUNT(DISTINCT u.bed_id) as total FROM users u JOIN beds b ON u.bed_id = b.id WHERE (u.role = 'student' OR (u.role = 'admin' AND u.student_code IS NOT NULL AND u.student_code != 'admin')) AND u.status IN ('active', 'pending')");
 $occupiedBeds = $stmtOccupiedBeds->fetch_assoc()['total'] ?? 0;
 
 // Tổng giường bằng tổng sức chứa (max_capacity) của tất cả các phòng hiện có
@@ -50,7 +50,7 @@ $stmtNew = $conn->prepare("
     FROM users u
     LEFT JOIN beds b ON u.bed_id = b.id
     LEFT JOIN rooms r ON b.room_id = r.id
-    WHERE u.role = 'student'
+    WHERE (u.role = 'student' OR (u.role = 'admin' AND u.student_code IS NOT NULL AND u.student_code != 'admin'))
     ORDER BY u.created_at DESC
     LIMIT 8
 ");
