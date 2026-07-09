@@ -35,6 +35,8 @@ if (!$profile) {
     exit;
 }
 
+$isStudentProfile = ($userRole === 'student' || ($userRole === 'admin' && !empty($profile['student_code']) && $profile['student_code'] !== 'admin'));
+
 // --- Xử lý cập nhật thông tin ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
@@ -139,7 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Lấy thêm info phòng nếu là sinh viên
 $roomInfo = null;
-if ($userRole === 'student' && !empty($profile['bed_id'])) {
+if ($isStudentProfile && !empty($profile['bed_id'])) {
     $roomStmt = $conn->prepare("
         SELECT r.room_code, f.floor_number, b.bed_label, bld.name as building_name
         FROM beds b
@@ -198,7 +200,7 @@ $genderMap = ['male' => 'Nam', 'female' => 'Nữ', 'other' => 'Khác'];
                 <span class="badge bg-<?php echo $userRole === 'admin' ? 'danger' : 'primary'; ?> mb-2">
                     <?php echo $userRole === 'admin' ? 'Quản trị viên' : 'Sinh viên'; ?>
                 </span>
-                <?php if ($userRole === 'student' && $profile['student_code']): ?>
+                <?php if ($isStudentProfile && $profile['student_code']): ?>
                 <p class="text-muted small mb-0"><i class="bi bi-card-text me-1"></i><?php echo htmlspecialchars($profile['student_code']); ?></p>
                 <p class="text-muted small mb-0"><i class="bi bi-envelope me-1"></i><?php echo htmlspecialchars($profile['email'] ?? $profile['student_code'].'@student.tdtu.edu.vn'); ?></p>
                 <?php elseif ($profile['email']): ?>
@@ -299,7 +301,7 @@ $genderMap = ['male' => 'Nam', 'female' => 'Nữ', 'other' => 'Khác'];
                                            placeholder="0912 345 678"
                                            value="<?php echo htmlspecialchars($profile['phone_personal'] ?? ''); ?>">
                                 </div>
-                                <?php if ($userRole === 'student'): ?>
+                                <?php if ($isStudentProfile): ?>
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold small">SĐT gia đình</label>
                                     <input type="tel" name="phone_family" class="form-control rounded-3"

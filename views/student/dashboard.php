@@ -127,8 +127,30 @@ $myReportsCount = $stmt2->get_result()->fetch_assoc()['cnt'] ?? 0;
 
 <!-- Quick Actions + Room Info -->
 <div class="row g-4">
+    <!-- Thông tin cá nhân -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm h-100" style="border-radius:12px;">
+            <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
+                <h6 class="fw-bold text-dark mb-0"><i class="bi bi-person-lines-fill me-2 text-info"></i>Thông tin cá nhân</h6>
+            </div>
+            <div class="card-body px-4 pb-4">
+                <table class="table table-sm table-borderless mb-0">
+                    <tr><td class="text-muted" style="width:45%">Ngày sinh</td><td class="fw-semibold"><?php echo $userData['date_of_birth'] ? date('d/m/Y', strtotime($userData['date_of_birth'])) : '—'; ?></td></tr>
+                    <tr><td class="text-muted">Giới tính</td><td class="fw-semibold"><?php $gMap = ['male'=>'Nam','female'=>'Nữ','other'=>'Khác']; echo $gMap[$userData['gender']] ?? '—'; ?></td></tr>
+                    <tr><td class="text-muted">SĐT cá nhân</td><td class="fw-semibold"><?php echo htmlspecialchars($userData['phone_personal'] ?? '—'); ?></td></tr>
+                    <tr><td class="text-muted">SĐT gia đình</td><td class="fw-semibold"><?php echo htmlspecialchars($userData['phone_family'] ?? '—'); ?></td></tr>
+                    <tr><td class="text-muted">Quê quán</td><td class="fw-semibold"><?php echo htmlspecialchars($userData['hometown'] ?? '—'); ?></td></tr>
+                    <tr><td class="text-muted">Email</td><td class="fw-semibold text-truncate" style="max-width: 150px;" title="<?php echo htmlspecialchars($userData['email'] ?? ''); ?>"><?php echo htmlspecialchars($userData['email'] ?? '—'); ?></td></tr>
+                </table>
+                <a href="<?php echo BASE_URL; ?>/profile" class="btn btn-sm btn-outline-info mt-3 w-100">
+                    <i class="bi bi-pencil-square me-1"></i>Cập nhật hồ sơ
+                </a>
+            </div>
+        </div>
+    </div>
+
     <!-- Thông tin phòng nhanh -->
-    <div class="col-lg-6">
+    <div class="col-lg-4">
         <div class="card border-0 shadow-sm h-100" style="border-radius:12px;">
             <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
                 <h6 class="fw-bold text-dark mb-0"><i class="bi bi-door-open me-2 text-primary"></i>Thông tin phòng</h6>
@@ -165,7 +187,7 @@ $myReportsCount = $stmt2->get_result()->fetch_assoc()['cnt'] ?? 0;
     </div>
 
     <!-- Thao tác nhanh -->
-    <div class="col-lg-6">
+    <div class="col-lg-4">
         <div class="card border-0 shadow-sm h-100" style="border-radius:12px;">
             <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
                 <h6 class="fw-bold text-dark mb-0"><i class="bi bi-lightning-charge me-2 text-warning"></i>Thao tác nhanh</h6>
