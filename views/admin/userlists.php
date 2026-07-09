@@ -28,7 +28,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $newStatus = $curStatus === 'active' ? 'inactive' : 'active';
         $upd = $conn->prepare("UPDATE users SET status = ? WHERE user_id = ?");
         $upd->bind_param('si', $newStatus, $targetId);
-        $toast = $upd->execute() ? 'success:Đã cập nhật trạng thái tài khoản!' : 'error:Lỗi cập nhật';
+        
+        if ($upd->execute()) {
+            if ($newStatus === 'active') {
+                // Tạo mật khẩu ngẫu nhiên
+                $upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                $lower = 'abcdefghijklmnopqrstuvwxyz';
+                $numbers = '0123456789';
+                $special = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+                $password = '';
+                $password .= $upper[random_int(0, strlen($upper) - 1)];
+                $password .= $lower[random_int(0, strlen($lower) - 1)];
+                $password .= $numbers[random_int(0, strlen($numbers) - 1)];
+                $password .= $special[random_int(0, strlen($special) - 1)];
+                $all = $upper . $lower . $numbers . $special;
+                for ($i = 4; $i < 8; $i++) {
+                    $password .= $all[random_int(0, strlen($all) - 1)];
+                }
+                $newPassword = str_shuffle($password);
+                $hashed = password_hash($newPassword, PASSWORD_BCRYPT);
+                
+                // Cập nhật auth_accounts
+                $authUpd = $conn->prepare("
+                    INSERT INTO auth_accounts (user_id, password, is_active, must_change_password, last_password_change)
+                    VALUES (?, ?, 1, 1, NOW())
+                    ON DUPLICATE KEY UPDATE password = VALUES(password), is_active = 1, must_change_password = 1, last_password_change = NOW()
+                ");
+                $authUpd->bind_param('is', $targetId, $hashed);
+                $authUpd->execute();
+                
+                $_SESSION['new_password'][$targetId] = $newPassword;
+                $toast = 'success:Đã kích hoạt tài khoản và tạo mật khẩu mới!';
+                
+                // Gửi email
+                $emQuery = $conn->prepare("SELECT email, student_code, fullname FROM users WHERE user_id = ?");
+                $emQuery->bind_param('i', $targetId);
+                $emQuery->execute();
+                $uData = $emQuery->get_result()->fetch_assoc();
+                
+                if ($uData) {
+                    $email = $uData['email'] ?? $uData['student_code'].'@student.tdtu.edu.vn';
+                    $subject = '[UniDorm] Kích hoạt tài khoản Ký túc xá';
+                    $body = "Xin chào {$uData['fullname']},\n\n"
+                          . "Tài khoản Ký túc xá UniDorm của bạn đã được kích hoạt thành công.\n\n"
+                          . "Thông tin đăng nhập:\n"
+                          . "- Tên đăng nhập (MSSV): {$uData['student_code']}\n"
+                          . "- Mật khẩu: $newPassword\n\n"
+                          . "Lưu ý: Vì lý do bảo mật, bạn sẽ được yêu cầu đổi lại mật khẩu này ngay trong lần đăng nhập đầu tiên.\n\n"
+                          . "Trân trọng,\nBan Quản lý Ký túc xá UniDorm.";
+                    @mail($email, $subject, $body, "From: noreply@unidorm.tdtu.edu.vn\r\nContent-Type: text/plain; charset=utf-8\r\n");
+                }
+            } else {
+                $toast = 'success:Đã khóa tài khoản thành công!';
+            }
+        } else {
+            $toast = 'error:Lỗi cập nhật';
+        }
     }
     if ($action === 'delete_user' && $targetId && $targetId !== $userId) {
         $del = $conn->prepare("DELETE FROM users WHERE user_id = ? AND role = 'student'");
@@ -45,7 +100,7 @@ $page    = max(1, (int)($_GET['p'] ?? 1));
 $perPage = 25;
 $offset  = ($page - 1) * $perPage;
 
-$where = ["1=1"];
+$where = ["(u.student_code IS NOT NULL AND u.student_code != 'admin')"];
 $params = [];
 $types  = '';
 
@@ -59,7 +114,11 @@ if ($status) {
     $where[] = "u.status = ?";
     $params[] = $status; $types .= 's';
 }
-if ($role) {
+if ($role === 'student') {
+    $where[] = "(u.role = 'student' OR (u.role = 'admin' AND u.student_code IS NOT NULL AND u.student_code != 'admin'))";
+} else if ($role === 'admin') {
+    $where[] = "u.role = 'admin'";
+} else if ($role) {
     $where[] = "u.role = ?";
     $params[] = $role; $types .= 's';
 }
@@ -94,9 +153,9 @@ $data->execute();
 $users = $data->get_result()->fetch_all(MYSQLI_ASSOC);
 
 // Stats
-$statsAll     = $conn->query("SELECT COUNT(*) as c FROM users WHERE role='student'")->fetch_assoc()['c'] ?? 0;
-$statsActive  = $conn->query("SELECT COUNT(*) as c FROM users WHERE role='student' AND status='active'")->fetch_assoc()['c'] ?? 0;
-$statsPending = $conn->query("SELECT COUNT(*) as c FROM users WHERE role='student' AND status='pending'")->fetch_assoc()['c'] ?? 0;
+$statsAll     = $conn->query("SELECT COUNT(*) as c FROM users WHERE (role='student' OR (role='admin' AND student_code IS NOT NULL AND student_code != 'admin'))")->fetch_assoc()['c'] ?? 0;
+$statsActive  = $conn->query("SELECT COUNT(*) as c FROM users WHERE (role='student' OR (role='admin' AND student_code IS NOT NULL AND student_code != 'admin')) AND status='active'")->fetch_assoc()['c'] ?? 0;
+$statsPending = $conn->query("SELECT COUNT(*) as c FROM users WHERE (role='student' OR (role='admin' AND student_code IS NOT NULL AND student_code != 'admin')) AND status='pending'")->fetch_assoc()['c'] ?? 0;
 ?>
 
 <?php if ($toast): [$toastType, $toastMsg] = explode(':', $toast, 2); ?>
@@ -249,6 +308,15 @@ $statsPending = $conn->query("SELECT COUNT(*) as c FROM users WHERE role='studen
                             <span class="badge bg-<?php echo $stColor; ?> bg-opacity-75"><?php echo $stLabel; ?></span>
                             <?php if (!$u['account_active']): ?>
                             <span class="badge bg-secondary bg-opacity-50 ms-1" style="font-size:9px;">No PW</span>
+                            <?php endif; ?>
+                            
+                            <?php if (isset($_SESSION['new_password'][$u['user_id']])): ?>
+                            <div class="mt-1">
+                                <span class="badge bg-light text-dark border">
+                                    MK mới: <code style="font-size:12px;"><?php echo htmlspecialchars($_SESSION['new_password'][$u['user_id']]); ?></code>
+                                </span>
+                            </div>
+                            <?php unset($_SESSION['new_password'][$u['user_id']]); ?>
                             <?php endif; ?>
                         </td>
                         <td class="text-muted small"><?php echo htmlspecialchars($u['email'] ?? '—'); ?></td>

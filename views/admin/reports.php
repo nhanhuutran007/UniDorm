@@ -14,9 +14,9 @@ require_once __DIR__ . '/../../includes/db.php';
 // ─── Aggregated stats ────────────────────────────────────────────────
 $stats = [];
 // Sinh viên
-$stats['students_total']   = (int)$conn->query("SELECT COUNT(*) as c FROM users WHERE role='student'")->fetch_assoc()['c'];
-$stats['students_active']  = (int)$conn->query("SELECT COUNT(*) as c FROM users WHERE role='student' AND status='active'")->fetch_assoc()['c'];
-$stats['students_pending'] = (int)$conn->query("SELECT COUNT(*) as c FROM users WHERE role='student' AND status='pending'")->fetch_assoc()['c'];
+$stats['students_total']   = (int)$conn->query("SELECT COUNT(*) as c FROM users WHERE (role='student' OR (role='admin' AND student_code IS NOT NULL AND student_code != 'admin'))")->fetch_assoc()['c'];
+$stats['students_active']  = (int)$conn->query("SELECT COUNT(*) as c FROM users WHERE (role='student' OR (role='admin' AND student_code IS NOT NULL AND student_code != 'admin')) AND status='active'")->fetch_assoc()['c'];
+$stats['students_pending'] = (int)$conn->query("SELECT COUNT(*) as c FROM users WHERE (role='student' OR (role='admin' AND student_code IS NOT NULL AND student_code != 'admin')) AND status='pending'")->fetch_assoc()['c'];
 // Phòng
 $stats['rooms_total']   = (int)$conn->query("SELECT COUNT(*) as c FROM rooms")->fetch_assoc()['c'];
 $stats['rooms_avail']   = (int)$conn->query("SELECT COUNT(*) as c FROM rooms WHERE status='available'")->fetch_assoc()['c'];
@@ -30,19 +30,24 @@ $stats['reports_total']      = (int)$conn->query("SELECT COUNT(*) as c FROM devi
 // Sĩ số theo lầu
 $floorOccupancy = $conn->query("
     SELECT f.floor_number, b.name as bname,
-           COUNT(u.user_id) as students,
-           SUM(r.max_capacity) as capacity
+           (SELECT COUNT(DISTINCT u.user_id) 
+            FROM users u 
+            JOIN beds bd ON u.bed_id = bd.id 
+            JOIN rooms r2 ON bd.room_id = r2.id 
+            WHERE r2.floor_id = f.id 
+              AND (u.role = 'student' OR (u.role = 'admin' AND u.student_code IS NOT NULL AND u.student_code != 'admin')) 
+              AND u.status='active') as students,
+           (SELECT SUM(r3.max_capacity) 
+            FROM rooms r3 
+            WHERE r3.floor_id = f.id) as capacity
     FROM floors f
     JOIN buildings b ON f.building_id = b.id
-    LEFT JOIN rooms r ON r.floor_id = f.id
-    LEFT JOIN beds bd ON bd.room_id = r.id
-    LEFT JOIN users u ON u.bed_id = bd.id AND u.status='active' AND u.role='student'
-    GROUP BY f.id ORDER BY f.floor_number ASC
+    ORDER BY f.floor_number ASC
 ")->fetch_all(MYSQLI_ASSOC);
 // Quê quán top
 $hometops = $conn->query("
     SELECT hometown, COUNT(*) as cnt FROM users
-    WHERE role='student' AND hometown IS NOT NULL AND hometown != ''
+    WHERE (role='student' OR (role='admin' AND student_code IS NOT NULL AND student_code != 'admin')) AND hometown IS NOT NULL AND hometown != ''
     GROUP BY hometown ORDER BY cnt DESC LIMIT 8
 ")->fetch_all(MYSQLI_ASSOC);
 // Danh sách tất cả phòng còn chỗ trống

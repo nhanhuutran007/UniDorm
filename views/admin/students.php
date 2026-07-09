@@ -27,7 +27,7 @@ $perPage      = 20;
 $offset       = ($page - 1) * $perPage;
 
 // Build query
-$where    = ["u.role = 'student'"];
+$where    = ["(u.role = 'student' OR (u.role = 'admin' AND u.student_code IS NOT NULL AND u.student_code != 'admin'))"];
 $params   = [];
 $types    = '';
 
