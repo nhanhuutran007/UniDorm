@@ -16,6 +16,13 @@ $mailService = new MailService();
 
 $successMsg = $errorMsg = '';
 
+if (session_status() === PHP_SESSION_NONE) session_start();
+$userId = (int)($_SESSION['user_id'] ?? 0);
+
+// Kiểm tra quyền (sinh viên thăng cấp admin bị hạn chế gửi thông báo)
+$currUsr = $conn->query("SELECT role, student_code FROM users WHERE user_id = $userId")->fetch_assoc();
+$isPromotedAdmin = ($currUsr && $currUsr['role'] === 'admin' && $currUsr['student_code'] !== null && $currUsr['student_code'] !== 'admin');
+
 // Xử lý gửi thông báo
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_notif'])) {
     $title        = trim($_POST['title'] ?? '');
@@ -23,7 +30,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_notif'])) {
     $type         = $_POST['type'] ?? 'general';
     $targetUserId = !empty($_POST['target_user_id']) ? (int)$_POST['target_user_id'] : null;
 
-    if (empty($title) || empty($message)) {
+    if ($isPromotedAdmin) {
+        $errorMsg = 'Tài khoản của bạn bị hạn chế quyền thực hiện chức năng này.';
+    } elseif (empty($title) || empty($message)) {
         $errorMsg = 'Vui lòng nhập đầy đủ tiêu đề và nội dung.';
     } else {
         $stmt = $conn->prepare("INSERT INTO notifications (sender_id, target_user_id, title, message, type) VALUES (?, ?, ?, ?, ?)");
@@ -147,10 +156,16 @@ $typeConfig = [
                         <label class="form-label fw-semibold small">Nội dung <span class="text-danger">*</span></label>
                         <textarea name="message" class="form-control form-control-sm" rows="5"
                                   placeholder="Nhập nội dung thông báo chi tiết..."
-                                  required><?php echo htmlspecialchars($_POST['message'] ?? ''); ?></textarea>
+                                  required <?php echo $isPromotedAdmin ? 'disabled' : ''; ?>><?php echo htmlspecialchars($_POST['message'] ?? ''); ?></textarea>
                     </div>
 
-                    <button type="submit" class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2">
+                    <?php if ($isPromotedAdmin): ?>
+                    <div class="alert alert-warning p-2 small mb-3 text-center border-warning bg-opacity-10">
+                        <i class="bi bi-shield-lock-fill me-1"></i> Tài khoản của bạn bị hạn chế chức năng này.
+                    </div>
+                    <?php endif; ?>
+
+                    <button type="submit" class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2" <?php echo $isPromotedAdmin ? 'disabled' : ''; ?>>
                         <i class="bi bi-send-fill"></i> Gửi thông báo
                     </button>
                 </form>
