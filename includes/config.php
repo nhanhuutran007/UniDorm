@@ -7,27 +7,23 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 
 // ====== BASE_URL AUTO DETECTION ======
 if (!defined('BASE_URL')) {
-    // Tự động nhận diện BASE_URL
-    $baseUrl = '';
+    // Tự động nhận diện BASE_URL dựa trên môi trường
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
     
-    // Nếu đang chạy trên localhost (XAMPP)
-    if (isset($_SERVER['HTTP_HOST']) && ($_SERVER['HTTP_HOST'] === 'localhost' || $_SERVER['HTTP_HOST'] === '127.0.0.1')) {
-        $docRoot = rtrim(str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']), '/');
-        $projectRoot = str_replace('\\', '/', dirname(__DIR__));
-        $baseUrl = str_replace($docRoot, '', $projectRoot);
+    // Phát hiện môi trường
+    $isLocalhost = in_array($host, ['localhost', '127.0.0.1', 'localhost:8080', 'localhost:80']);
+    
+    if ($isLocalhost) {
+        // LOCALHOST: Tự động tìm đường dẫn thư mục project bằng cách so sánh DOCUMENT_ROOT và thư mục gốc của project
+        $docRoot = str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']);
+        $projRoot = str_replace('\\', '/', dirname(__DIR__));
+        $baseUrl = rtrim(str_replace($docRoot, '', $projRoot), '/');
     } else {
-        // Khi deploy lên hosting/cPanel và dùng .htaccess trỏ domain vào thư mục
-        // thì BASE_URL phải là rỗng để domain chính hiển thị trực tiếp.
-        $baseUrl = ''; 
+        // HOSTING: Domain trỏ thẳng vào thư mục UniDorm qua .htaccess redirect
+        // BASE_URL = rỗng (domain.com hiển thị trực tiếp)
+        $baseUrl = '';
     }
-    
-    // Đảm bảo có dấu '/' ở đầu nếu không rỗng
-    if (!empty($baseUrl) && $baseUrl[0] !== '/') {
-        $baseUrl = '/' . $baseUrl;
-    }
-    
-    // Đảm bảo không có dấu '/' ở cuối
-    $baseUrl = rtrim($baseUrl, '/');
     
     define('BASE_URL', $baseUrl);
 }

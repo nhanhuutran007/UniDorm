@@ -44,13 +44,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$user) {
             $error = 'MSSV/tên đăng nhập không tồn tại trong hệ thống.';
         } elseif ($user['status'] === 'pending') {
-            $error = 'Tài khoản chưa được kích hoạt. Kiểm tra email sinh viên để đặt mật khẩu.
-                      <a href="register.php" class="alert-link">Đăng ký lại</a>';
+            $error = 'Tài khoản chưa được kích hoạt. Kiểm tra email sinh viên để đặt mật khẩu.';
         } elseif (!in_array($user['status'], ['active'])) {
             $error = 'Tài khoản đã bị khóa hoặc vô hiệu hóa. Liên hệ Ban quản lý.';
         } else {
             // Kiểm tra mật khẩu từ auth_accounts
-            $authStmt = $conn->prepare("SELECT password, is_active FROM auth_accounts WHERE user_id = ?");
+            $authStmt = $conn->prepare("SELECT password, is_active, must_change_password FROM auth_accounts WHERE user_id = ?");
             $authStmt->bind_param('i', $user['user_id']);
             $authStmt->execute();
             $auth = $authStmt->get_result()->fetch_assoc();
@@ -72,6 +71,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['last_activity']  = time();
 
                 // Redirect theo role
+                if ($auth['must_change_password'] == 1) {
+                    header('Location: ' . BASE_URL . '/views/auth/force_change_password.php');
+                    exit;
+                }
+
                 header('Location: ' . BASE_URL . '/dashboard');
                 exit;
             }
@@ -509,8 +513,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </button>
             
             <!-- Links -->
-            <div class="links-wrapper">
-                <a href="register.php" class="link">Chưa có tài khoản?</a>
+            <div class="links-wrapper" style="justify-content: center;">
                 <a href="forgot_password.php" class="link">Quên mật khẩu?</a>
             </div>
         </form>
@@ -556,17 +559,14 @@ window.addEventListener('load', function() {
     if (!title || !card) return;
     
     // Intercept navigation for continuous slide
-    const links = document.querySelectorAll('a[href*="register.php"], a[href*="forgot_password.php"]');
+    const links = document.querySelectorAll('a[href*="forgot_password.php"]');
     links.forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
             const targetUrl = this.href;
-            const isRegister = targetUrl.includes('register.php');
             
             // Start background transition immediately
-            const newBgImage = isRegister 
-                ? "url('../../assets/img/ktx-layout-1_0.png')" 
-                : "url('../../assets/img/ktx-layout-1_0.png')";
+            const newBgImage = "url('../../assets/img/ktx-layout-1_0.png')";
             
             document.body.style.transition = 'background-image 0.6s ease';
             document.body.style.backgroundImage = newBgImage;

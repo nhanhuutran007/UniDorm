@@ -637,7 +637,7 @@ document.querySelectorAll('form').forEach(f => {
 document.addEventListener('DOMContentLoaded', function() {
     document.body.style.opacity = '1';
     
-    const links = document.querySelectorAll('a[href*="login.php"], a[href*="register.php"]');
+    const links = document.querySelectorAll('a[href*="login.php"]');
     links.forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
