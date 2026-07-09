@@ -31,7 +31,7 @@ if ($token) {
 }
 
 if (!$token || !$tokenUser) {
-    $error = 'Liên kết không hợp lệ hoặc đã hết hạn. Vui lòng <a href="/UniDorm/views/auth/register.php">đăng ký lại</a>.';
+    $error = 'Liên kết không hợp lệ hoặc đã hết hạn. Vui lòng liên hệ BQL Ký túc xá để được cấp lại.';
 }
 
 // Xử lý POST
@@ -129,7 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $tokenUser) {
         <div><?php echo $error; ?></div>
     </div>
     <div class="text-center mt-3">
-        <a href="/UniDorm/views/auth/register.php" class="btn btn-outline-primary rounded-3 btn-sm">Đăng ký lại</a>
+        <a href="/UniDorm/views/auth/login.php" class="btn btn-outline-primary rounded-3 btn-sm">Quay lại trang đăng nhập</a>
     </div>
 
     <?php else: ?>
