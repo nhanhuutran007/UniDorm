@@ -15,7 +15,7 @@ require_once __DIR__ . '/../../includes/db.php';
 $stats = [];
 // Sinh viên
 $stats['students_total']   = (int)$conn->query("SELECT COUNT(*) as c FROM users WHERE (role='student' OR (role='admin' AND student_code IS NOT NULL AND student_code != 'admin'))")->fetch_assoc()['c'];
-$stats['students_active']  = (int)$conn->query("SELECT COUNT(*) as c FROM users WHERE (role='student' OR (role='admin' AND student_code IS NOT NULL AND student_code != 'admin')) AND status='active'")->fetch_assoc()['c'];
+$stats['students_active']  = (int)$conn->query("SELECT COUNT(*) as c FROM users WHERE (role='student' OR (role='admin' AND student_code IS NOT NULL AND student_code != 'admin')) AND status IN ('active', 'pending')")->fetch_assoc()['c'];
 $stats['students_pending'] = (int)$conn->query("SELECT COUNT(*) as c FROM users WHERE (role='student' OR (role='admin' AND student_code IS NOT NULL AND student_code != 'admin')) AND status='pending'")->fetch_assoc()['c'];
 // Phòng
 $stats['rooms_total']   = (int)$conn->query("SELECT COUNT(*) as c FROM rooms")->fetch_assoc()['c'];
@@ -36,7 +36,7 @@ $floorOccupancy = $conn->query("
             JOIN rooms r2 ON bd.room_id = r2.id 
             WHERE r2.floor_id = f.id 
               AND (u.role = 'student' OR (u.role = 'admin' AND u.student_code IS NOT NULL AND u.student_code != 'admin')) 
-              AND u.status='active') as students,
+              AND u.status IN ('active', 'pending')) as students,
            (SELECT SUM(r3.max_capacity) 
             FROM rooms r3 
             WHERE r3.floor_id = f.id) as capacity

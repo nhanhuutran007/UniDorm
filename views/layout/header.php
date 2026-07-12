@@ -63,8 +63,8 @@
         <!-- Cài đặt (chỉ hiển thị với Admin) -->
         <?php if (isset($userRole) && $userRole === 'admin'): ?>
         <li class="nav-item">
-            <a href="<?php echo BASE_URL; ?>/settings" class="nav-link header-icon-btn" title="Cài đặt hệ thống">
-                <i class="bi bi-gear fs-5"></i>
+            <a href="javascript:void(0);" class="nav-link header-icon-btn" title="Xóa toàn bộ sinh viên" data-bs-toggle="modal" data-bs-target="#deleteAllStudentsModal">
+                <i class="bi bi-gear fs-5 text-danger"></i>
             </a>
         </li>
         <?php endif; ?>
@@ -180,3 +180,77 @@ function markAllNotifRead() {
     });
 }
 </script>
+
+<?php if (isset($userRole) && $userRole === 'admin'): ?>
+<!-- Modal Xóa Toàn Bộ Sinh Viên -->
+<div class="modal fade" id="deleteAllStudentsModal" tabindex="-1" aria-labelledby="deleteAllStudentsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-danger text-white border-0">
+                <h5 class="modal-title" id="deleteAllStudentsModalLabel">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i> Cảnh Báo Nguy Hiểm
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="deleteAllStudentsForm">
+                <div class="modal-body p-4">
+                    <p class="text-danger fw-bold">Hành động này sẽ XÓA TOÀN BỘ dữ liệu sinh viên khỏi hệ thống!</p>
+                    <p class="small text-muted mb-4">Bao gồm toàn bộ danh sách sinh viên, tài khoản đăng nhập, tin nhắn, thông báo, và các báo cáo liên quan. Dữ liệu <strong class="text-dark">không thể khôi phục</strong> sau khi xóa.</p>
+                    
+                    <div class="mb-3">
+                        <label for="admin_password" class="form-label fw-semibold">Xác nhận mật khẩu Admin gốc <span class="text-danger">*</span></label>
+                        <input type="password" class="form-control" id="admin_password" name="admin_password" required placeholder="Nhập mật khẩu của bạn để xác nhận">
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                    <button type="submit" class="btn btn-danger" id="btnConfirmDeleteAll">
+                        <i class="bi bi-trash"></i> Đồng ý xóa toàn bộ
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('deleteAllStudentsForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnConfirmDeleteAll');
+    const password = document.getElementById('admin_password').value;
+    
+    if(!password) {
+        alert('Lỗi: Vui lòng nhập mật khẩu xác nhận');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...';
+
+    fetch('<?php echo BASE_URL; ?>/api/delete_all_students.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: password })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('Thành công! Toàn bộ sinh viên và tài khoản liên quan đã được xóa.');
+            const modal = bootstrap.Modal.getInstance(document.getElementById('deleteAllStudentsModal'));
+            if (modal) modal.hide();
+            window.location.reload();
+        } else {
+            alert('Lỗi: ' + (data.message || 'Có lỗi xảy ra'));
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-trash"></i> Đồng ý xóa toàn bộ';
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert('Lỗi: Không thể kết nối đến máy chủ');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-trash"></i> Đồng ý xóa toàn bộ';
+    });
+});
+</script>
+<?php endif; ?>
