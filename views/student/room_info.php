@@ -12,6 +12,12 @@ ob_start();
 
 require_once __DIR__ . '/../../includes/db.php';
 
+// Lấy thông tin user
+require_once __DIR__ . '/../../app/models/UserModel.php';
+$userModel = new UserModel($conn);
+$userId = $_SESSION['user_id'] ?? 0;
+$userData = $userModel->getUserById($userId);
+
 require_once __DIR__ . '/../../app/models/RoomModel.php';
 require_once __DIR__ . '/../../app/models/BedModel.php';
 
@@ -30,7 +36,7 @@ if ($myRoom) {
                b.bed_label
         FROM users u
         JOIN beds b ON u.bed_id = b.id
-        WHERE b.room_id = ? AND u.user_id != ? AND u.status = 'active'
+        WHERE b.room_id = ? AND u.user_id != ? AND u.status IN ('active', 'pending')
         ORDER BY b.bed_label ASC
     ");
     $rmStmt->bind_param('ii', $myRoom['id'], $userId);
@@ -133,6 +139,7 @@ if ($myRoom) {
                 <div class="px-4 pb-3 pt-2">
                     <a href="<?php echo BASE_URL; ?>/report_device" class="btn btn-sm btn-outline-danger w-100">
                         <i class="bi bi-exclamation-triangle me-1"></i>Báo hỏng thiết bị
+
                     </a>
                 </div>
             </div>
@@ -140,18 +147,13 @@ if ($myRoom) {
     </div>
 
     <!-- Danh sách bạn cùng phòng -->
+    <?php if (!empty($roommates)): ?>
     <div class="col-lg-8">
         <div class="card border-0 shadow-sm" style="border-radius:14px;">
             <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
                 <h6 class="fw-bold mb-0"><i class="bi bi-people-fill text-success me-2"></i>Bạn cùng phòng</h6>
             </div>
             <div class="card-body p-0">
-                <?php if (empty($roommates)): ?>
-                <div class="text-center py-5 text-muted">
-                    <i class="bi bi-person-x fs-2 d-block mb-2"></i>
-                    <small>Phòng hiện chưa có bạn cùng phòng khác.</small>
-                </div>
-                <?php else: ?>
 
                 <!-- Sơ đồ giường -->
                 <div class="px-4 pt-4 pb-2">
@@ -223,10 +225,10 @@ if ($myRoom) {
                         </tbody>
                     </table>
                 </div>
-                <?php endif; ?>
             </div>
         </div>
     </div>
+    <?php endif; ?>
 </div>
 <?php endif; ?>
 

@@ -12,6 +12,12 @@ ob_start();
 
 require_once __DIR__ . '/../../includes/db.php';
 
+// Lấy thông tin user
+require_once __DIR__ . '/../../app/models/UserModel.php';
+$userModel = new UserModel($conn);
+$userId = $_SESSION['user_id'] ?? 0;
+$userData = $userModel->getUserById($userId);
+
 require_once __DIR__ . '/../../app/models/RoomModel.php';
 require_once __DIR__ . '/../../app/models/BedModel.php';
 
