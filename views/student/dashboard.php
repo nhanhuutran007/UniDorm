@@ -12,6 +12,12 @@ require_once __DIR__ . '/../../includes/db.php';
 ?>
 
 <?php
+// Lấy thông tin user
+require_once __DIR__ . '/../../app/models/UserModel.php';
+$userModel = new UserModel($conn);
+$userId = $_SESSION['user_id'] ?? 0;
+$userData = $userModel->getUserById($userId);
+
 // Lấy thông tin phòng của sinh viên
 require_once __DIR__ . '/../../app/models/RoomModel.php';
 require_once __DIR__ . '/../../app/models/BedModel.php';
@@ -21,6 +27,21 @@ $bedModel  = new BedModel($conn);
 
 $myBed  = $userData['bed_id'] ? $bedModel->getBedById($userData['bed_id']) : null;
 $myRoom = $myBed ? $roomModel->getRoomById($myBed['room_id']) : null;
+
+// Lấy danh sách bạn cùng phòng
+$roommates = [];
+if ($myRoom) {
+    $rmStmt = $conn->prepare("
+        SELECT u.fullname, u.student_code, b.bed_label
+        FROM users u
+        JOIN beds b ON u.bed_id = b.id
+        WHERE b.room_id = ? AND u.user_id != ? AND u.status IN ('active', 'pending')
+        ORDER BY b.bed_label ASC
+    ");
+    $rmStmt->bind_param('ii', $myRoom['id'], $userId);
+    $rmStmt->execute();
+    $roommates = $rmStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+}
 
 // Thông báo chưa đọc
 $stmt = $conn->prepare("SELECT COUNT(*) as cnt FROM notifications WHERE (target_user_id = ? OR target_user_id IS NULL) AND is_read = 0");
@@ -40,7 +61,7 @@ $myReportsCount = $stmt2->get_result()->fetch_assoc()['cnt'] ?? 0;
     <div class="card-body p-4 d-flex align-items-center justify-content-between">
         <div class="text-white">
             <p class="mb-1 opacity-75 small">Xin chào 👋</p>
-            <h4 class="fw-bold mb-1"><?php echo htmlspecialchars($userData['fullname']); ?></h4>
+            <h4 class="fw-bold mb-1 text-white"><?php echo htmlspecialchars($userData['fullname']); ?></h4>
             <p class="mb-0 opacity-75 small">MSSV: <strong><?php echo htmlspecialchars($userData['student_code'] ?? '—'); ?></strong></p>
         </div>
         <div class="text-white text-end d-none d-md-block">
@@ -216,6 +237,45 @@ $myReportsCount = $stmt2->get_result()->fetch_assoc()['cnt'] ?? 0;
         </div>
     </div>
 </div>
+
+<?php if ($myRoom): ?>
+<!-- Roommates -->
+<div class="row mt-2 mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm" style="border-radius:12px;">
+            <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
+                <h6 class="fw-bold text-dark mb-0"><i class="bi bi-people-fill me-2 text-success"></i>Bạn cùng phòng</h6>
+            </div>
+            <div class="card-body px-4 pb-4 mt-3">
+                <?php if (empty($roommates)): ?>
+                <p class="text-muted small mb-0"><i class="bi bi-info-circle me-1"></i>Phòng hiện chưa có bạn cùng phòng khác.</p>
+                <?php else: ?>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="text-muted small py-2 rounded-start">Giường</th>
+                                <th class="text-muted small py-2">Họ tên</th>
+                                <th class="text-muted small py-2 rounded-end">MSSV</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($roommates as $rm): ?>
+                            <tr>
+                                <td><span class="badge bg-light text-dark border"><i class="bi bi-hospital me-1"></i><?php echo htmlspecialchars($rm['bed_label']); ?></span></td>
+                                <td class="fw-semibold text-dark"><?php echo htmlspecialchars($rm['fullname']); ?></td>
+                                <td><?php echo htmlspecialchars($rm['student_code']); ?></td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
 
 <?php
 $content = ob_get_clean();
