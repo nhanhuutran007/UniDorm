@@ -198,7 +198,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                         // Xác định phòng từ cột Phòng (Chuẩn hóa thành Chữ Hoa)
                         $roomCodeRaw  = isset($colMap['room_code']) ? trim($data[$colMap['room_code']] ?? '') : '';
                         $roomCode     = strtoupper($roomCodeRaw);
-                        $bedLabel     = isset($colMap['bed_label']) ? trim($data[$colMap['bed_label']] ?? '') : '';
+                        $bedLabelRaw  = isset($colMap['bed_label']) ? trim($data[$colMap['bed_label']] ?? '') : '';
+                        $bedLabel     = $bedLabelRaw;
+                        if ($bedLabel !== '' && is_numeric($bedLabel)) {
+                            $bedLabel = 'G' . $bedLabel;
+                        } else if ($bedLabel !== '' && preg_match('/^G\d+$/i', $bedLabel)) {
+                            $bedLabel = strtoupper($bedLabel);
+                        }
                         $bedId        = null;
                         $assignedBed  = '—';
 
@@ -231,8 +237,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                         $phonePers    = isset($colMap['phone_personal']) ? trim($data[$colMap['phone_personal']] ?? '') : null;
                         $phoneFamily  = isset($colMap['phone_family'])   ? trim($data[$colMap['phone_family']] ?? '')   : null;
                         
-                        if ($phonePers !== null) $phonePers = ltrim($phonePers, "'");
-                        if ($phoneFamily !== null) $phoneFamily = ltrim($phoneFamily, "'");
+                        if ($phonePers !== null && $phonePers !== '') {
+                            $phonePers = ltrim($phonePers, "'");
+                            $phonePers = preg_replace('/[^0-9]/', '', $phonePers);
+                            if (strlen($phonePers) === 9 && !str_starts_with($phonePers, '0')) {
+                                $phonePers = '0' . $phonePers;
+                            }
+                        }
+                        if ($phoneFamily !== null && $phoneFamily !== '') {
+                            $phoneFamily = ltrim($phoneFamily, "'");
+                            $phoneFamily = preg_replace('/[^0-9]/', '', $phoneFamily);
+                            if (strlen($phoneFamily) === 9 && !str_starts_with($phoneFamily, '0')) {
+                                $phoneFamily = '0' . $phoneFamily;
+                            }
+                        }
 
                         $hometown     = isset($colMap['hometown'])       ? trim($data[$colMap['hometown']] ?? '')       : null;
                         $isLeader     = 0;
