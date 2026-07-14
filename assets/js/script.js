@@ -10,20 +10,33 @@ $(document).ready(function () {
     }
   });
   $("body").append('<div class="sidebar-overlay"></div>');
-  $(document).on("click", "#mobile_btn", function () {
+
+  // Mobile sidebar toggle
+  $(document).on("click", "#mobile_btn", function (e) {
+    e.preventDefault();
     $wrapper.toggleClass("slide-nav");
     $(".sidebar-overlay").toggleClass("opened");
-    $("html").addClass("menu-opened");
     $(this).toggleClass("active");
-    $("#task_window").removeClass("opened");
+    $("body").toggleClass("sidebar-open");
     return false;
   });
+
+  // Close sidebar on overlay click
   $(".sidebar-overlay").on("click", function () {
-    $("html").removeClass("menu-opened");
-    $(this).removeClass("opened");
     $wrapper.removeClass("slide-nav");
-    $(".sidebar-overlay").removeClass("opened");
-    $("#task_window").removeClass("opened");
+    $(this).removeClass("opened");
+    $("#mobile_btn").removeClass("active");
+    $("body").removeClass("sidebar-open");
+  });
+
+  // Auto-close sidebar on menu link click (mobile only)
+  $(document).on("click", ".sidebar-menu a", function () {
+    if ($(window).width() <= 991) {
+      $wrapper.removeClass("slide-nav");
+      $(".sidebar-overlay").removeClass("opened");
+      $("#mobile_btn").removeClass("active");
+      $("body").removeClass("sidebar-open");
+    }
   });
   $(document).on("click", ".hideset", function () {
     $(this).parent().parent().parent().hide();
