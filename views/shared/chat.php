@@ -286,12 +286,28 @@ ob_start();
 
 /* Responsive */
 @media (max-width: 768px) {
-    .chat-sidebar { position: fixed; z-index: 100; left: 0; top: 0; bottom: 0; transform: translateX(-100%); transition: transform .3s; width: 280px; }
+    .chat-wrapper { height: calc(100vh - 160px); }
+    .chat-sidebar { position: fixed; z-index: 1050; left: 0; top: 60px; bottom: 0; transform: translateX(-100%); transition: transform .3s ease; width: 280px; box-shadow: 4px 0 20px rgba(0,0,0,.15); }
     .chat-sidebar.open { transform: translateX(0); }
     .chat-back-btn { display: flex !important; }
+    .chat-main-header { padding: 10px 12px; }
+    .chat-messages-area { padding: 12px; }
+    .chat-input-area { padding: 10px 12px; }
+    .chat-contact-item { padding: 10px 12px; }
 }
+.chat-sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 1040;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+}
+.chat-sidebar-overlay.open { display: block; }
 </style>
 
+<div class="chat-sidebar-overlay" id="chatSidebarOverlay" onclick="closeChatSidebar()"></div>
 <div class="chat-wrapper">
 
     <!-- ===== LEFT: Contacts ===== -->
@@ -353,6 +369,9 @@ ob_start();
         <div class="chat-main-header" id="chatHeader">
             <button class="btn btn-sm btn-outline-secondary d-none chat-back-btn" id="chatBackBtn" onclick="closeChatPanel()">
                 <i class="bi bi-chevron-left"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-primary d-md-none me-2" onclick="openChatSidebar()" title="Danh sách hội thoại">
+                <i class="bi bi-list fs-5"></i>
             </button>
             <div id="chatHeaderAvatar" class="flex-shrink-0" style="display:none;">
                 <img id="chatReceiverAvatar" src="<?php echo BASE_URL; ?>/assets/images/default.jpg"
@@ -445,12 +464,18 @@ function selectContact(uid, name, avatar, role) {
     const newUid = parseInt(uid);
     
     if (currentReceiverId !== newUid) {
-        lastMsgCount = -1; // Reset để ép buộc vẽ lại DOM khi chuyển user
+        lastMsgCount = -1;
         document.getElementById('chatMessages').innerHTML = '<div class="text-center my-5 text-muted"><div class="spinner-border spinner-border-sm" role="status"></div> Đang tải...</div>';
     }
 
     currentReceiverId   = newUid;
     currentReceiverName = name;
+
+    // Close sidebar on mobile
+    if (window.innerWidth <= 768) {
+        document.getElementById('chatSidebar').classList.remove('open');
+        document.getElementById('chatSidebarOverlay').classList.remove('open');
+    }
 
     // Update header
     document.getElementById('chatPlaceholderText').style.display     = 'none';
@@ -609,7 +634,12 @@ function autoResize(el) {
 }
 
 function closeChatPanel() {
-    document.getElementById('chatSidebar').classList.toggle('open');
+    document.getElementById('chatSidebar').classList.remove('open');
+    document.getElementById('chatSidebarOverlay').classList.remove('open');
+}
+function openChatSidebar() {
+    document.getElementById('chatSidebar').classList.add('open');
+    document.getElementById('chatSidebarOverlay').classList.add('open');
 }
 </script>
 

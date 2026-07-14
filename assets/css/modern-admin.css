@@ -216,13 +216,13 @@ h1, h2, h3, h4, h5, h6 {
 /* Mobile Enhancements (<= 768px) */
 @media (max-width: 767.98px) {
   .page-wrapper {
-    padding: 1rem 0.5rem !important;
+    padding: 0.75rem 0.5rem !important;
   }
   .modern-card {
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
   }
   .modern-table thead {
-    display: none; /* Consider card-based layout for very small screens */
+    display: none;
   }
   .modern-table tbody td {
     display: block;
@@ -245,6 +245,23 @@ h1, h2, h3, h4, h5, h6 {
     font-weight: 600;
     color: #64748b;
     margin-right: 0.5rem;
+  }
+  /* Header adjustments */
+  .header .user-menu {
+    gap: 0.25rem !important;
+    padding-right: 0.5rem !important;
+  }
+  .header-icon-btn {
+    width: 34px !important;
+    height: 34px !important;
+  }
+  .avatar-wrap {
+    width: 30px !important;
+    height: 30px !important;
+  }
+  .avatar-wrap img {
+    width: 30px !important;
+    height: 30px !important;
   }
 }
 
@@ -442,6 +459,77 @@ body.mini-sidebar #toggle_btn {
     margin-left: 0;
     width: 260px;
     background: #ffffff !important;
+    z-index: 1050;
+  }
+  .sidebar-overlay {
+    display: none;
+    height: 100%;
+    width: 100%;
+    z-index: 1040;
+    background-color: rgba(0, 0, 0, 0.5);
+    position: fixed;
+    top: 0;
+    left: 0;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    transition: opacity 0.3s ease;
+  }
+  .sidebar-overlay.opened {
+    display: block;
+  }
+  .page-wrapper {
+    margin-left: 0 !important;
+    padding: 1rem 0.75rem !important;
+  }
+  .content.container-fluid {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  .page-header h3 {
+    font-size: 1.25rem;
+  }
+  .breadcrumb {
+    font-size: 0.75rem;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+  }
+  .card {
+    border-radius: 12px !important;
+  }
+  .card-body {
+    padding: 1rem !important;
+  }
+  .card-body.p-4 {
+    padding: 0.85rem !important;
+  }
+  .card-header {
+    padding: 0.75rem 1rem !important;
+  }
+  .row.g-4 {
+    --bs-gutter-x: 0.75rem;
+    --bs-gutter-y: 0.75rem;
+  }
+  .row.g-3 {
+    --bs-gutter-x: 0.5rem;
+    --bs-gutter-y: 0.5rem;
+  }
+  h3.page-title {
+    font-size: 1.15rem;
+  }
+  .btn {
+    font-size: 0.8rem;
+    padding: 0.35rem 0.65rem;
+  }
+  .table td, .table th {
+    padding: 0.5rem 0.4rem;
+    font-size: 0.78rem;
+    white-space: nowrap;
+  }
+  .badge {
+    font-size: 0.65rem;
   }
 }
 

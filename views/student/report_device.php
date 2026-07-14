@@ -111,7 +111,7 @@ $statusMap  = ['pending' => ['Đang chờ xử lý', 'warning'], 'in_progress' =
                 <form method="POST" autocomplete="off">
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Thiết bị liên quan <span class="text-muted fw-normal">(tuỳ chọn)</span></label>
-                        <select name="device_id" class="form-select">
+                        <select name="device_id" class="form-select" disabled>
                             <option value="">-- Chọn thiết bị (nếu có) --</option>
                             <?php foreach ($devices as $dev): ?>
                             <option value="<?php echo $dev['id']; ?>" <?php echo $dev['status'] === 'broken' ? 'style="color:red;"' : ''; ?>>
@@ -127,18 +127,19 @@ $statusMap  = ['pending' => ['Đang chờ xử lý', 'warning'], 'in_progress' =
                         <label class="form-label fw-semibold">Tiêu đề sự cố <span class="text-danger">*</span></label>
                         <input type="text" name="title" class="form-control"
                                placeholder="VD: Bóng đèn toilet bị cháy, máy lạnh không chạy..."
-                               value="<?php echo htmlspecialchars($_POST['title'] ?? ''); ?>" required>
+                               value="" disabled>
                     </div>
 
                     <div class="mb-4">
                         <label class="form-label fw-semibold">Mô tả chi tiết</label>
                         <textarea name="description" class="form-control" rows="4"
-                                  placeholder="Mô tả thêm về tình trạng hỏng hóc, thời gian xảy ra..."><?php echo htmlspecialchars($_POST['description'] ?? ''); ?></textarea>
+                                  placeholder="Mô tả thêm về tình trạng hỏng hóc, thời gian xảy ra..." disabled></textarea>
                     </div>
 
-                    <button type="submit" class="btn btn-danger w-100 d-flex align-items-center justify-content-center gap-2">
-                        <i class="bi bi-send-fill"></i> Gửi báo cáo
-                    </button>
+                    <div class="alert alert-secondary d-flex align-items-center gap-2 mb-0" style="border-radius:10px;">
+                        <i class="bi bi-info-circle-fill"></i>
+                        <span>Chức năng gửi báo cáo đang được phát triển. Vui lòng liên hệ BQL để được hỗ trợ.</span>
+                    </div>
                 </form>
                 <?php endif; ?>
             </div>

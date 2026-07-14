@@ -69,17 +69,22 @@ $emptyRooms = $conn->query("
 ?>
 
 <!-- Nút xuất PDF -->
-<div class="d-flex justify-content-end mb-3">
-    <div class="dropdown">
-        <button class="btn btn-danger dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-radius:10px; font-size:14px;">
-            <i class="bi bi-file-earmark-pdf-fill me-1"></i> Xuất PDF
-        </button>
-        <ul class="dropdown-menu dropdown-menu-end" style="border-radius:10px; min-width:220px;">
-            <li><a class="dropdown-item d-flex align-items-center gap-2" href="<?php echo BASE_URL; ?>/api/export_pdf.php?type=students" target="_blank"><i class="bi bi-people-fill text-primary"></i> Danh sách sinh viên</a></li>
-            <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item d-flex align-items-center gap-2" href="<?php echo BASE_URL; ?>/api/export_pdf.php?type=report" target="_blank"><i class="bi bi-bar-chart-fill text-success"></i> Báo cáo thống kê</a></li>
-        </ul>
+<div class="d-flex justify-content-end align-items-center gap-2 mb-3" id="pdfExportArea">
+    <div id="pdfSubBtns" class="d-none d-flex gap-2">
+        <a href="<?php echo BASE_URL; ?>/api/export_pdf.php?type=students" target="_blank"
+           class="btn btn-primary" style="border-radius:10px; font-size:13px;">
+            <i class="bi bi-people-fill me-1"></i> Xuất DSSV
+        </a>
+        <a href="<?php echo BASE_URL; ?>/api/export_pdf.php?type=report" target="_blank"
+           class="btn btn-success" style="border-radius:10px; font-size:13px;">
+            <i class="bi bi-bar-chart-fill me-1"></i> Xuất BC
+        </a>
     </div>
+    <button class="btn btn-danger" id="btnTogglePDF" type="button"
+            onclick="document.getElementById('pdfSubBtns').classList.toggle('d-none'); this.classList.toggle('active');"
+            style="border-radius:10px; font-size:14px;">
+        <i class="bi bi-file-earmark-pdf-fill me-1"></i> Xuất PDF
+    </button>
 </div>
 
 <!-- Row 1: Key metrics -->
