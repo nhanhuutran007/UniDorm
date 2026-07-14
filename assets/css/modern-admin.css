@@ -531,7 +531,7 @@ body.mini-sidebar #toggle_btn {
   .header .user-menu {
     display: flex !important;
     align-items: center !important;
-    gap: 4px !important;
+    gap: 6px !important;
     padding-right: 4px !important;
     margin-left: auto !important;
     flex-shrink: 0;
@@ -543,40 +543,51 @@ body.mini-sidebar #toggle_btn {
     display: flex !important;
     align-items: center !important;
     padding: 0 !important;
+    height: 36px !important;
   }
   .header-icon-btn {
-    width: 34px !important;
-    height: 34px !important;
+    width: 36px !important;
+    height: 36px !important;
     font-size: 0.85rem;
   }
-  /* Avatar: keep inline 36x36, just ensure vertical alignment */
+  /* Avatar: same visual box as icon-btn */
   .header .user-menu .main-drop {
     display: flex !important;
     align-items: center !important;
+    height: 36px !important;
   }
   .header .user-menu .main-drop .dropdown-toggle {
     padding: 0 !important;
     margin: 0 !important;
     display: flex !important;
     align-items: center !important;
+    justify-content: center !important;
+    width: 36px !important;
     height: 36px !important;
+    border-radius: 50% !important;
+    background: var(--surface-color) !important;
+    border: 1px solid var(--glass-border) !important;
+    box-shadow: var(--shadow-sm) !important;
+    overflow: hidden;
+    position: relative;
   }
   .header .user-menu .main-drop .dropdown-toggle::after {
     display: none !important;
   }
   .header .user-menu .main-drop .avatar-wrap {
-    width: 36px !important;
-    height: 36px !important;
+    width: 30px !important;
+    height: 30px !important;
     flex-shrink: 0;
+    line-height: 1;
   }
   .header .user-menu .main-drop .avatar-wrap img {
-    width: 36px !important;
-    height: 36px !important;
+    width: 30px !important;
+    height: 30px !important;
   }
   .header .user-menu .main-drop .avatar-wrap .online-dot {
     width: 8px !important;
     height: 8px !important;
-    transform: translate(20%, 20%) !important;
+    transform: translate(15%, 15%) !important;
   }
 
   /* ---- Notification dropdown: fit mobile width ---- */
