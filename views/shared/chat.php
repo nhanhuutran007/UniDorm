@@ -287,7 +287,7 @@ ob_start();
 /* Responsive */
 @media (max-width: 768px) {
     .chat-wrapper { height: calc(100vh - 160px); border-radius: 0; }
-    .chat-sidebar { position: fixed; z-index: 1050; left: 0; top: 0; bottom: 0; transform: translateX(-100%); transition: transform .3s ease; width: 280px; box-shadow: 4px 0 20px rgba(0,0,0,.15); }
+    .chat-sidebar { position: fixed; z-index: 1045; left: 0; top: 0; bottom: 0; transform: translateX(-100%); transition: transform .3s ease; width: 280px; box-shadow: 4px 0 20px rgba(0,0,0,.15); }
     .chat-sidebar.open { transform: translateX(0); }
     .chat-back-btn { display: flex !important; }
     .chat-main-header { padding: 10px 12px; }
