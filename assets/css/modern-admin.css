@@ -549,42 +549,33 @@ body.mini-sidebar #toggle_btn {
     height: 34px !important;
     font-size: 0.85rem;
   }
-  /* Avatar: force same box as icon-btn */
+  /* Avatar: keep inline 36x36, just ensure vertical alignment */
   .header .user-menu .main-drop {
     display: flex !important;
     align-items: center !important;
-    padding: 0 !important;
   }
   .header .user-menu .main-drop .dropdown-toggle {
     padding: 0 !important;
     margin: 0 !important;
     display: flex !important;
     align-items: center !important;
-    justify-content: center !important;
-    width: 34px !important;
-    height: 34px !important;
-    border-radius: 50% !important;
-    overflow: hidden;
+    height: 36px !important;
   }
-  /* Hide dropdown caret arrow */
   .header .user-menu .main-drop .dropdown-toggle::after {
     display: none !important;
   }
   .header .user-menu .main-drop .avatar-wrap {
-    width: 30px !important;
-    height: 30px !important;
+    width: 36px !important;
+    height: 36px !important;
     flex-shrink: 0;
-    position: relative;
   }
   .header .user-menu .main-drop .avatar-wrap img {
-    width: 30px !important;
-    height: 30px !important;
-    border-width: 1.5px !important;
+    width: 36px !important;
+    height: 36px !important;
   }
   .header .user-menu .main-drop .avatar-wrap .online-dot {
     width: 8px !important;
     height: 8px !important;
-    border-width: 1.5px !important;
     transform: translate(20%, 20%) !important;
   }
 
