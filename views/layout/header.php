@@ -81,7 +81,7 @@
                          class="rounded-circle object-fit-cover border border-2 border-light shadow-sm bg-white"
                          width="36" height="36"
                          onerror="if (this.src != '<?php echo BASE_URL; ?>/assets/images/default.jpg') this.src='<?php echo BASE_URL; ?>/assets/images/default.jpg';">
-                    <span class="position-absolute bottom-0 end-0 bg-success rounded-circle border border-2 border-white"
+                    <span class="online-dot position-absolute bottom-0 end-0 bg-success rounded-circle border border-2 border-white"
                           style="width:10px;height:10px; transform: translate(10%, 10%);"></span>
                 </div>
             </a>

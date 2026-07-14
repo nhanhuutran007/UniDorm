@@ -529,34 +529,49 @@ body.mini-sidebar #toggle_btn {
 
   /* ---- User menu: compact on mobile ---- */
   .header .user-menu {
-    display: flex !important; /* override style.css display:none at 575px */
-    gap: 0 !important;
-    padding-right: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    padding-right: 4px !important;
     margin-left: auto !important;
-    flex-shrink: 1;
-    min-width: 0;
+    flex-shrink: 0;
     float: none !important;
   }
   .header .user-menu .nav-item {
     margin-left: 0 !important;
     flex-shrink: 0;
+    display: flex !important;
+    align-items: center !important;
   }
   .header-icon-btn {
     width: 34px !important;
     height: 34px !important;
     font-size: 0.85rem;
   }
-  /* Avatar dropdown - keep visible */
+  /* Avatar: match icon-btn size and alignment */
+  .header .user-menu .main-drop {
+    display: flex !important;
+    align-items: center !important;
+  }
   .header .user-menu .main-drop .dropdown-toggle {
     padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    height: 34px !important;
   }
   .header .user-menu .main-drop .avatar-wrap {
-    width: 32px !important;
-    height: 32px !important;
+    width: 34px !important;
+    height: 34px !important;
+    flex-shrink: 0;
   }
   .header .user-menu .main-drop .avatar-wrap img {
-    width: 32px !important;
-    height: 32px !important;
+    width: 34px !important;
+    height: 34px !important;
+  }
+  .header .user-menu .main-drop .avatar-wrap .online-dot {
+    width: 8px !important;
+    height: 8px !important;
+    transform: translate(10%, 10%) !important;
   }
 
   /* ---- Notification dropdown: fit mobile width ---- */
@@ -680,12 +695,15 @@ body.mini-sidebar #toggle_btn {
     min-width: 240px !important;
   }
   .header .user-menu .main-drop .avatar-wrap {
-    width: 28px !important;
-    height: 28px !important;
+    width: 30px !important;
+    height: 30px !important;
   }
   .header .user-menu .main-drop .avatar-wrap img {
-    width: 28px !important;
-    height: 28px !important;
+    width: 30px !important;
+    height: 30px !important;
+  }
+  .header .user-menu .main-drop .dropdown-toggle {
+    height: 30px !important;
   }
   .header-icon-btn {
     width: 30px !important;
