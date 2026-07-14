@@ -265,6 +265,40 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+/* Extra small screens (< 400px) */
+@media (max-width: 399.98px) {
+  .page-wrapper {
+    padding: 0.5rem 0.35rem !important;
+  }
+  .row.g-3, .row.g-4 {
+    --bs-gutter-x: 0.35rem;
+    --bs-gutter-y: 0.35rem;
+  }
+  .card-body {
+    padding: 0.6rem !important;
+  }
+  .card-body.p-4, .card-body.p-3 {
+    padding: 0.5rem !important;
+  }
+  h3.page-title {
+    font-size: 1rem !important;
+  }
+  .btn {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.5rem;
+  }
+  .table td, .table th {
+    padding: 0.35rem 0.3rem;
+    font-size: 0.7rem;
+  }
+  .badge {
+    font-size: 0.6rem;
+  }
+  h4.fw-black {
+    font-size: 1rem !important;
+  }
+}
+
 /* Tablet & Smaller Desktop (768px - 1199px) */
 @media (min-width: 768px) and (max-width: 1199.98px) {
   .stat-icon-wrap {
@@ -459,23 +493,23 @@ body.mini-sidebar #toggle_btn {
     margin-left: 0;
     width: 260px;
     background: #ffffff !important;
-    z-index: 1050;
+    z-index: 1050 !important;
   }
   .sidebar-overlay {
-    display: none;
-    height: 100%;
-    width: 100%;
-    z-index: 1040;
-    background-color: rgba(0, 0, 0, 0.5);
-    position: fixed;
-    top: 0;
-    left: 0;
+    display: none !important;
+    height: 100% !important;
+    width: 100% !important;
+    z-index: 1040 !important;
+    background-color: rgba(0, 0, 0, 0.5) !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
     backdrop-filter: blur(2px);
     -webkit-backdrop-filter: blur(2px);
     transition: opacity 0.3s ease;
   }
   .sidebar-overlay.opened {
-    display: block;
+    display: block !important;
   }
   .page-wrapper {
     margin-left: 0 !important;
