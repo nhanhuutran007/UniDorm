@@ -70,7 +70,7 @@ if ($type === 'students') {
 
     // Lấy danh sách SV
     $students = $conn->query("
-        SELECT u.student_code, u.full_name, u.gender, u.dob, u.phone, u.hometown,
+        SELECT u.student_code, u.fullname, u.gender, u.date_of_birth, u.phone_personal, u.hometown,
                r.room_code, b.bed_label, u.status,
                u.role AS user_role
         FROM users u
@@ -118,10 +118,10 @@ if ($type === 'students') {
         $row = [
             ($i + 1),
             $s['student_code'] ?? '',
-            $s['full_name'] ?? '',
+            $s['fullname'] ?? '',
             $s['gender'] ?? '',
-            $s['dob'] ?? '',
-            $s['phone'] ?? '',
+            $s['date_of_birth'] ?? '',
+            $s['phone_personal'] ?? '',
             $s['hometown'] ?? '',
             $s['room_code'] ?? 'Chua phong',
         ];

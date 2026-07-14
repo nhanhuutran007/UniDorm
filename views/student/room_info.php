@@ -72,9 +72,7 @@ if ($myRoom) {
         <div class="card border-0 shadow-sm mb-4" style="border-radius:14px; overflow:hidden;">
             <div class="card-header border-0 p-4 text-white" style="background:linear-gradient(135deg,#1e3a5f,#2563eb);">
                 <div class="d-flex align-items-center gap-3">
-                    <div class="bg-white bg-opacity-20 rounded-3 p-3">
-                        <i class="bi bi-door-open-fill fs-3 text-white"></i>
-                    </div>
+                    <i class="bi bi-door-open-fill fs-2 text-white"></i>
                     <div>
                         <h3 class="fw-black mb-0 text-white"><?php echo htmlspecialchars($myRoom['room_code']); ?></h3>
                         <small class="opacity-75"><?php echo htmlspecialchars($myRoom['building_name']); ?> · Lầu <?php echo $myRoom['floor_number']; ?></small>
