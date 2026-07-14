@@ -529,16 +529,34 @@ body.mini-sidebar #toggle_btn {
 
   /* ---- User menu: compact on mobile ---- */
   .header .user-menu {
-    gap: 0.15rem !important;
-    padding-right: 0.25rem !important;
+    display: flex !important; /* override style.css display:none at 575px */
+    gap: 0 !important;
+    padding-right: 0 !important;
+    margin-left: auto !important;
+    flex-shrink: 1;
+    min-width: 0;
+    float: none !important;
   }
   .header .user-menu .nav-item {
-    margin-left: 2px !important;
+    margin-left: 0 !important;
+    flex-shrink: 0;
   }
   .header-icon-btn {
     width: 34px !important;
     height: 34px !important;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+  }
+  /* Avatar dropdown - keep visible */
+  .header .user-menu .main-drop .dropdown-toggle {
+    padding: 0 !important;
+  }
+  .header .user-menu .main-drop .avatar-wrap {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  .header .user-menu .main-drop .avatar-wrap img {
+    width: 32px !important;
+    height: 32px !important;
   }
 
   /* ---- Notification dropdown: fit mobile width ---- */
@@ -628,6 +646,9 @@ body.mini-sidebar #toggle_btn {
   .header {
     padding-left: 44px !important;
   }
+  .header .user-menu {
+    display: flex !important;
+  }
   .row.g-3, .row.g-4 {
     --bs-gutter-x: 0.35rem;
     --bs-gutter-y: 0.35rem;
@@ -657,6 +678,18 @@ body.mini-sidebar #toggle_btn {
   }
   .header .dropdown-menu {
     min-width: 240px !important;
+  }
+  .header .user-menu .main-drop .avatar-wrap {
+    width: 28px !important;
+    height: 28px !important;
+  }
+  .header .user-menu .main-drop .avatar-wrap img {
+    width: 28px !important;
+    height: 28px !important;
+  }
+  .header-icon-btn {
+    width: 30px !important;
+    height: 30px !important;
   }
 }
 
