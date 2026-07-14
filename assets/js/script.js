@@ -11,31 +11,59 @@ $(document).ready(function () {
   });
   $("body").append('<div class="sidebar-overlay"></div>');
 
+  // Helper: lock/unlock body scroll (iOS-safe)
+  var scrollPos = 0;
+  function lockBody() {
+    scrollPos = window.pageYOffset;
+    document.body.style.position = 'fixed';
+    document.body.style.top = '-' + scrollPos + 'px';
+    document.body.style.width = '100%';
+  }
+  function unlockBody() {
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.width = '';
+    window.scrollTo(0, scrollPos);
+  }
+
   // Mobile sidebar toggle
   $(document).on("click", "#mobile_btn", function (e) {
     e.preventDefault();
-    $wrapper.toggleClass("slide-nav");
-    $(".sidebar-overlay").toggleClass("opened");
-    $(this).toggleClass("active");
-    $("body").toggleClass("sidebar-open");
+    e.stopPropagation();
+    var isOpen = $wrapper.hasClass("slide-nav");
+    if (isOpen) {
+      closeSidebar();
+    } else {
+      openSidebar();
+    }
     return false;
   });
 
-  // Close sidebar on overlay click
-  $(".sidebar-overlay").on("click", function () {
+  function openSidebar() {
+    $wrapper.addClass("slide-nav");
+    $(".sidebar-overlay").addClass("opened");
+    $("#mobile_btn").addClass("active");
+    $("body").addClass("sidebar-open");
+    lockBody();
+  }
+
+  function closeSidebar() {
     $wrapper.removeClass("slide-nav");
-    $(this).removeClass("opened");
+    $(".sidebar-overlay").removeClass("opened");
     $("#mobile_btn").removeClass("active");
     $("body").removeClass("sidebar-open");
+    unlockBody();
+  }
+
+  // Close sidebar on overlay click
+  $(document).on("click", ".sidebar-overlay", function () {
+    closeSidebar();
   });
 
   // Auto-close sidebar on menu link click (mobile only)
   $(document).on("click", ".sidebar-menu a", function () {
     if ($(window).width() <= 991) {
-      $wrapper.removeClass("slide-nav");
-      $(".sidebar-overlay").removeClass("opened");
-      $("#mobile_btn").removeClass("active");
-      $("body").removeClass("sidebar-open");
+      closeSidebar();
     }
   });
   $(document).on("click", ".hideset", function () {
