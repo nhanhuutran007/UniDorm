@@ -68,6 +68,20 @@ $emptyRooms = $conn->query("
 ")->fetch_all(MYSQLI_ASSOC);
 ?>
 
+<!-- Nút xuất PDF -->
+<div class="d-flex justify-content-end mb-3">
+    <div class="dropdown">
+        <button class="btn btn-danger dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-radius:10px; font-size:14px;">
+            <i class="bi bi-file-earmark-pdf-fill me-1"></i> Xuất PDF
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end" style="border-radius:10px; min-width:220px;">
+            <li><a class="dropdown-item d-flex align-items-center gap-2" href="<?php echo BASE_URL; ?>/api/export_pdf.php?type=students" target="_blank"><i class="bi bi-people-fill text-primary"></i> Danh sách sinh viên</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item d-flex align-items-center gap-2" href="<?php echo BASE_URL; ?>/api/export_pdf.php?type=report" target="_blank"><i class="bi bi-bar-chart-fill text-success"></i> Báo cáo thống kê</a></li>
+        </ul>
+    </div>
+</div>
+
 <!-- Row 1: Key metrics -->
 <div class="row g-3 mb-4">
     <?php foreach ([
