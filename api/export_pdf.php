@@ -23,7 +23,16 @@ if (!in_array($type, ['students', 'report'])) {
 }
 
 // ─── Tạo PDF ─────────────────────────────────────────────────────────
-$pdf = new TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
+class UniDormPDF extends TCPDF {
+    public function Footer() {
+        $this->SetY(-15);
+        $this->SetFont('dejavusans', '', 8);
+        $this->SetTextColor(128, 128, 128);
+        $this->Cell(0, 10, 'Trang ' . $this->getAliasNumPage() . '/' . $this->getAliasNbPages(), 0, 0, 'C');
+    }
+}
+
+$pdf = new UniDormPDF('P', 'mm', 'A4', true, 'UTF-8', false);
 
 $pdf->SetCreator('UniDorm');
 $pdf->SetAuthor('UniDorm Admin');
@@ -35,7 +44,6 @@ $pdf->setHeaderData('', 0, 'UniDorm - Ky tac xa', 'Ngay xuat: ' . date('d/m/Y H:
 $pdf->setFooterFont(['dejavusans', '', 8]);
 $pdf->setFooterData(array(64, 64, 64), array(128, 128, 128));
 $pdf->setFooterMargin(10);
-$pdf->setFooterTemplate('<div style="text-align:center;font-size:8px;color:#888;">Trang {nbpg}</div>');
 
 // Margin
 $pdf->SetMargins(15, 25, 15);
