@@ -286,8 +286,8 @@ ob_start();
 
 /* Responsive */
 @media (max-width: 768px) {
-    .chat-wrapper { height: calc(100vh - 160px); }
-    .chat-sidebar { position: fixed; z-index: 1050; left: 0; top: 60px; bottom: 0; transform: translateX(-100%); transition: transform .3s ease; width: 280px; box-shadow: 4px 0 20px rgba(0,0,0,.15); }
+    .chat-wrapper { height: calc(100vh - 160px); border-radius: 0; }
+    .chat-sidebar { position: fixed; z-index: 1050; left: 0; top: 0; bottom: 0; transform: translateX(-100%); transition: transform .3s ease; width: 280px; box-shadow: 4px 0 20px rgba(0,0,0,.15); }
     .chat-sidebar.open { transform: translateX(0); }
     .chat-back-btn { display: flex !important; }
     .chat-main-header { padding: 10px 12px; }
@@ -295,6 +295,7 @@ ob_start();
     .chat-input-area { padding: 10px 12px; }
     .chat-contact-item { padding: 10px 12px; }
 }
+.chat-back-btn { display: none; }
 .chat-sidebar-overlay {
     display: none;
     position: fixed;
@@ -307,7 +308,7 @@ ob_start();
 .chat-sidebar-overlay.open { display: block; }
 </style>
 
-<div class="chat-sidebar-overlay" id="chatSidebarOverlay" onclick="closeChatSidebar()"></div>
+<div class="chat-sidebar-overlay" id="chatSidebarOverlay" onclick="closeChatPanel()"></div>
 <div class="chat-wrapper">
 
     <!-- ===== LEFT: Contacts ===== -->
@@ -367,7 +368,7 @@ ob_start();
     <div class="chat-main">
         <!-- Header -->
         <div class="chat-main-header" id="chatHeader">
-            <button class="btn btn-sm btn-outline-secondary d-none chat-back-btn" id="chatBackBtn" onclick="closeChatPanel()">
+            <button class="btn btn-sm btn-outline-secondary chat-back-btn" id="chatBackBtn" onclick="closeChatPanel()">
                 <i class="bi bi-chevron-left"></i>
             </button>
             <button class="btn btn-sm btn-outline-primary d-md-none me-2" onclick="openChatSidebar()" title="Danh sách hội thoại">
