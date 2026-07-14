@@ -284,7 +284,7 @@ $statsPending = $conn->query("SELECT COUNT(*) as c FROM users WHERE (role='stude
                             <span class="stt-text"><?php echo $offset + $i + 1; ?></span>
                             <input type="checkbox" class="form-check-input user-checkbox" value="<?php echo $u['user_id']; ?>" onchange="updateRowState(this)">
                         </td>
-                        <td>
+                        <td data-label="MSSV / Username">
                             <code class="bg-light px-2 py-1 rounded" style="font-size:12px;">
                                 <?php echo htmlspecialchars($u['student_code'] ?? $u['role']); ?>
                             </code>
@@ -292,11 +292,11 @@ $statsPending = $conn->query("SELECT COUNT(*) as c FROM users WHERE (role='stude
                             <span class="badge bg-info bg-opacity-75 ms-1" style="font-size:9px;">TP</span>
                             <?php endif; ?>
                         </td>
-                        <td>
+                        <td data-label="Họ và tên">
                             <div class="fw-semibold"><?php echo htmlspecialchars($u['fullname']); ?></div>
                             <small class="text-muted"><?php echo $u['role'] === 'admin' ? 'Quản trị viên' : 'Sinh viên'; ?></small>
                         </td>
-                        <td>
+                        <td data-label="Phòng / Giường">
                             <?php if ($u['room_code']): ?>
                             <code class="bg-light px-2 py-1 rounded" style="font-size:12px;"><?php echo $u['room_code']; ?></code>
                             <small class="text-muted d-block" style="font-size:10px;">Lầu <?php echo $u['floor_number']; ?></small>
@@ -304,7 +304,7 @@ $statsPending = $conn->query("SELECT COUNT(*) as c FROM users WHERE (role='stude
                             <span class="text-muted small fst-italic">Chưa có phòng</span>
                             <?php endif; ?>
                         </td>
-                        <td>
+                        <td data-label="Trạng thái TK">
                             <span class="badge bg-<?php echo $stColor; ?> bg-opacity-75"><?php echo $stLabel; ?></span>
                             <?php if (!$u['account_active']): ?>
                             <span class="badge bg-secondary bg-opacity-50 ms-1" style="font-size:9px;">No PW</span>
@@ -319,8 +319,8 @@ $statsPending = $conn->query("SELECT COUNT(*) as c FROM users WHERE (role='stude
                             <?php unset($_SESSION['new_password'][$u['user_id']]); ?>
                             <?php endif; ?>
                         </td>
-                        <td class="text-muted small"><?php echo htmlspecialchars($u['email'] ?? '—'); ?></td>
-                        <td class="text-center">
+                        <td data-label="Email" class="text-muted small"><?php echo htmlspecialchars($u['email'] ?? '—'); ?></td>
+                        <td data-label="Thao tác" class="text-center">
                             <div class="d-flex justify-content-center gap-1">
                                 <a href="<?php echo BASE_URL; ?>/updateuser?id=<?php echo $u['user_id']; ?>"
                                    class="btn btn-sm btn-outline-primary" title="Chỉnh sửa" style="font-size:11px;">

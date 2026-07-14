@@ -153,29 +153,29 @@ $statusConfig = [
                         [$clr, $lbl, $ico] = $statusConfig[$rpt['status']] ?? ['secondary','?','question'];
                     ?>
                     <tr>
-                        <td class="ps-4 py-3 text-muted small"><?php echo $offset + $i + 1; ?></td>
-                        <td class="py-3">
+                        <td data-label="#" class="ps-4 py-3 text-muted small"><?php echo $offset + $i + 1; ?></td>
+                        <td data-label="Tiêu đề sự cố" class="py-3">
                             <p class="mb-0 fw-semibold small text-dark"><?php echo htmlspecialchars(mb_strimwidth($rpt['title'], 0, 45, '...')); ?></p>
                             <?php if ($rpt['description']): ?>
                             <small class="text-muted"><?php echo htmlspecialchars(mb_strimwidth($rpt['description'], 0, 60, '...')); ?></small>
                             <?php endif; ?>
                         </td>
-                        <td class="py-3">
+                        <td data-label="Phòng" class="py-3">
                             <code class="bg-light text-dark px-2 py-1 rounded small"><?php echo $rpt['room_code']; ?></code>
                             <div class="text-muted" style="font-size:10px;">Lầu <?php echo $rpt['floor_number']; ?></div>
                         </td>
-                        <td class="py-3 small">
+                        <td data-label="Sinh viên" class="py-3 small">
                             <p class="mb-0 fw-semibold"><?php echo htmlspecialchars(mb_strimwidth($rpt['reporter_name'], 0, 20, '...')); ?></p>
                             <small class="text-muted"><?php echo htmlspecialchars($rpt['student_code'] ?? ''); ?></small>
                         </td>
-                        <td class="py-3 small text-muted"><?php echo htmlspecialchars($rpt['device_name'] ?? 'Khác'); ?></td>
-                        <td class="py-3 text-center">
+                        <td data-label="Thiết bị" class="py-3 small text-muted"><?php echo htmlspecialchars($rpt['device_name'] ?? 'Khác'); ?></td>
+                        <td data-label="Trạng thái" class="py-3 text-center">
                             <span class="badge bg-<?php echo $clr; ?> bg-opacity-75" style="font-size:10px;">
                                 <i class="bi bi-<?php echo $ico; ?> me-1"></i><?php echo $lbl; ?>
                             </span>
                         </td>
-                        <td class="py-3 text-muted" style="font-size:11px;"><?php echo date('d/m/Y H:i', strtotime($rpt['created_at'])); ?></td>
-                        <td class="py-3 text-center">
+                        <td data-label="Ngày gửi" class="py-3 text-muted" style="font-size:11px;"><?php echo date('d/m/Y H:i', strtotime($rpt['created_at'])); ?></td>
+                        <td data-label="Xử lý" class="py-3 text-center">
                             <div class="dropdown">
                                 <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" style="font-size:11px;">
                                     Chuyển trạng thái

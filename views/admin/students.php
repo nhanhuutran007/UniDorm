@@ -208,7 +208,7 @@ $statusMap = ['active'=>['success','Hoạt động'],'pending'=>['warning','Ch�
                             <span class="stt-text"><?php echo $offset + $i + 1; ?></span>
                             <input type="checkbox" class="form-check-input student-checkbox" value="<?php echo $sv['user_id']; ?>" onchange="updateRowState(this)">
                         </td>
-                        <td class="py-3">
+                        <td data-label="Họ tên & MSSV" class="py-3">
                             <div class="d-flex align-items-center gap-2">
                                 <div class="rounded-circle bg-primary bg-opacity-10 text-primary fw-bold d-flex align-items-center justify-content-center flex-shrink-0"
                                      style="width:36px;height:36px;font-size:13px;">
@@ -225,7 +225,7 @@ $statusMap = ['active'=>['success','Hoạt động'],'pending'=>['warning','Ch�
                                 </div>
                             </div>
                         </td>
-                        <td class="py-3">
+                        <td data-label="Phòng / Giường" class="py-3">
                             <?php if ($sv['room_code']): ?>
                             <code class="bg-light text-dark px-2 py-1 rounded small">
                                 <?php echo $sv['room_code']; ?> / <?php echo $sv['bed_label']; ?>
@@ -235,17 +235,17 @@ $statusMap = ['active'=>['success','Hoạt động'],'pending'=>['warning','Ch�
                             <span class="text-muted small">Chưa xếp phòng</span>
                             <?php endif; ?>
                         </td>
-                        <td class="py-3 small text-muted"><?php echo htmlspecialchars($sv['phone_personal'] ?? '—'); ?></td>
-                        <td class="py-3 small text-muted"><?php echo htmlspecialchars($sv['phone_family'] ?? '—'); ?></td>
-                        <td class="py-3 small text-muted" style="max-width:140px;">
+                        <td data-label="SĐT Cá nhân" class="py-3 small text-muted"><?php echo htmlspecialchars($sv['phone_personal'] ?? '—'); ?></td>
+                        <td data-label="SĐT Gia đình" class="py-3 small text-muted"><?php echo htmlspecialchars($sv['phone_family'] ?? '—'); ?></td>
+                        <td data-label="Hộ khẩu" class="py-3 small text-muted" style="max-width:140px;">
                             <span title="<?php echo htmlspecialchars($sv['hometown'] ?? ''); ?>">
                                 <?php echo htmlspecialchars(mb_strimwidth($sv['hometown'] ?? '—', 0, 20, '...')); ?>
                             </span>
                         </td>
-                        <td class="py-3 text-center">
+                        <td data-label="Trạng thái" class="py-3 text-center">
                             <span class="badge bg-<?php echo $sc; ?> bg-opacity-75" style="font-size:10px;"><?php echo $sl; ?></span>
                         </td>
-                        <td class="py-3 text-center">
+                        <td data-label="Thao tác" class="py-3 text-center">
                             <div class="d-flex justify-content-center gap-1">
                                 <a href="<?php echo BASE_URL; ?>/updateuser?id=<?php echo $sv['user_id']; ?>"
                                    class="btn btn-sm btn-outline-primary p-1" title="Sửa" style="width:28px;height:28px;line-height:1;">
