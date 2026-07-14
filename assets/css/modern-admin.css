@@ -482,11 +482,12 @@ body.mini-sidebar #toggle_btn {
     padding-right: 0.5rem;
   }
 
-  /* ---- Header: prevent hamburger/logo overlap ---- */
+  /* ---- Header ---- */
   .header {
     display: flex !important;
     align-items: center !important;
     padding: 0 0 0 50px !important;
+    overflow: hidden !important;
   }
   .header .header-left {
     position: absolute !important;
@@ -531,11 +532,12 @@ body.mini-sidebar #toggle_btn {
   .header .user-menu {
     display: flex !important;
     align-items: center !important;
-    gap: 6px !important;
-    padding-right: 4px !important;
+    gap: 4px !important;
+    padding-right: 2px !important;
     margin-left: auto !important;
     flex-shrink: 0;
     float: none !important;
+    overflow: visible !important;
   }
   .header .user-menu .nav-item {
     margin-left: 0 !important;
@@ -546,8 +548,8 @@ body.mini-sidebar #toggle_btn {
     height: 36px !important;
   }
   .header-icon-btn {
-    width: 36px !important;
-    height: 36px !important;
+    width: 34px !important;
+    height: 34px !important;
     font-size: 0.85rem;
   }
   /* Avatar: same visual box as icon-btn */
