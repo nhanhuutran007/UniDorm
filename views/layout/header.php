@@ -72,13 +72,14 @@
         <!-- Avatar + Dropdown tài khoản -->
         <li class="nav-item dropdown has-arrow main-drop d-flex align-items-center">
             <a href="javascript:void(0);" class="dropdown-toggle nav-link userset d-flex align-items-center gap-2 p-0" data-bs-toggle="dropdown">
-                <div class="avatar-wrap position-relative">
+                <div class="avatar-wrap position-relative" style="width: 36px; height: 36px;">
                     <?php
                     $avatarSrc = (!empty($profilePicture) && $profilePicture != BASE_URL . '/') ? $profilePicture : BASE_URL . '/assets/images/default.jpg';
                     ?>
                     <img src="<?php echo $avatarSrc; ?>"
                          alt="Avatar"
                          class="rounded-circle object-fit-cover border border-2 border-light shadow-sm bg-white"
+                         width="36" height="36"
                          onerror="if (this.src != '<?php echo BASE_URL; ?>/assets/images/default.jpg') this.src='<?php echo BASE_URL; ?>/assets/images/default.jpg';">
                     <span class="online-dot position-absolute bottom-0 end-0 bg-success rounded-circle border border-2 border-white"
                           style="width:10px;height:10px; transform: translate(10%, 10%);"></span>
