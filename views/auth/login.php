@@ -93,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="icon" type="image/svg+xml" href="../../assets/img/favicon.svg">
     <link rel="stylesheet" href="../../assets/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
     * {
         margin: 0;
@@ -103,14 +103,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     body {
         font-family: 'Inter', sans-serif;
-        background: url('../../assets/img/KTX-TDT-KL-1024x525.png') no-repeat center center fixed;
-        background-size: cover;
+        background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 30%, #2563eb 60%, #60a5fa 100%);
         min-height: 100vh;
         display: flex;
-        align-items: flex-start;
-        justify-content: flex-end;
+        align-items: center;
+        justify-content: center;
         padding: 40px;
-        padding-right: calc(5% + 40px);
         position: relative;
         overflow: hidden;
     }
@@ -118,12 +116,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     body::before {
         content: '';
         position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle at 30% 50%, rgba(96, 165, 250, 0.15) 0%, transparent 50%),
+                    radial-gradient(circle at 70% 80%, rgba(37, 99, 235, 0.2) 0%, transparent 40%);
+        z-index: 1;
+    }
+    
+    #meshCanvas {
+        position: fixed;
         top: 0;
         left: 0;
-        right: 0;
-        bottom: 0;
-        background: transparent;
-        z-index: 1;
+        width: 100%;
+        height: 100%;
+        z-index: 2;
+        pointer-events: none;
     }
     
     /* Main Container */
@@ -133,7 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         width: 100%;
         max-width: 450px;
         text-align: center;
-        margin-top: 20px;
+        margin: 0 auto;
     }
     
     /* Logo */
@@ -145,39 +154,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         display: inline-flex;
         align-items: center;
         gap: 12px;
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        padding: 12px 24px;
-        border-radius: 50px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     }
     
     .logo-icon {
-        width: 40px;
-        height: 40px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 20px;
+        width: 36px;
+        height: 36px;
+    }
+    
+    .logo-icon img {
+        width: 100%;
+        height: 100%;
     }
     
     .logo-text {
         font-size: 24px;
         font-weight: 800;
-        color: #2d3748;
+        color: #ffffff;
     }
     
     /* Main Title */
     .main-title {
-        font-size: 32px;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 38px;
         font-weight: 800;
         color: #ffffff;
         margin-bottom: 35px;
-        letter-spacing: -0.5px;
-        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        letter-spacing: -1.5px;
+        line-height: 1.15;
+        background: linear-gradient(135deg, #ffffff 0%, #93c5fd 50%, #60a5fa 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
         transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s ease;
     }
     
@@ -402,7 +409,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         .main-title {
-            font-size: 26px;
+            font-size: 30px;
             margin-bottom: 30px;
         }
         
@@ -425,23 +432,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             padding: 9px 16px;
         }
     }
-    
-    @media (max-width: 992px) {
-        body {
-            justify-content: center;
-            padding-right: 40px;
-        }
-    }
     </style>
 </head>
 <body>
+<canvas id="meshCanvas"></canvas>
 
 <div class="login-container">
     <!-- Logo -->
     <div class="logo-section">
         <div class="logo-wrapper">
             <div class="logo-icon">
-                <i class="bi bi-building-fill"></i>
+                <img src="../../assets/img/favicon.svg" alt="UniDorm">
             </div>
             <span class="logo-text">UniDorm</span>
         </div>
@@ -528,7 +529,180 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </div>
 
 <script>
-// Toggle Password
+// ===== Constellation Particles =====
+(function() {
+    const canvas = document.getElementById('meshCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    let mouse = { x: null, y: null, vx: 0, vy: 0, px: 0, py: 0 };
+    let particles = [];
+    const PARTICLE_COUNT = 130;
+
+    function resize() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+    }
+
+    function createParticle(x, y) {
+        return {
+            x: x !== undefined ? x : Math.random() * width,
+            y: y !== undefined ? y : Math.random() * height,
+            vx: (Math.random() - 0.5) * 0.35,
+            vy: (Math.random() - 0.5) * 0.35,
+            radius: Math.random() * 1.6 + 0.8,
+            baseAlpha: Math.random() * 0.4 + 0.2,
+            pulseOffset: Math.random() * Math.PI * 2,
+            pulseSpeed: Math.random() * 0.008 + 0.003,
+        };
+    }
+
+    function initParticles() {
+        particles = [];
+        const count = Math.min(PARTICLE_COUNT, Math.floor((width * height) / 12000));
+        for (let i = 0; i < count; i++) {
+            particles.push(createParticle());
+        }
+    }
+
+    function updateMouseTrail(e) {
+        mouse.vx = e.clientX - mouse.px;
+        mouse.vy = e.clientY - mouse.py;
+        mouse.px = mouse.x = e.clientX;
+        mouse.py = mouse.y = e.clientY;
+    }
+
+    document.addEventListener('mousemove', updateMouseTrail);
+    document.addEventListener('mouseleave', function() {
+        mouse.x = null;
+        mouse.y = null;
+    });
+
+    function animate(time) {
+        ctx.clearRect(0, 0, width, height);
+
+        // Draw connections first (behind particles)
+        for (let i = 0; i < particles.length; i++) {
+            for (let j = i + 1; j < particles.length; j++) {
+                const a = particles[i];
+                const b = particles[j];
+                const dx = a.x - b.x;
+                const dy = a.y - b.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const maxDist = 130;
+
+                if (dist < maxDist) {
+                    const t = 1 - dist / maxDist;
+                    const alpha = t * t * 0.35;
+
+                    ctx.beginPath();
+                    ctx.moveTo(a.x, a.y);
+                    ctx.lineTo(b.x, b.y);
+                    ctx.strokeStyle = 'rgba(120, 180, 255, ' + alpha.toFixed(4) + ')';
+                    ctx.lineWidth = t * 0.8;
+                    ctx.stroke();
+                }
+            }
+        }
+
+        // Update and draw particles
+        for (let i = 0; i < particles.length; i++) {
+            const p = particles[i];
+
+            // Mouse interaction - gentle repulsion with flow
+            if (mouse.x !== null) {
+                const dx = p.x - mouse.x;
+                const dy = p.y - mouse.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const mouseRange = 160;
+
+                if (dist < mouseRange && dist > 0) {
+                    const t = 1 - dist / mouseRange;
+                    // Repulsion
+                    p.vx += (dx / dist) * t * 0.15;
+                    p.vy += (dy / dist) * t * 0.15;
+                    // Flow with mouse movement
+                    p.vx += mouse.vx * t * 0.02;
+                    p.vy += mouse.vy * t * 0.02;
+                }
+            }
+
+            // Apply velocity with damping
+            p.vx *= 0.985;
+            p.vy *= 0.985;
+
+            // Minimum drift so particles never stop completely
+            const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+            if (speed < 0.08) {
+                p.vx += (Math.random() - 0.5) * 0.06;
+                p.vy += (Math.random() - 0.5) * 0.06;
+            }
+
+            p.x += p.vx;
+            p.y += p.vy;
+
+            // Wrap around edges
+            if (p.x < -10) p.x = width + 10;
+            if (p.x > width + 10) p.x = -10;
+            if (p.y < -10) p.y = height + 10;
+            if (p.y > height + 10) p.y = -10;
+
+            // Pulsing alpha
+            const pulse = Math.sin(time * p.pulseSpeed + p.pulseOffset) * 0.15;
+            const alpha = Math.max(0.1, p.baseAlpha + pulse);
+
+            // Mouse proximity glow boost
+            let glowBoost = 0;
+            if (mouse.x !== null) {
+                const dx = p.x - mouse.x;
+                const dy = p.y - mouse.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < 200) {
+                    glowBoost = (1 - dist / 200) * 0.5;
+                }
+            }
+
+            // Outer glow
+            const glowRadius = p.radius * 4 + glowBoost * 6;
+            const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, glowRadius);
+            grad.addColorStop(0, 'rgba(147, 197, 253, ' + ((alpha + glowBoost) * 0.3).toFixed(4) + ')');
+            grad.addColorStop(1, 'rgba(147, 197, 253, 0)');
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, glowRadius, 0, Math.PI * 2);
+            ctx.fillStyle = grad;
+            ctx.fill();
+
+            // Core dot
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(200, 225, 255, ' + Math.min(alpha + glowBoost + 0.2, 1).toFixed(4) + ')';
+            ctx.fill();
+        }
+
+        // Subtle mouse glow
+        if (mouse.x !== null) {
+            const grad = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, 200);
+            grad.addColorStop(0, 'rgba(96, 165, 250, 0.06)');
+            grad.addColorStop(0.5, 'rgba(96, 165, 250, 0.02)');
+            grad.addColorStop(1, 'rgba(96, 165, 250, 0)');
+            ctx.beginPath();
+            ctx.arc(mouse.x, mouse.y, 200, 0, Math.PI * 2);
+            ctx.fillStyle = grad;
+            ctx.fill();
+        }
+
+        requestAnimationFrame(animate);
+    }
+
+    window.addEventListener('resize', function() {
+        resize();
+        initParticles();
+    });
+    resize();
+    initParticles();
+    animate(0);
+})();
+
+// ===== Toggle Password =====
 function togglePassword() {
     const passwordInput = document.getElementById('password');
     const eyeIcon = document.getElementById('eyeIcon');
@@ -566,10 +740,8 @@ window.addEventListener('load', function() {
             const targetUrl = this.href;
             
             // Start background transition immediately
-            const newBgImage = "url('../../assets/img/ktx-layout-1_0.png')";
-            
-            document.body.style.transition = 'background-image 0.6s ease';
-            document.body.style.backgroundImage = newBgImage;
+            document.body.style.transition = 'opacity 0.6s ease';
+            document.body.style.opacity = '0';
             
             // Slide out to left
             if (logo) logo.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
