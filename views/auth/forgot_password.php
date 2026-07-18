@@ -116,21 +116,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$token) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quên mật khẩu – UniDorm</title>
+    <meta name="description" content="Đặt lại mật khẩu hệ thống quản lý ký túc xá UniDorm">
     <link rel="icon" type="image/svg+xml" href="../../assets/img/favicon.svg">
     <link rel="stylesheet" href="../../assets/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
     * {
         margin: 0;
         padding: 0;
         box-sizing: border-box;
     }
-    
+
     body {
         font-family: 'Inter', sans-serif;
-        background: url('../../assets/img/ktx-layout-1_0.png') no-repeat center center fixed;
-        background-size: cover;
+        background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 30%, #2563eb 60%, #60a5fa 100%);
         min-height: 100vh;
         display: flex;
         align-items: center;
@@ -139,110 +139,133 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$token) {
         position: relative;
         overflow: hidden;
     }
-    
+
     body::before {
         content: '';
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: transparent;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle at 30% 50%, rgba(96, 165, 250, 0.15) 0%, transparent 50%),
+                    radial-gradient(circle at 70% 80%, rgba(37, 99, 235, 0.2) 0%, transparent 40%);
         z-index: 1;
     }
-    
-    .forgot-container {
+
+    #meshCanvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 2;
+        pointer-events: none;
+    }
+
+    .login-container {
         position: relative;
         z-index: 10;
         width: 100%;
-        max-width: 480px;
+        max-width: 450px;
         text-align: center;
+        margin: 0 auto;
     }
-    
+
     .logo-section {
         margin-bottom: 30px;
     }
-    
+
     .logo-wrapper {
         display: inline-flex;
         align-items: center;
         gap: 12px;
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        padding: 12px 24px;
-        border-radius: 50px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     }
-    
+
     .logo-icon {
-        width: 40px;
-        height: 40px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 20px;
+        width: 36px;
+        height: 36px;
     }
-    
+
+    .logo-icon img {
+        width: 100%;
+        height: 100%;
+    }
+
     .logo-text {
         font-size: 24px;
         font-weight: 800;
-        color: #2d3748;
+        color: #ffffff;
     }
-    
+
     .main-title {
-        font-size: 32px;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 38px;
         font-weight: 800;
         color: #ffffff;
         margin-bottom: 35px;
-        letter-spacing: -0.5px;
-        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        letter-spacing: -1.5px;
+        line-height: 1.15;
+        background: linear-gradient(135deg, #ffffff 0%, #93c5fd 50%, #60a5fa 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s ease;
     }
-    
-    .forgot-card {
+
+    .login-card {
         background: rgba(255, 255, 255, 0.98);
         backdrop-filter: blur(20px);
         border-radius: 24px;
         padding: 45px 40px;
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
         position: relative;
+        animation: slideUp 0.6s ease-out;
         border: 1px solid rgba(255, 255, 255, 0.5);
-        text-align: left;
     }
-    
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
     .card-blob {
         position: absolute;
         width: 120px;
         height: 120px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         filter: blur(40px);
         opacity: 0.3;
         top: -40px;
         right: -30px;
         z-index: -1;
     }
-    
+
     .form-group {
-        margin-bottom: 20px;
+        margin-bottom: 24px;
+        text-align: left;
     }
-    
+
     .form-label {
         display: block;
-        font-size: 13px;
+        font-size: 14px;
         font-weight: 600;
         color: #4a5568;
         margin-bottom: 8px;
     }
-    
+
     .input-wrapper {
         position: relative;
         display: flex;
         align-items: center;
     }
-    
+
     .input-icon {
         position: absolute;
         left: 18px;
@@ -250,29 +273,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$token) {
         font-size: 18px;
         z-index: 10;
     }
-    
+
     .form-input {
         width: 100%;
-        padding: 14px 18px 14px 50px;
+        padding: 16px 18px 16px 50px;
         border: 2px solid #e2e8f0;
         border-radius: 14px;
-        font-size: 14px;
+        font-size: 15px;
         color: #2d3748;
         background: #f7fafc;
         transition: all 0.3s ease;
         outline: none;
     }
-    
+
     .form-input::placeholder {
         color: #cbd5e0;
     }
-    
+
     .form-input:focus {
         background: white;
         border-color: #667eea;
         box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
     }
-    
+
     .toggle-password {
         position: absolute;
         right: 18px;
@@ -284,15 +307,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$token) {
         font-size: 18px;
         transition: color 0.3s;
     }
-    
+
     .toggle-password:hover {
         color: #667eea;
     }
-    
-    .btn-submit {
+
+    .btn-signin {
         width: 100%;
         padding: 16px;
-        background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
         color: white;
         font-size: 16px;
         font-weight: 700;
@@ -300,63 +323,77 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$token) {
         border-radius: 14px;
         cursor: pointer;
         transition: all 0.3s ease;
-        box-shadow: 0 8px 24px rgba(245, 158, 11, 0.3);
+        box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
         margin-top: 10px;
     }
-    
-    .btn-submit:hover {
+
+    .btn-signin:hover {
         transform: translateY(-2px);
-        box-shadow: 0 12px 32px rgba(245, 158, 11, 0.4);
+        box-shadow: 0 12px 32px rgba(16, 185, 129, 0.4);
     }
-    
-    .btn-submit:active {
+
+    .btn-signin:active {
         transform: translateY(0);
     }
-    
-    .btn-submit:disabled {
+
+    .btn-signin:disabled {
         opacity: 0.6;
         cursor: not-allowed;
         transform: none;
     }
-    
+
     .alert {
         padding: 14px 18px;
         border-radius: 12px;
-        margin-bottom: 20px;
+        margin-bottom: 24px;
         font-size: 14px;
         display: flex;
         align-items: start;
         gap: 10px;
     }
-    
+
     .alert-danger {
         background: #fee;
         color: #c53030;
         border-left: 4px solid #fc8181;
     }
-    
+
     .alert-success {
         background: #f0fdf4;
         color: #166534;
         border-left: 4px solid #86efac;
     }
-    
-    .back-link {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
+
+    .link {
         color: #667eea;
         text-decoration: none;
-        font-size: 14px;
         font-weight: 600;
-        margin-bottom: 20px;
         transition: color 0.3s;
     }
-    
-    .back-link:hover {
+
+    .link:hover {
         color: #764ba2;
+        text-decoration: underline;
     }
-    
+
+    .links-wrapper {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 24px;
+        font-size: 14px;
+    }
+
+    .subtitle-text {
+        color: #6b7280;
+        font-size: 14px;
+        margin-bottom: 25px;
+        line-height: 1.6;
+    }
+
+    .subtitle-text strong {
+        color: #2d3748;
+    }
+
     .strength-bar {
         height: 4px;
         border-radius: 4px;
@@ -364,19 +401,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$token) {
         transition: width 0.3s, background 0.3s;
         margin-top: 8px;
     }
-    
+
     .strength-text {
         font-size: 12px;
         color: #6b7280;
         margin-top: 4px;
     }
-    
+
+    .success-icon {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 20px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .success-title {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-weight: 700;
+        font-size: 18px;
+        color: #2d3748;
+        margin-bottom: 10px;
+    }
+
+    .success-desc {
+        color: #6b7280;
+        font-size: 14px;
+        margin-bottom: 25px;
+        line-height: 1.6;
+    }
+
     .footer-badges {
         margin-top: 30px;
         display: flex;
         justify-content: center;
+        flex-wrap: wrap;
+        gap: 0;
     }
-    
+
     .badge-item {
         display: inline-flex;
         align-items: center;
@@ -394,40 +458,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$token) {
         border: 1px solid rgba(255, 255, 255, 0.3);
         white-space: nowrap;
     }
-    
+
     @media (max-width: 576px) {
         body {
+            align-items: center;
+            justify-content: center;
             padding: 20px;
         }
-        
-        .forgot-card {
+
+        .login-card {
             padding: 35px 25px;
         }
-        
+
         .main-title {
-            font-size: 26px;
+            font-size: 30px;
             margin-bottom: 30px;
         }
-        
+
         .badge-item {
             font-size: 9px;
             padding: 8px 14px;
+            letter-spacing: 0.3px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .badge-item {
+            font-size: 10px;
+            padding: 9px 16px;
         }
     }
     </style>
 </head>
 <body>
+<canvas id="meshCanvas"></canvas>
 
-<div class="forgot-container">
+<div class="login-container">
     <div class="logo-section">
         <div class="logo-wrapper">
             <div class="logo-icon">
-                <i class="bi bi-building-fill"></i>
+                <img src="../../assets/img/favicon.svg" alt="UniDorm">
             </div>
             <span class="logo-text">UniDorm</span>
         </div>
     </div>
-    
+
     <h1 class="main-title">
         <?php if ($success === 'reset_done'): ?>
             Hoàn tất!
@@ -439,77 +514,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$token) {
             Quên mật khẩu?
         <?php endif; ?>
     </h1>
-    
-    <div class="forgot-card">
+
+    <div class="login-card">
         <div class="card-blob"></div>
-        
+
         <?php if ($success === 'reset_done'): ?>
-        <!-- Success - Password Reset -->
         <div class="text-center">
-            <div style="width:64px;height:64px;margin:0 auto 20px;background:rgba(34,197,94,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+            <div class="success-icon" style="background:rgba(34,197,94,0.1);">
                 <i class="bi bi-check2-circle" style="font-size:32px;color:#22c55e;"></i>
             </div>
-            <h5 style="font-weight:700;color:#2d3748;margin-bottom:10px;">Mật khẩu đã được đặt lại!</h5>
-            <p style="color:#6b7280;font-size:14px;margin-bottom:25px;">Bạn có thể đăng nhập với mật khẩu mới.</p>
-            <a href="login.php" class="btn-submit" style="display:inline-block;width:auto;padding:14px 30px;text-decoration:none;">
+            <h5 class="success-title">Mật khẩu đã được đặt lại!</h5>
+            <p class="success-desc">Bạn có thể đăng nhập với mật khẩu mới.</p>
+            <a href="login.php" class="btn-signin" style="display:inline-block;width:auto;padding:14px 30px;text-decoration:none;">
                 <i class="bi bi-box-arrow-in-right me-2"></i>Đăng nhập
             </a>
         </div>
-        
+
         <?php elseif ($success === 'email_sent'): ?>
-        <!-- Success - Email Sent -->
         <div class="text-center">
-            <div style="width:64px;height:64px;margin:0 auto 20px;background:rgba(102,126,234,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+            <div class="success-icon" style="background:rgba(102,126,234,0.1);">
                 <i class="bi bi-envelope-check-fill" style="font-size:32px;color:#667eea;"></i>
             </div>
-            <h5 style="font-weight:700;color:#2d3748;margin-bottom:10px;">Email đã được gửi!</h5>
-            <p style="color:#6b7280;font-size:14px;margin-bottom:8px;">Nếu tài khoản tồn tại, bạn sẽ nhận được email đặt lại mật khẩu trong vài phút.</p>
-            <p style="color:#6b7280;font-size:13px;margin-bottom:25px;">Kiểm tra cả thư mục <strong>Spam</strong> nếu không thấy.</p>
-            <a href="login.php" class="back-link" style="display:inline-flex;">
+            <h5 class="success-title">Email đã được gửi!</h5>
+            <p class="success-desc">Nếu tài khoản tồn tại, bạn sẽ nhận được email đặt lại mật khẩu trong vài phút.<br>Kiểm tra cả thư mục <strong>Spam</strong> nếu không thấy.</p>
+            <a href="login.php" class="link" style="display:inline-flex;align-items:center;gap:6px;">
                 <i class="bi bi-arrow-left"></i>Quay về đăng nhập
             </a>
         </div>
-        
+
         <?php elseif ($step === 'invalid'): ?>
-        <!-- Invalid Token -->
         <div class="text-center">
-            <div style="width:64px;height:64px;margin:0 auto 20px;background:rgba(239,68,68,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+            <div class="success-icon" style="background:rgba(239,68,68,0.1);">
                 <i class="bi bi-x-octagon-fill" style="font-size:32px;color:#ef4444;"></i>
             </div>
-            <h5 style="font-weight:700;color:#2d3748;margin-bottom:10px;">Liên kết không hợp lệ</h5>
-            <p style="color:#6b7280;font-size:14px;margin-bottom:25px;"><?php echo htmlspecialchars($error); ?></p>
-            <a href="forgot_password.php" class="btn-submit" style="display:inline-block;width:auto;padding:14px 30px;text-decoration:none;">
+            <h5 class="success-title">Liên kết không hợp lệ</h5>
+            <p class="success-desc"><?php echo htmlspecialchars($error); ?></p>
+            <a href="forgot_password.php" class="btn-signin" style="display:inline-block;width:auto;padding:14px 30px;text-decoration:none;">
                 Yêu cầu lại
             </a>
         </div>
-        
+
         <?php elseif ($step === 'reset'): ?>
-        <!-- Reset Password Form -->
-        <a href="login.php" class="back-link">
-            <i class="bi bi-arrow-left"></i>Quay về đăng nhập
-        </a>
-        
-        <div style="text-align:center;margin-bottom:25px;">
-            <p style="color:#6b7280;font-size:14px;">Xin chào <strong style="color:#2d3748;"><?php echo htmlspecialchars($tokenUser['fullname']); ?></strong></p>
+        <div class="subtitle-text" style="text-align:center;">
+            Xin chào <strong><?php echo htmlspecialchars($tokenUser['fullname']); ?></strong>
         </div>
-        
+
         <?php if ($error): ?>
         <div class="alert alert-danger">
             <i class="bi bi-exclamation-triangle-fill"></i>
             <div><?php echo htmlspecialchars($error); ?></div>
         </div>
         <?php endif; ?>
-        
+
         <form method="POST">
             <input type="hidden" name="token" value="<?php echo htmlspecialchars($token); ?>">
-            
+
             <div class="form-group">
                 <label class="form-label">Mật khẩu mới</label>
                 <div class="input-wrapper">
                     <i class="bi bi-lock input-icon"></i>
-                    <input 
-                        type="password" 
-                        name="new_password" 
+                    <input
+                        type="password"
+                        name="new_password"
                         id="newPass"
                         class="form-input"
                         placeholder="Nhập mật khẩu mới"
@@ -524,14 +590,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$token) {
                 <div class="strength-bar" id="strBar"></div>
                 <div class="strength-text" id="strTxt">Ít nhất 8 ký tự, 1 chữ hoa, 1 chữ số</div>
             </div>
-            
+
             <div class="form-group">
                 <label class="form-label">Xác nhận mật khẩu</label>
                 <div class="input-wrapper">
                     <i class="bi bi-lock input-icon"></i>
-                    <input 
-                        type="password" 
-                        name="confirm_password" 
+                    <input
+                        type="password"
+                        name="confirm_password"
                         id="confPass"
                         class="form-input"
                         placeholder="Nhập lại mật khẩu"
@@ -543,36 +609,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$token) {
                     </button>
                 </div>
             </div>
-            
-            <button type="submit" class="btn-submit" id="submitBtn">
+
+            <button type="submit" class="btn-signin" id="submitBtn">
                 Đặt lại mật khẩu
             </button>
+
+            <div class="links-wrapper" style="justify-content: center;">
+                <a href="login.php" class="link"><i class="bi bi-arrow-left me-1"></i>Quay về đăng nhập</a>
+            </div>
         </form>
-        
+
         <?php else: ?>
-        <!-- Request Reset Form -->
-        <a href="login.php" class="back-link">
-            <i class="bi bi-arrow-left"></i>Quay về đăng nhập
-        </a>
-        
-        <div style="text-align:center;margin-bottom:25px;">
-            <p style="color:#6b7280;font-size:14px;">Nhập MSSV (sinh viên) hoặc email (quản trị) để nhận liên kết đặt lại mật khẩu</p>
+        <div class="subtitle-text" style="text-align:center;">
+            Nhập MSSV (sinh viên) hoặc email (quản trị) để nhận liên kết đặt lại mật khẩu
         </div>
-        
+
         <?php if ($error): ?>
         <div class="alert alert-danger">
             <i class="bi bi-exclamation-triangle-fill"></i>
             <div><?php echo htmlspecialchars($error); ?></div>
         </div>
         <?php endif; ?>
-        
+
         <form method="POST">
             <div class="form-group">
                 <label class="form-label">MSSV hoặc Email</label>
                 <div class="input-wrapper">
                     <i class="bi bi-person input-icon"></i>
-                    <input 
-                        type="text" 
+                    <input
+                        type="text"
                         name="identifier"
                         class="form-input"
                         placeholder="VD: 52100001 hoặc admin@tdtu.edu.vn"
@@ -581,14 +646,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$token) {
                     >
                 </div>
             </div>
-            
-            <button type="submit" class="btn-submit" id="submitBtn">
+
+            <button type="submit" class="btn-signin" id="submitBtn">
                 Gửi liên kết đặt lại
             </button>
+
+            <div class="links-wrapper" style="justify-content: center;">
+                <a href="login.php" class="link"><i class="bi bi-arrow-left me-1"></i>Quay về đăng nhập</a>
+            </div>
         </form>
         <?php endif; ?>
     </div>
-    
+
     <div class="footer-badges">
         <div class="badge-item">
             Kỷ luật - Lễ phép - Chuyên nghiệp - Sáng tạo - Phụng sự
@@ -597,6 +666,167 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$token) {
 </div>
 
 <script>
+// ===== Constellation Particles =====
+(function() {
+    const canvas = document.getElementById('meshCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    let mouse = { x: null, y: null, vx: 0, vy: 0, px: 0, py: 0 };
+    let particles = [];
+    const PARTICLE_COUNT = 130;
+
+    function resize() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+    }
+
+    function createParticle(x, y) {
+        return {
+            x: x !== undefined ? x : Math.random() * width,
+            y: y !== undefined ? y : Math.random() * height,
+            vx: (Math.random() - 0.5) * 0.35,
+            vy: (Math.random() - 0.5) * 0.35,
+            radius: Math.random() * 1.6 + 0.8,
+            baseAlpha: Math.random() * 0.4 + 0.2,
+            pulseOffset: Math.random() * Math.PI * 2,
+            pulseSpeed: Math.random() * 0.008 + 0.003,
+        };
+    }
+
+    function initParticles() {
+        particles = [];
+        const count = Math.min(PARTICLE_COUNT, Math.floor((width * height) / 12000));
+        for (let i = 0; i < count; i++) {
+            particles.push(createParticle());
+        }
+    }
+
+    function updateMouseTrail(e) {
+        mouse.vx = e.clientX - mouse.px;
+        mouse.vy = e.clientY - mouse.py;
+        mouse.px = mouse.x = e.clientX;
+        mouse.py = mouse.y = e.clientY;
+    }
+
+    document.addEventListener('mousemove', updateMouseTrail);
+    document.addEventListener('mouseleave', function() {
+        mouse.x = null;
+        mouse.y = null;
+    });
+
+    function animate(time) {
+        ctx.clearRect(0, 0, width, height);
+
+        for (let i = 0; i < particles.length; i++) {
+            for (let j = i + 1; j < particles.length; j++) {
+                const a = particles[i];
+                const b = particles[j];
+                const dx = a.x - b.x;
+                const dy = a.y - b.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const maxDist = 130;
+
+                if (dist < maxDist) {
+                    const t = 1 - dist / maxDist;
+                    const alpha = t * t * 0.35;
+
+                    ctx.beginPath();
+                    ctx.moveTo(a.x, a.y);
+                    ctx.lineTo(b.x, b.y);
+                    ctx.strokeStyle = 'rgba(120, 180, 255, ' + alpha.toFixed(4) + ')';
+                    ctx.lineWidth = t * 0.8;
+                    ctx.stroke();
+                }
+            }
+        }
+
+        for (let i = 0; i < particles.length; i++) {
+            const p = particles[i];
+
+            if (mouse.x !== null) {
+                const dx = p.x - mouse.x;
+                const dy = p.y - mouse.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const mouseRange = 160;
+
+                if (dist < mouseRange && dist > 0) {
+                    const t = 1 - dist / mouseRange;
+                    p.vx += (dx / dist) * t * 0.15;
+                    p.vy += (dy / dist) * t * 0.15;
+                    p.vx += mouse.vx * t * 0.02;
+                    p.vy += mouse.vy * t * 0.02;
+                }
+            }
+
+            p.vx *= 0.985;
+            p.vy *= 0.985;
+
+            const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+            if (speed < 0.08) {
+                p.vx += (Math.random() - 0.5) * 0.06;
+                p.vy += (Math.random() - 0.5) * 0.06;
+            }
+
+            p.x += p.vx;
+            p.y += p.vy;
+
+            if (p.x < -10) p.x = width + 10;
+            if (p.x > width + 10) p.x = -10;
+            if (p.y < -10) p.y = height + 10;
+            if (p.y > height + 10) p.y = -10;
+
+            const pulse = Math.sin(time * p.pulseSpeed + p.pulseOffset) * 0.15;
+            const alpha = Math.max(0.1, p.baseAlpha + pulse);
+
+            let glowBoost = 0;
+            if (mouse.x !== null) {
+                const dx = p.x - mouse.x;
+                const dy = p.y - mouse.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < 200) {
+                    glowBoost = (1 - dist / 200) * 0.5;
+                }
+            }
+
+            const glowRadius = p.radius * 4 + glowBoost * 6;
+            const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, glowRadius);
+            grad.addColorStop(0, 'rgba(147, 197, 253, ' + ((alpha + glowBoost) * 0.3).toFixed(4) + ')');
+            grad.addColorStop(1, 'rgba(147, 197, 253, 0)');
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, glowRadius, 0, Math.PI * 2);
+            ctx.fillStyle = grad;
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(200, 225, 255, ' + Math.min(alpha + glowBoost + 0.2, 1).toFixed(4) + ')';
+            ctx.fill();
+        }
+
+        if (mouse.x !== null) {
+            const grad = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, 200);
+            grad.addColorStop(0, 'rgba(96, 165, 250, 0.06)');
+            grad.addColorStop(0.5, 'rgba(96, 165, 250, 0.02)');
+            grad.addColorStop(1, 'rgba(96, 165, 250, 0)');
+            ctx.beginPath();
+            ctx.arc(mouse.x, mouse.y, 200, 0, Math.PI * 2);
+            ctx.fillStyle = grad;
+            ctx.fill();
+        }
+
+        requestAnimationFrame(animate);
+    }
+
+    window.addEventListener('resize', function() {
+        resize();
+        initParticles();
+    });
+    resize();
+    initParticles();
+    animate(0);
+})();
+
+// ===== Utilities =====
 function togglePass(id, eyeId) {
     const inp = document.getElementById(id);
     const ico = document.getElementById(eyeId);
@@ -610,7 +840,7 @@ function checkStrength(val) {
     if (/[A-Z]/.test(val)) s++;
     if (/[0-9]/.test(val)) s++;
     if (/[^A-Za-z0-9]/.test(val)) s++;
-    
+
     const map = [
         [0, '0%', '#ef4444', 'Quá ngắn'],
         [25, '25%', '#ef4444', 'Yếu'],
@@ -619,13 +849,13 @@ function checkStrength(val) {
         [100, '100%', '#22c55e', 'Mạnh']
     ];
     const [_, w, c, l] = map[Math.min(s, 4)];
-    document.getElementById('strBar').style.cssText = `width:${w};background:${c}`;
+    document.getElementById('strBar').style.cssText = 'width:' + w + ';background:' + c;
     document.getElementById('strTxt').textContent = l;
 }
 
-document.querySelectorAll('form').forEach(f => {
-    f.addEventListener('submit', () => {
-        const btn = document.getElementById('submitBtn');
+document.querySelectorAll('form').forEach(function(f) {
+    f.addEventListener('submit', function() {
+        var btn = document.getElementById('submitBtn');
         if (btn) {
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang xử lý...';
@@ -633,34 +863,29 @@ document.querySelectorAll('form').forEach(f => {
     });
 });
 
-// Smooth crossfade page transition
+// Smooth slide transition back to login
 document.addEventListener('DOMContentLoaded', function() {
-    document.body.style.opacity = '1';
-    
-    const links = document.querySelectorAll('a[href*="login.php"]');
-    links.forEach(link => {
+    var links = document.querySelectorAll('a[href*="login.php"]');
+    links.forEach(function(link) {
         link.addEventListener('click', function(e) {
             e.preventDefault();
-            const targetUrl = this.href;
-            const container = document.querySelector('.forgot-container');
-            const isLogin = targetUrl.includes('login.php');
-            
-            container.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s ease';
-            container.style.transform = isLogin ? 'translateX(100vw)' : 'translateX(-100vw)';
-            container.style.opacity = '0';
-            
-            const newBgImage = isLogin 
-                ? "url('../../assets/img/KTX-TDT-KL-1024x525.png')" 
-                : "url('../../assets/img/ktx-layout-1_0.png')";
-            
-            const img = new Image();
-            img.onload = function() {
-                document.body.style.transition = 'background-image 0.6s ease';
-                document.body.style.backgroundImage = newBgImage;
-            };
-            img.src = isLogin ? '../../assets/img/KTX-TDT-KL-1024x525.png' : '../../assets/img/ktx-layout-1_0.png';
-            
-            setTimeout(() => {
+            var targetUrl = this.href;
+            var logo = document.querySelector('.logo-section');
+            var title = document.querySelector('.main-title');
+            var card = document.querySelector('.login-card');
+            var footer = document.querySelector('.footer-badges');
+
+            document.body.style.transition = 'opacity 0.6s ease';
+            document.body.style.opacity = '0';
+
+            if (logo) { logo.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)'; logo.style.transform = 'translateX(-100vw)'; }
+            title.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.05s';
+            title.style.transform = 'translateX(-100vw)';
+            card.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.1s';
+            card.style.transform = 'translateX(-100vw)';
+            if (footer) { footer.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.15s'; footer.style.transform = 'translateX(-100vw)'; }
+
+            setTimeout(function() {
                 window.location.href = targetUrl;
             }, 600);
         });
