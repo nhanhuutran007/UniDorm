@@ -225,16 +225,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                                 }
                                 if (!$bedId) {
                                     $errors[] = "Dòng $rowNum: Giường '$bedLabel' tại phòng '$roomCode' không trống → tự gán giường khác.";
+                                    // Fallback: tự gán giường trống khi giường chỉ định đã có người
+                                    if (!empty($freeBedCache[$roomCodeKey])) {
+                                        $bed = array_shift($freeBedCache[$roomCodeKey]);
+                                        $bedId = $bed['bed_id'];
+                                        $assignedBed = $bed['bed_label'];
+                                    }
                                 }
-                            }
-                            if (!$bedId && !empty($freeBedCache[$roomCodeKey])) {
+                            } else if (!$existingUser) {
+                                // Chỉ tự gán giường cho SINH VIÊN MỚI khi CSV không ghi số giường
                                 $bed = array_shift($freeBedCache[$roomCodeKey]);
                                 $bedId = $bed['bed_id'];
                                 $assignedBed = $bed['bed_label'];
                             }
+                            // Sinh viên CŨ mà CSV không ghi số giường → giữ nguyên giường cũ (xử lý bên dưới)
                         }
 
-                        if ($roomCode && !$bedId) {
+                        if ($roomCode && !$bedId && !$existingUser) {
                             if (!isset($freeBedCache[$roomCodeKey])) {
                                 $errors[] = "Dòng $rowNum: Phòng '$roomCode' không tồn tại trong hệ thống → sinh viên '$code' chưa được gán giường.";
                             } else {
