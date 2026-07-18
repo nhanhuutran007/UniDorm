@@ -128,16 +128,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$token) {
         box-sizing: border-box;
     }
 
+    html {
+        -webkit-text-size-adjust: 100%;
+        -ms-text-size-adjust: 100%;
+        overflow: hidden;
+        height: 100%;
+    }
+
     body {
         font-family: 'Inter', sans-serif;
         background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 30%, #2563eb 60%, #60a5fa 100%);
         min-height: 100vh;
+        height: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
         padding: 40px;
         position: relative;
         overflow: hidden;
+        touch-action: manipulation;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        overscroll-behavior: none;
     }
 
     body::before {
@@ -156,8 +168,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$token) {
         position: fixed;
         top: 0;
         left: 0;
-        width: 100%;
-        height: 100%;
+        width: 100vw;
+        height: 100vh;
         z-index: 2;
         pointer-events: none;
     }
@@ -486,6 +498,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$token) {
         .badge-item {
             font-size: 10px;
             padding: 9px 16px;
+        }
+    }
+
+    @media (max-width: 400px) {
+        body {
+            padding: 16px 12px;
+        }
+        .login-card {
+            padding: 30px 20px;
+            border-radius: 20px;
+        }
+        .logo-text {
+            font-size: 20px;
         }
     }
     </style>
