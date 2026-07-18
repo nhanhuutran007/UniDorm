@@ -114,7 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$token) {
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Quên mật khẩu – UniDorm</title>
     <meta name="description" content="Đặt lại mật khẩu hệ thống quản lý ký túc xá UniDorm">
     <link rel="icon" type="image/svg+xml" href="../../assets/img/favicon.svg">
