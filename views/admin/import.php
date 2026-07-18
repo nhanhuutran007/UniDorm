@@ -89,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                 'date_of_birth'  => ['ngày_sinh', 'ngay_sinh', 'date_of_birth', 'ngày_sinh', 'ns', 'sinh_nhật', 'sinh_nhat'],
                 'phone_personal' => ['sđt_cá_nhân', 'sdt_ca_nhan', 'phone_personal', 'sđt', 'sdt', 'điện_thoại', 'dien_thoai', 'dt_cá_nhân', 'dt_ca_nhan'],
                 'phone_family'   => ['sđt_gia_đình', 'sdt_gia_dinh', 'phone_family', 'dt_gia_đình', 'dt_gia_dinh'],
-                'hometown'       => ['hộ_khẩu', 'ho_khau', 'hometown', 'quê_quán', 'que_quan', 'địa_chỉ', 'dia_chi'],
+                'hometown'       => ['hộ_khẩu', 'ho_khau', 'hometown', 'quê_quán', 'que_quan', 'địa_chỉ', 'dia_chi', 'hktt', 'hk', 'hộ_khẩu_thường_trú', 'ho_khau_thuong_tru', 'nơi_sinh', 'noi_sinh', 'quê_hương', 'que_huong'],
                 'is_room_leader' => ['trưởng_phòng', 'truong_phong', 'is_room_leader', 'tp'],
             ];
 
@@ -135,7 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                         ORDER BY r.room_code ASC, b.bed_label ASC
                     ");
                     while ($br = $bRes->fetch_assoc()) {
-                        $key = strtoupper(trim($br['room_code']));
+                        $key = strtoupper(preg_replace('/[^A-Z0-9]/i', '', $br['room_code']));
                         $freeBedCache[$key][] = $br;
                     }
 
@@ -198,25 +198,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                         // Xác định phòng từ cột Phòng (Chuẩn hóa thành Chữ Hoa)
                         $roomCodeRaw  = isset($colMap['room_code']) ? trim($data[$colMap['room_code']] ?? '') : '';
                         $roomCode     = strtoupper($roomCodeRaw);
+                        $roomCodeKey  = strtoupper(preg_replace('/[^A-Z0-9]/i', '', $roomCodeRaw));
                         $bedLabelRaw  = isset($colMap['bed_label']) ? trim($data[$colMap['bed_label']] ?? '') : '';
-                        $bedLabel     = $bedLabelRaw;
-                        if ($bedLabel !== '' && is_numeric($bedLabel)) {
-                            $bedLabel = 'G' . $bedLabel;
-                        } else if ($bedLabel !== '' && preg_match('/^G\d+$/i', $bedLabel)) {
-                            $bedLabel = strtoupper($bedLabel);
+                        $bedLabelClean = preg_replace('/[^A-Z0-9]/i', '', preg_replace('/giường|giuong/i', '', $bedLabelRaw));
+                        if ($bedLabelClean !== '' && is_numeric($bedLabelClean)) {
+                            $bedLabel = 'G' . $bedLabelClean;
+                        } else if ($bedLabelClean !== '' && preg_match('/^G\d+$/i', $bedLabelClean)) {
+                            $bedLabel = strtoupper($bedLabelClean);
+                        } else {
+                            $bedLabel = $bedLabelClean !== '' ? strtoupper($bedLabelClean) : '';
                         }
                         $bedId        = null;
                         $assignedBed  = '—';
 
-                        if ($roomCode && isset($freeBedCache[$roomCode]) && !empty($freeBedCache[$roomCode])) {
+                        if ($roomCodeKey && isset($freeBedCache[$roomCodeKey]) && !empty($freeBedCache[$roomCodeKey])) {
                             if ($bedLabel) {
                                 // Tìm đúng giường theo nhãn trong cache giường trống
-                                foreach ($freeBedCache[$roomCode] as $idx => $bed) {
+                                foreach ($freeBedCache[$roomCodeKey] as $idx => $bed) {
                                     if ($bed['bed_label'] === $bedLabel) {
                                         $bedId = $bed['bed_id'];
                                         $assignedBed = $bedLabel;
-                                        unset($freeBedCache[$roomCode][$idx]);
-                                        $freeBedCache[$roomCode] = array_values($freeBedCache[$roomCode]);
+                                        unset($freeBedCache[$roomCodeKey][$idx]);
+                                        $freeBedCache[$roomCodeKey] = array_values($freeBedCache[$roomCodeKey]);
                                         break;
                                     }
                                 }
@@ -224,10 +227,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                                     $errors[] = "Dòng $rowNum: Giường '$bedLabel' tại phòng '$roomCode' không trống → tự gán giường khác.";
                                 }
                             }
-                            if (!$bedId && !empty($freeBedCache[$roomCode])) {
-                                $bed = array_shift($freeBedCache[$roomCode]);
+                            if (!$bedId && !empty($freeBedCache[$roomCodeKey])) {
+                                $bed = array_shift($freeBedCache[$roomCodeKey]);
                                 $bedId = $bed['bed_id'];
                                 $assignedBed = $bed['bed_label'];
+                            }
+                        }
+
+                        if ($roomCode && !$bedId) {
+                            if (!isset($freeBedCache[$roomCodeKey])) {
+                                $errors[] = "Dòng $rowNum: Phòng '$roomCode' không tồn tại trong hệ thống → sinh viên '$code' chưa được gán giường.";
+                            } else {
+                                $errors[] = "Dòng $rowNum: Phòng '$roomCode' đã hết giường trống → sinh viên '$code' chưa được gán giường.";
                             }
                         }
 
