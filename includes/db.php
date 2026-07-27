@@ -9,16 +9,16 @@ require_once __DIR__ . '/config.php';
 // Tự động nhận diện môi trường để chọn cấu hình DB phù hợp
 if (isset($_SERVER['HTTP_HOST']) && ($_SERVER['HTTP_HOST'] === 'localhost' || $_SERVER['HTTP_HOST'] === '127.0.0.1')) {
     // Cấu hình môi trường Local (XAMPP/WAMP)
-    $host   = "localhost";
-    $user   = "root";
-    $pass   = "";          // XAMPP default là rỗng
+    $host = "localhost";
+    $user = "root";
+    $pass = "";          // XAMPP default là rỗng
     $dbname = "unidorm";
 } else {
     // Cấu hình môi trường Hosting / cPanel
-    $host   = "localhost";
-    $user   = "githubio5524_githubio";
-    $pass   = "nhanhuutran007@";
-    $dbname = "githubio5524_UniDorm";
+    $host = "localhost";
+    $user = "githubio6724_githubio";
+    $pass = "nhanhuutran007@";
+    $dbname = "githubio6724_UniDorm";
 }
 
 try {
