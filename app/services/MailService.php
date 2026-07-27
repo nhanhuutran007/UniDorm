@@ -4,7 +4,7 @@
  * Gửi email qua PHPMailer (Gmail SMTP + App Password)
  *
  * SENDER: unidorm.tdtu@gmail.com
- * APP PASSWORD: ufrv rrnv qqua wepv  (từ README – không có dấu cách)
+ * APP PASSWORD: ***REMOVED***  (Google App Password)
  *
  * Cài PHPMailer: composer require phpmailer/phpmailer
  */
