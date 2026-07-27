@@ -14,6 +14,7 @@ if (!isset($_SESSION['user_id'])) {
 
 $role   = strtolower($_SESSION['role'] ?? '');
 $route  = trim($_GET['page'] ?? '');
+$route  = preg_replace('#^.*/UniDorm/#i', '', $route);
 
 // Map route → file
 $adminRoutes = [
@@ -30,7 +31,7 @@ $adminRoutes = [
     'newuser'         => 'views/admin/newuser.php',
     'updateuser'      => 'views/admin/updateuser.php',
     'import'          => 'views/admin/import.php',
-    'fix_beds'        => 'database/fix_missing_beds.php',
+    'fix_beds'        => 'views/admin/fix_missing_beds.php',
     'chat'            => 'views/shared/chat.php',
     'profile'         => 'views/shared/profile.php',
     'settings'        => 'views/admin/settings.php',
