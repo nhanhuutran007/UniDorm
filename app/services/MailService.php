@@ -23,6 +23,7 @@ if (!class_exists('PHPMailer\PHPMailer\PHPMailer')) {
 
 class MailService
 {
+  public string $lastError = '';
 
   private string $senderEmail = 'unidorm.tdtu@gmail.com';
   private string $senderName = 'UniDorm – Ký túc xá TDTU';
@@ -56,6 +57,7 @@ class MailService
   {
     // Fallback: nếu PHPMailer chưa cài, dùng mail()
     if (!class_exists('PHPMailer\PHPMailer\PHPMailer')) {
+      $this->lastError = 'PHPMailer class not found – using PHP mail() fallback';
       $headers = "MIME-Version: 1.0\r\nContent-Type: text/html; charset=UTF-8\r\n"
         . "From: {$this->senderName} <{$this->senderEmail}>\r\n";
       return @mail($toEmail, $subject, $htmlBody, $headers);
@@ -87,7 +89,8 @@ class MailService
       $mail->send();
       return true;
     } catch (Exception $e) {
-      error_log("MailService Error [{$toEmail}]: " . $mail->ErrorInfo);
+      $this->lastError = $mail->ErrorInfo . ' | ' . $e->getMessage();
+      error_log("MailService Error [{$toEmail}]: " . $this->lastError);
       return false;
     }
   }

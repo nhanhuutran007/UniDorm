@@ -30,6 +30,7 @@ $adminRoutes = [
     'newuser'         => 'views/admin/newuser.php',
     'updateuser'      => 'views/admin/updateuser.php',
     'import'          => 'views/admin/import.php',
+    'test_mail'       => 'views/admin/test_mail.php',
     'chat'            => 'views/shared/chat.php',
     'profile'         => 'views/shared/profile.php',
     'settings'        => 'views/admin/settings.php',
