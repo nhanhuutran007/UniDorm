@@ -21,6 +21,29 @@ ob_start();
 
 require_once __DIR__ . '/../../includes/db.php';
 
+function normalizeUnicodeNFC($str) {
+    if (function_exists('Normalizer::normalize')) {
+        return Normalizer::normalize($str, Normalizer::FORM_C) ?: $str;
+    }
+    return $str;
+}
+
+function normalizeHeader($h) {
+    $h = trim($h);
+    $h = preg_replace('/[\x00-\x1F\x7F]/', '', $h);
+    $h = mb_strtolower($h, 'UTF-8');
+    $h = preg_replace('/\s+/', '_', $h);
+    return normalizeUnicodeNFC($h);
+}
+
+function matchBedLabel($dbLabel, $csvLabel) {
+    if ($dbLabel === $csvLabel) return true;
+    $dbNum  = preg_replace('/^G/i', '', $dbLabel);
+    $csvNum = preg_replace('/^G/i', '', $csvLabel);
+    if ($dbNum !== '' && $csvNum !== '' && is_numeric($dbNum) && is_numeric($csvNum) && (int)$dbNum === (int)$csvNum) return true;
+    return false;
+}
+
 $errors  = [];
 $success = 0;
 $skipped = 0;
@@ -39,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
         
         while (($line = fgets($handle)) !== false) {
             // Xử lý BOM UTF-8 (\xEF\xBB\xBF) ở ngay dòng đầu tiên
-            if ($rowIdx === 0 && str_starts_with($line, "\xEF\xBB\xBF")) {
+            if ($rowIdx === 0 && substr($line, 0, 3) === "\xEF\xBB\xBF") {
                 $line = substr($line, 3);
             }
             
@@ -62,18 +85,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
         if (empty($allRows)) {
             $errors[] = 'File CSV trống hoặc không đọc được.';
         } else {
-            // Xác định header (dòng đầu tiên)
-            $header = array_map(function($h) {
-                // Loại bỏ BOM, khoảng trắng đầu cuối
-                $h = trim($h);
-                // Loại bỏ CHÍNH XÁC ký tự điều khiển (0x00-0x1F, 0x7F), GIỮ NGUYÊN ký tự Unicode Vietnamese
-                $h = preg_replace('/[\x00-\x1F\x7F]/', '', $h);
-                // Chuyển về lowercase (quan trọng: dùng mb_strtolower để xử lý Unicode)
-                $h = mb_strtolower($h, 'UTF-8');
-                // Thay khoảng trắng bằng dấu _
-                $h = preg_replace('/\s+/', '_', $h);
-                return $h;
-            }, $allRows[0]);
+            // Xác định header (dòng đầu tiên) – dùng NFC normalization để tránh mismatch Unicode
+            $header = array_map('normalizeHeader', $allRows[0]);
 
             // Debug: Log header để kiểm tra
             error_log("CSV Headers detected: " . json_encode($header, JSON_UNESCAPED_UNICODE));
@@ -94,8 +107,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
             ];
 
             foreach ($knownCols as $field => $aliases) {
+                $normAliases = array_map('normalizeUnicodeNFC', $aliases);
                 foreach ($header as $idx => $h) {
-                    if (in_array($h, $aliases)) {
+                    if (in_array($h, $normAliases)) {
                         $colMap[$field] = $idx;
                         error_log("Mapped field '$field' to column $idx: '$h'");
                         break;
@@ -200,7 +214,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                         $roomCode     = strtoupper($roomCodeRaw);
                         $roomCodeKey  = strtoupper(preg_replace('/[^A-Z0-9]/i', '', $roomCodeRaw));
                         $bedLabelRaw  = isset($colMap['bed_label']) ? trim($data[$colMap['bed_label']] ?? '') : '';
-                        $bedLabelClean = preg_replace('/[^A-Z0-9]/i', '', preg_replace('/giường|giuong/i', '', $bedLabelRaw));
+                        $bedLabelRaw  = normalizeUnicodeNFC($bedLabelRaw);
+                        $bedLabelClean = preg_replace('/[^A-Z0-9]/iu', '', preg_replace('/giường|giuong/iu', '', $bedLabelRaw));
                         if ($bedLabelClean !== '' && is_numeric($bedLabelClean)) {
                             $bedLabel = 'G' . $bedLabelClean;
                         } else if ($bedLabelClean !== '' && preg_match('/^G\d+$/i', $bedLabelClean)) {
@@ -215,7 +230,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                             if ($bedLabel) {
                                 // Tìm đúng giường theo nhãn trong cache giường trống
                                 foreach ($freeBedCache[$roomCodeKey] as $idx => $bed) {
-                                    if ($bed['bed_label'] === $bedLabel) {
+                                    if (matchBedLabel($bed['bed_label'], $bedLabel)) {
                                         $bedId = $bed['bed_id'];
                                         $assignedBed = $bedLabel;
                                         unset($freeBedCache[$roomCodeKey][$idx]);
