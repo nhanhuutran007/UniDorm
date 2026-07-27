@@ -43,6 +43,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_notif'])) {
                 : "Đã gửi thông báo đến <strong>tất cả sinh viên</strong>.";
 
             // --- Gửi Email ---
+            $emailSuccess = 0;
+            $emailFailed  = 0;
+            $emailErrors  = [];
             if ($targetUserId) {
                 $uStmt = $conn->prepare("SELECT fullname, email, student_code FROM users WHERE user_id = ?");
                 $uStmt->bind_param('i', $targetUserId);
@@ -50,14 +53,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_notif'])) {
                 $targetUser = $uStmt->get_result()->fetch_assoc();
                 if ($targetUser) {
                     $targetEmail = $targetUser['email'] ?? ($targetUser['student_code'] . '@student.tdtu.edu.vn');
-                    $mailService->sendNotification($targetEmail, $targetUser['fullname'], $title, $message);
+                    if ($mailService->sendNotification($targetEmail, $targetUser['fullname'], $title, $message)) {
+                        $emailSuccess++;
+                    } else {
+                        $emailFailed++;
+                        $emailErrors[] = $targetEmail;
+                    }
                 }
             } else {
                 $allStudents = $conn->query("SELECT fullname, email, student_code FROM users WHERE role='student' AND status='active'");
                 while($s = $allStudents->fetch_assoc()){
                     $sEmail = $s['email'] ?? ($s['student_code'] . '@student.tdtu.edu.vn');
-                    $mailService->sendNotification($sEmail, $s['fullname'], $title, $message);
+                    if ($mailService->sendNotification($sEmail, $s['fullname'], $title, $message)) {
+                        $emailSuccess++;
+                    } else {
+                        $emailFailed++;
+                        $emailErrors[] = $sEmail;
+                    }
                 }
+            }
+            if ($emailFailed > 0) {
+                $successMsg .= " <span class='text-warning'>⚠️ Gửi email thất bại {$emailFailed}/" . ($emailSuccess + $emailFailed) . " (kiểm tra Error Log trên hosting).</span>";
+                error_log("MailService: Failed to send {$emailFailed} emails. Failed addresses: " . implode(', ', $emailErrors));
+            } elseif ($emailSuccess > 0) {
+                $successMsg .= " <span class='text-success'>✅ Đã gửi {$emailSuccess} email.</span>";
             }
         } else {
             $errorMsg = 'Có lỗi xảy ra khi gửi thông báo. Vui lòng thử lại.';
