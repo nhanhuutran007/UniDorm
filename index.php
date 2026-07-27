@@ -14,8 +14,6 @@ if (!isset($_SESSION['user_id'])) {
 
 $role   = strtolower($_SESSION['role'] ?? '');
 $route  = trim($_GET['page'] ?? '');
-if (strpos($route, 'UniDorm/') === 0) $route = substr($route, 8);
-if (strpos($route, '/UniDorm/') === 0) $route = substr($route, 9);
 
 // Map route → file
 $adminRoutes = [
@@ -32,7 +30,6 @@ $adminRoutes = [
     'newuser'         => 'views/admin/newuser.php',
     'updateuser'      => 'views/admin/updateuser.php',
     'import'          => 'views/admin/import.php',
-    'fix_beds'        => 'views/admin/fix_missing_beds.php',
     'chat'            => 'views/shared/chat.php',
     'profile'         => 'views/shared/profile.php',
     'settings'        => 'views/admin/settings.php',
