@@ -3,10 +3,7 @@
  * UniDorm – MailService
  * Gửi email qua PHPMailer (Gmail SMTP + App Password)
  *
- * SENDER: 52300235@student.tdtu.edu.vn (Google Workspace TDTU)
- * SMTP: smtp.gmail.com:587 (STARTTLS)
- * APP PASSWORD: Tạo từ https://myaccount.google.com/apppasswords (đăng nhập bằng tài khoản TDTU)
- *
+ * Cấu hình đọc từ file .env (根目录)
  * Cài PHPMailer: composer require phpmailer/phpmailer
  */
 
@@ -22,14 +19,43 @@ if (!class_exists('PHPMailer\PHPMailer\PHPMailer')) {
   }
 }
 
+function loadEnv(string $key, string $default = ''): string {
+  static $env = null;
+  if ($env === null) {
+    $env = [];
+    $envFile = dirname(__DIR__, 2) . '/.env';
+    if (file_exists($envFile)) {
+      foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+        $line = trim($line);
+        if ($line === '' || $line[0] === '#') continue;
+        if (strpos($line, '=') !== false) {
+          [$k, $v] = explode('=', $line, 2);
+          $env[trim($k)] = trim($v);
+        }
+      }
+    }
+  }
+  return $env[$key] ?? $default;
+}
+
 class MailService
 {
   public string $lastError = '';
 
-  private string $senderEmail = '52300235@student.tdtu.edu.vn';
-  private string $senderName = 'UniDorm – Ký túc xá TDTU';
+  private string $senderEmail;
+  private string $senderName;
+  private string $appPassword;
+  private string $smtpHost;
+  private int    $smtpPort;
 
-  private string $appPassword = '***REMOVED***';
+  public function __construct()
+  {
+    $this->senderEmail = loadEnv('MAIL_SENDER_EMAIL', '52300235@student.tdtu.edu.vn');
+    $this->senderName  = loadEnv('MAIL_SENDER_NAME', 'UniDorm – Ký túc xá TDTU');
+    $this->appPassword = loadEnv('MAIL_APP_PASSWORD', '');
+    $this->smtpHost    = loadEnv('MAIL_SMTP_HOST', 'smtp.gmail.com');
+    $this->smtpPort    = (int) loadEnv('MAIL_SMTP_PORT', '587');
+  }
 
   // Phân loại email templates
   public function sendActivation(string $toEmail, string $toName, string $activationUrl): bool
@@ -68,18 +94,18 @@ class MailService
     try {
       // Server settings
       $mail->isSMTP();
-      $mail->Host = 'smtp.gmail.com';
+      $mail->Host = $this->smtpHost;
       $mail->SMTPAuth = true;
       $mail->Username = $this->senderEmail;
-      $mail->Password = str_replace(' ', '', $this->appPassword);  // Xóa khoảng trắng
+      $mail->Password = str_replace(' ', '', $this->appPassword);
       $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-      $mail->Port = 587;
+      $mail->Port = $this->smtpPort;
       $mail->CharSet = 'UTF-8';
 
       // Recipients
       $mail->setFrom($this->senderEmail, $this->senderName);
       $mail->addAddress($toEmail, $toName);
-      $mail->addReplyTo('52300235@student.tdtu.edu.vn', 'Ký túc xá TDTU – No Reply');
+      $mail->addReplyTo($this->senderEmail, 'Ký túc xá TDTU – No Reply');
 
       // Content
       $mail->isHTML(true);
