@@ -24,10 +24,10 @@ if (!class_exists('PHPMailer\PHPMailer\PHPMailer')) {
 class MailService
 {
 
-  private string $senderEmail = '52300235@student.tdtu.edu.vn';
-  private string $senderName = 'Trần Hữu Nhân';
+  private string $senderEmail = 'unidorm.tdtu@gmail.com';
+  private string $senderName = 'UniDorm – Ký túc xá TDTU';
 
-  private string $appPassword = '***REMOVED***'; // Mặc định để trống
+  private string $appPassword = '***REMOVED***';
 
   // Phân loại email templates
   public function sendActivation(string $toEmail, string $toName, string $activationUrl): bool
@@ -76,7 +76,7 @@ class MailService
       // Recipients
       $mail->setFrom($this->senderEmail, $this->senderName);
       $mail->addAddress($toEmail, $toName);
-      $mail->addReplyTo('52300235@student.tdtu.edu.vn', 'Ký túc xá TDTU – No Reply');
+      $mail->addReplyTo('unidorm.tdtu@gmail.com', 'Ký túc xá TDTU – No Reply');
 
       // Content
       $mail->isHTML(true);

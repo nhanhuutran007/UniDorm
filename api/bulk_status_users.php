@@ -7,6 +7,8 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 header('Content-Type: application/json');
 
 require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../app/services/MailService.php';
+$mailService = new MailService();
 
 // Auth check
 if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'admin') {
@@ -77,15 +79,13 @@ if ($stmt->execute()) {
             
             if ($uData) {
                 $email = $uData['email'] ?? $uData['student_code'].'@student.tdtu.edu.vn';
-                $subject = '[UniDorm] Kích hoạt tài khoản Ký túc xá';
-                $body = "Xin chào {$uData['fullname']},\n\n"
-                      . "Tài khoản Ký túc xá UniDorm của bạn đã được kích hoạt thành công.\n\n"
+                $body = "Tài khoản Ký túc xá UniDorm của bạn đã được kích hoạt thành công.\n\n"
                       . "Thông tin đăng nhập:\n"
                       . "- Tên đăng nhập (MSSV): {$uData['student_code']}\n"
                       . "- Mật khẩu: $newPassword\n\n"
                       . "Lưu ý: Vì lý do bảo mật, bạn sẽ được yêu cầu đổi lại mật khẩu này ngay trong lần đăng nhập đầu tiên.\n\n"
                       . "Trân trọng,\nBan Quản lý Ký túc xá UniDorm.";
-                @mail($email, $subject, $body, "From: noreply@unidorm.tdtu.edu.vn\r\nContent-Type: text/plain; charset=utf-8\r\n");
+                $mailService->sendNotification($email, $uData['fullname'], 'Kích hoạt tài khoản Ký túc xá', nl2br(htmlspecialchars($body)));
             }
         }
     }

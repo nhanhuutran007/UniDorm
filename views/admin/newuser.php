@@ -11,6 +11,8 @@ $breadcrumbs = [
 ob_start();
 
 require_once __DIR__ . '/../../includes/db.php';
+require_once __DIR__ . '/../../app/services/MailService.php';
+$mailService = new MailService();
 
 $successMsg = $errorMsg = '';
 
@@ -123,11 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // Gửi email
                 $setUrl = "https://{$_SERVER['HTTP_HOST']}/UniDorm/views/auth/set_password.php?token=$token";
-                @mail($email, '[UniDorm] Tạo mật khẩu cho tài khoản',
-                    "Xin chào $fullname,\n\nTài khoản sinh viên tại UniDorm đã được tạo bởi Ban quản lý.\n"
-                    . "MSSV: $studentCode\n\nHãy vào link sau để đặt mật khẩu:\n$setUrl\n\n(Hiệu lực 24 giờ)",
-                    "From: noreply@unidorm.tdtu.edu.vn\r\nContent-Type: text/plain; charset=UTF-8\r\n"
-                );
+                $mailService->sendActivation($email, $fullname, $setUrl);
 
                 $successMsg = "Tạo tài khoản thành công cho sinh viên <strong>$fullname</strong> ($studentCode)."
                     . " Email kích hoạt đã gửi đến <strong>$email</strong>."

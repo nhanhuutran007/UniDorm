@@ -11,6 +11,8 @@ $breadcrumbs = [
 ob_start();
 
 require_once __DIR__ . '/../../includes/db.php';
+require_once __DIR__ . '/../../app/services/MailService.php';
+$mailService = new MailService();
 
 $targetId = (int)($_GET['id'] ?? 0);
 if (!$targetId) {
@@ -154,16 +156,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 // Gửi email
                 $email = $target['email'] ?? $target['student_code'].'@student.tdtu.edu.vn';
-                $subject = '[UniDorm] Cấp lại mật khẩu tài khoản Ký túc xá';
-                $body = "Xin chào {$target['fullname']},\n\n"
-                      . "Ban quản lý Ký túc xá UniDorm vừa tạo mới mật khẩu cho tài khoản của bạn.\n\n"
+                $body = "Tài khoản Ký túc xá UniDorm của bạn vừa được cấp lại mật khẩu.\n\n"
                       . "Thông tin đăng nhập:\n"
                       . "- Tên đăng nhập (MSSV): {$target['student_code']}\n"
                       . "- Mật khẩu mới: $newPassword\n\n"
                       . "Lưu ý: Vì lý do bảo mật, bạn sẽ được yêu cầu đổi lại mật khẩu này ngay trong lần đăng nhập đầu tiên.\n\n"
                       . "Trân trọng,\nBan Quản lý Ký túc xá UniDorm.";
-                      
-                @mail($email, $subject, $body, "From: noreply@unidorm.tdtu.edu.vn\r\nContent-Type: text/plain; charset=utf-8\r\n");
+                $mailService->sendNotification($email, $target['fullname'], 'Cấp lại mật khẩu tài khoản Ký túc xá', nl2br(htmlspecialchars($body)));
             }
 
             $conn->commit();
