@@ -3,8 +3,9 @@
  * UniDorm – MailService
  * Gửi email qua PHPMailer (Gmail SMTP + App Password)
  *
- * SENDER: unidorm.tdtu@gmail.com
- * APP PASSWORD: sooo cqcx mqnd gxfo  (Google App Password)
+ * SENDER: 52300235@student.tdtu.edu.vn (Google Workspace TDTU)
+ * SMTP: smtp.gmail.com:587 (STARTTLS)
+ * APP PASSWORD: Tạo từ https://myaccount.google.com/apppasswords (đăng nhập bằng tài khoản TDTU)
  *
  * Cài PHPMailer: composer require phpmailer/phpmailer
  */
@@ -25,7 +26,7 @@ class MailService
 {
   public string $lastError = '';
 
-  private string $senderEmail = 'unidorm.tdtu@gmail.com';
+  private string $senderEmail = '52300235@student.tdtu.edu.vn';
   private string $senderName = 'UniDorm – Ký túc xá TDTU';
 
   private string $appPassword = '***REMOVED***';
@@ -78,7 +79,7 @@ class MailService
       // Recipients
       $mail->setFrom($this->senderEmail, $this->senderName);
       $mail->addAddress($toEmail, $toName);
-      $mail->addReplyTo('unidorm.tdtu@gmail.com', 'Ký túc xá TDTU – No Reply');
+      $mail->addReplyTo('52300235@student.tdtu.edu.vn', 'Ký túc xá TDTU – No Reply');
 
       // Content
       $mail->isHTML(true);
