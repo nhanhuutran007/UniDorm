@@ -118,41 +118,41 @@ $emptyRooms = $conn->query("
 
                 <?php
                 $maxCapacity = max(array_map(fn($f) => (int)$f['capacity'], $floorOccupancy) ?: [1]);
-                $buildingH   = 260;
+                $buildingH   = 300;
                 ?>
 
                 <style>
-                .bldg-wrap{display:flex;align-items:flex-end;justify-content:center;gap:12px;height:<?php echo $buildingH; ?>px;padding:0 8px;}
-                .bldg-col{display:flex;flex-direction:column;align-items:center;flex:1;max-width:72px;height:100%;position:relative;}
-                .bldg-stack{width:100%;flex:1;display:flex;flex-direction:column;border-radius:8px 8px 0 0;overflow:hidden;border:2px solid #e2e8f0;position:relative;background:#f1f5f9;}
-                .bldg-fill{background:linear-gradient(180deg,#3b82f6 0%,#2563eb 100%);width:100%;transition:height .6s ease;position:relative;}
-                .bldg-fill::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(0deg,transparent,transparent 6px,rgba(255,255,255,.12) 6px,rgba(255,255,255,.12) 7px);}
-                .bldg-empty{width:100%;flex:1;background:repeating-linear-gradient(0deg,#f8fafc,#f8fafc 6px,#eef2f7 6px,#eef2f7 7px);}
-                .bldg-roof{width:120%;height:8px;background:linear-gradient(180deg,#475569,#64748b);border-radius:4px 4px 0 0;margin-bottom:-1px;z-index:1;}
-                .bldg-base{width:130%;height:6px;background:#475569;border-radius:0 0 3px 3px;margin-top:-1px;}
-                .bldg-label{margin-top:8px;font-size:11px;font-weight:600;color:#475569;white-space:nowrap;}
-                .bldg-pct{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:11px;font-weight:700;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.3);z-index:2;white-space:nowrap;}
-                .bldg-pct.empty-pos{color:#94a3b8;text-shadow:none;}
-                .bldg-window{position:absolute;width:calc(100% - 10px);left:5px;height:4px;background:rgba(255,255,255,.2);border-radius:1px;}
+                .bldg-wrap{display:flex;align-items:flex-end;justify-content:center;gap:20px;height:<?php echo $buildingH; ?>px;padding:0 12px;}
+                .bldg-col{display:flex;flex-direction:column;align-items:center;width:80px;height:100%;}
+                .bldg-body{width:100%;flex:1;display:flex;flex-direction:column;border-radius:10px 10px 0 0;overflow:hidden;border:2px solid #cbd5e1;position:relative;background:#f1f5f9;}
+                .bldg-fill{background:linear-gradient(180deg,#60a5fa 0%,#2563eb 100%);width:100%;position:relative;}
+                .bldg-fill::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 8px,rgba(255,255,255,.1) 8px,rgba(255,255,255,.1) 9px);}
+                .bldg-empty{width:100%;background:repeating-linear-gradient(0deg,#f8fafc 0px,#f8fafc 8px,#edf0f5 8px,#edf0f5 9px);}
+                .bldg-roof{width:115%;height:10px;background:linear-gradient(180deg,#334155,#64748b);border-radius:5px 5px 0 0;margin-bottom:-2px;z-index:1;flex-shrink:0;}
+                .bldg-base{width:115%;height:7px;background:#334155;border-radius:0 0 3px 3px;margin-top:-2px;flex-shrink:0;}
+                .bldg-label{margin-top:10px;font-size:12px;font-weight:700;color:#334155;white-space:nowrap;}
+                .bldg-count{font-size:10px;font-weight:500;color:#64748b;margin-top:2px;}
+                .bldg-pct{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:13px;font-weight:800;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.25);z-index:2;white-space:nowrap;letter-spacing:.3px;}
+                .bldg-pct.empty-pos{color:#94a3b8;text-shadow:none;font-weight:700;}
                 </style>
 
                 <div class="bldg-wrap">
                 <?php foreach ($floorOccupancy as $f):
-                    $stu   = (int)$f['students'];
-                    $cap   = (int)$f['capacity'];
-                    $pct   = $cap > 0 ? round($stu / $cap * 100) : 0;
-                    $fillH = $cap > 0 ? ($stu / $maxCapacity) * ($buildingH - 30) : 0;
-                    $emptyH = $cap > 0 ? (($cap - $stu) / $maxCapacity) * ($buildingH - 30) : ($buildingH - 30);
+                    $stu    = (int)$f['students'];
+                    $cap    = (int)$f['capacity'];
+                    $pct    = $cap > 0 ? round($stu / $cap * 100) : 0;
+                    $fillH  = $cap > 0 ? ($stu / $maxCapacity) * ($buildingH - 40) : 0;
+                    $emptyH = $cap > 0 ? (($cap - $stu) / $maxCapacity) * ($buildingH - 40) : ($buildingH - 40);
                 ?>
                 <div class="bldg-col">
                     <div class="bldg-roof"></div>
-                    <div class="bldg-stack">
-                        <div class="bldg-empty" style="flex:<?php echo max($emptyH, 8); ?>;">
-                            <?php if ($stu < $cap && $pct > 0 && $emptyH > 20): ?>
+                    <div class="bldg-body">
+                        <div class="bldg-empty" style="flex:<?php echo max($emptyH, 10); ?>;">
+                            <?php if ($stu < $cap && $pct > 0 && $emptyH > 24): ?>
                             <span class="bldg-pct empty-pos"><?php echo 100 - $pct; ?>%</span>
                             <?php endif; ?>
                         </div>
-                        <div class="bldg-fill" style="flex:<?php echo max($fillH, $stu > 0 ? 10 : 0); ?>;">
+                        <div class="bldg-fill" style="flex:<?php echo max($fillH, $stu > 0 ? 12 : 0); ?>;">
                             <?php if ($pct > 0): ?>
                             <span class="bldg-pct"><?php echo $pct; ?>%</span>
                             <?php endif; ?>
@@ -160,13 +160,14 @@ $emptyRooms = $conn->query("
                     </div>
                     <div class="bldg-base"></div>
                     <div class="bldg-label">Lầu <?php echo $f['floor_number']; ?></div>
+                    <div class="bldg-count"><?php echo $stu; ?>/<?php echo $cap; ?> SV</div>
                 </div>
                 <?php endforeach; ?>
                 </div>
 
                 <div class="d-flex justify-content-center gap-4 mt-3">
-                    <div class="d-flex align-items-center gap-2"><div style="width:14px;height:14px;border-radius:3px;background:linear-gradient(180deg,#3b82f6,#2563eb);"></div><small class="text-muted">Đã có SV</small></div>
-                    <div class="d-flex align-items-center gap-2"><div style="width:14px;height:14px;border-radius:3px;background:#f1f5f9;border:1px solid #e2e8f0;"></div><small class="text-muted">Còn trống</small></div>
+                    <div class="d-flex align-items-center gap-2"><div style="width:14px;height:14px;border-radius:3px;background:linear-gradient(180deg,#60a5fa,#2563eb);"></div><small class="text-muted">Đã có SV</small></div>
+                    <div class="d-flex align-items-center gap-2"><div style="width:14px;height:14px;border-radius:3px;background:#f1f5f9;border:1px solid #cbd5e1;"></div><small class="text-muted">Còn trống</small></div>
                 </div>
             </div>
         </div>
