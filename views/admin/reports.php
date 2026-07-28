@@ -124,16 +124,17 @@ $emptyRooms = $conn->query("
                 <style>
                 .bldg-wrap{display:flex;align-items:flex-end;justify-content:center;gap:20px;height:<?php echo $buildingH; ?>px;padding:0 12px;}
                 .bldg-col{display:flex;flex-direction:column;align-items:center;width:80px;height:100%;}
-                .bldg-body{width:100%;flex:1;display:flex;flex-direction:column;border-radius:10px 10px 0 0;overflow:hidden;border:2px solid #cbd5e1;position:relative;background:#f1f5f9;}
-                .bldg-fill{background:linear-gradient(180deg,#60a5fa 0%,#2563eb 100%);width:100%;position:relative;}
-                .bldg-fill::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 8px,rgba(255,255,255,.1) 8px,rgba(255,255,255,.1) 9px);}
-                .bldg-empty{width:100%;background:repeating-linear-gradient(0deg,#f8fafc 0px,#f8fafc 8px,#edf0f5 8px,#edf0f5 9px);}
+                .bldg-body{width:100%;flex:1;display:flex;flex-direction:column;border-radius:10px 10px 0 0;overflow:hidden;border:2px solid #cbd5e1;background:#f1f5f9;}
+                .bldg-fill{background:linear-gradient(180deg,#60a5fa 0%,#2563eb 100%);width:100%;position:relative;display:flex;align-items:center;justify-content:center;}
+                .bldg-fill::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 8px,rgba(255,255,255,.1) 8px,rgba(255,255,255,.1) 9px);pointer-events:none;}
+                .bldg-empty{width:100%;position:relative;display:flex;align-items:center;justify-content:center;background:repeating-linear-gradient(0deg,#f8fafc 0px,#f8fafc 8px,#edf0f5 8px,#edf0f5 9px);}
                 .bldg-roof{width:115%;height:10px;background:linear-gradient(180deg,#334155,#64748b);border-radius:5px 5px 0 0;margin-bottom:-2px;z-index:1;flex-shrink:0;}
                 .bldg-base{width:115%;height:7px;background:#334155;border-radius:0 0 3px 3px;margin-top:-2px;flex-shrink:0;}
                 .bldg-label{margin-top:10px;font-size:12px;font-weight:700;color:#334155;white-space:nowrap;}
                 .bldg-count{font-size:10px;font-weight:500;color:#64748b;margin-top:2px;}
-                .bldg-pct{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:13px;font-weight:800;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.25);z-index:2;white-space:nowrap;letter-spacing:.3px;}
-                .bldg-pct.empty-pos{color:#94a3b8;text-shadow:none;font-weight:700;}
+                .bldg-pct{font-size:13px;font-weight:800;z-index:2;white-space:nowrap;letter-spacing:.3px;line-height:1;position:relative;}
+                .bldg-fill .bldg-pct{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.4);}
+                .bldg-empty .bldg-pct{color:#475569;font-weight:700;}
                 </style>
 
                 <div class="bldg-wrap">
@@ -149,7 +150,7 @@ $emptyRooms = $conn->query("
                     <div class="bldg-body">
                         <div class="bldg-empty" style="flex:<?php echo max($emptyH, 10); ?>;">
                             <?php if ($stu < $cap && $pct > 0 && $emptyH > 24): ?>
-                            <span class="bldg-pct empty-pos"><?php echo 100 - $pct; ?>%</span>
+                            <span class="bldg-pct"><?php echo 100 - $pct; ?>%</span>
                             <?php endif; ?>
                         </div>
                         <div class="bldg-fill" style="flex:<?php echo max($fillH, $stu > 0 ? 12 : 0); ?>;">
