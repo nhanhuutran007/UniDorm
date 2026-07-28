@@ -451,19 +451,22 @@ $allFloors = $conn->query("
             </div>
 
             <!-- Ngày tháng -->
+            <?php
+            $day      = date('d');
+            $month    = date('m');
+            $year     = date('Y');
+            $dow      = date('w');
+            $weekSun  = date('d/m/Y', strtotime("-{$dow} days"));
+            $weekSat  = date('d/m/Y', strtotime("+" . (6 - $dow) . " days"));
+            ?>
             <div class="date-line">
-                <?php
-                $day   = date('d');
-                $month = date('m');
-                $year  = date('Y');
-                ?>
                 TP. Hồ Chí Minh, ngày <?php echo $day; ?> tháng <?php echo $month; ?> năm <?php echo $year; ?>
             </div>
 
             <!-- Tiêu đề báo cáo động theo lầu được chọn -->
             <div class="title-section">
                 <div class="title-main font-bold">BÁO CÁO LẦU <?php echo $floorCodeStr; ?></div>
-                <div class="title-sub">( Từ ngày ..............đến ngày ............. )</div>
+                <div class="title-sub">( Từ ngày <?php echo $weekSun; ?> đến ngày <?php echo $weekSat; ?> )</div>
             </div>
 
             <!-- Bảng nội dung báo cáo (Cột đầu là TT chuẩn ảnh) -->
