@@ -107,6 +107,13 @@ function sidebarActive(string $path, string $current): string {
                     </a>
                 </li>
 
+                <li class="<?php echo sidebarActive('login_logs', $currentPath); ?>">
+                    <a href="<?php echo BASE_URL; ?>/login_logs">
+                        <i class="bi bi-shield-lock-fill"></i>
+                        <span>Lịch sử đăng nhập</span>
+                    </a>
+                </li>
+
             </ul>
 
             <?php elseif (isset($userRole) && $userRole === 'student'): ?>

@@ -33,6 +33,7 @@ $adminRoutes = [
     'chat'            => 'views/shared/chat.php',
     'profile'         => 'views/shared/profile.php',
     'settings'        => 'views/admin/settings.php',
+    'login_logs'      => 'views/admin/login_logs.php',
 ];
 
 $studentRoutes = [

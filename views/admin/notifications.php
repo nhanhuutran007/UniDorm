@@ -85,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_notif'])) {
 }
 
 // Lấy danh sách sinh viên để gửi trực tiếp
-$svStmt = $conn->query("SELECT user_id, fullname, student_code FROM users WHERE role='student' AND status='active' ORDER BY fullname ASC");
+$svStmt = $conn->query("SELECT user_id, fullname, student_code FROM users WHERE student_code IS NOT NULL AND student_code != 'admin' AND status='active' ORDER BY fullname ASC");
 $studentList = $svStmt->fetch_all(MYSQLI_ASSOC);
 
 // Lịch sử thông báo đã gửi

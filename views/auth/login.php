@@ -70,6 +70,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['profile_picture']= $user['profile_picture'];
                 $_SESSION['last_activity']  = time();
 
+                // Ghi log dang nhap
+                $logIp      = $_SERVER['REMOTE_ADDR'] ?? null;
+                $logAgent   = substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 512);
+                $logStmt    = $conn->prepare("INSERT INTO login_logs (user_id, ip_address, user_agent) VALUES (?, ?, ?)");
+                $logStmt->bind_param('iss', $user['user_id'], $logIp, $logAgent);
+                $logStmt->execute();
+
                 // Redirect theo role
                 if ($auth['must_change_password'] == 1) {
                     header('Location: ' . BASE_URL . '/views/auth/force_change_password.php');
