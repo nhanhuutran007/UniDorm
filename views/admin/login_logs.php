@@ -53,7 +53,6 @@ if ($dateTo !== '') {
 $whereSQL = $where ? implode(' AND ', $where) : '1=1';
 
 // ── Stats ────────────────────────────────────────────────────
-$statsTotal = $conn->query("SELECT COUNT(*) as c FROM login_logs")->fetch_assoc()['c'] ?? 0;
 $statsToday = $conn->query("SELECT COUNT(*) as c FROM login_logs WHERE DATE(login_at) = CURDATE()")->fetch_assoc()['c'] ?? 0;
 $statsUniqueToday = $conn->query("SELECT COUNT(DISTINCT user_id) as c FROM login_logs WHERE DATE(login_at) = CURDATE()")->fetch_assoc()['c'] ?? 0;
 
@@ -109,7 +108,6 @@ function detectOS(string $ua): string {
 <!-- Stat cards -->
 <div class="row g-3 mb-4">
     <?php foreach ([
-        ['Tổng lượt đăng nhập', $statsTotal, 'primary', 'box-arrow-in-right'],
         ['Đăng nhập hôm nay',   $statsToday, 'success', 'clock-history'],
         ['User hoạt động hôm nay', $statsUniqueToday, 'info', 'person-check-fill'],
     ] as [$label, $count, $color, $icon]): ?>
